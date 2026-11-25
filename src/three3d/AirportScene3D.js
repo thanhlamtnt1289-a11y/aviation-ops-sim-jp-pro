@@ -137,6 +137,64 @@ function makeStandBadgeTexture(numStr) {
   return tex;
 }
 
+function makeRoadMarkingTexture(text, bg = '#334155', fg = '#FACC15', border = null) {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 160;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, 512, 160);
+  if (border) {
+    ctx.strokeStyle = border;
+    ctx.lineWidth = 14;
+    ctx.strokeRect(10, 10, 492, 140);
+  }
+  ctx.fillStyle = fg;
+  ctx.font = '900 66px "Be Vietnam Pro", "Noto Sans JP", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 256, 84);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function makeFrontPrioritySignTexture() {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#475569';
+  ctx.fillRect(0, 0, 256, 256);
+  // White stop bar
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(10, 214, 236, 22);
+  // Red inverted triangle
+  ctx.beginPath();
+  ctx.moveTo(128, 198);
+  ctx.lineTo(28, 28);
+  ctx.lineTo(228, 28);
+  ctx.closePath();
+  ctx.fillStyle = '#DC2626';
+  ctx.fill();
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.stroke();
+  // Inner triangle + aircraft icon
+  ctx.beginPath();
+  ctx.moveTo(128, 168);
+  ctx.lineTo(56, 46);
+  ctx.lineTo(200, 46);
+  ctx.closePath();
+  ctx.fillStyle = '#CBD5E1';
+  ctx.fill();
+  ctx.fillStyle = '#DC2626';
+  ctx.fillRect(122, 62, 12, 74);
+  ctx.fillRect(88, 86, 80, 14);
+  ctx.fillRect(108, 122, 40, 9);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 // Helper to create reusable GSE 3D meshes
 function createGseMesh(kind, opts = {}) {
   const g = new THREE.Group();
@@ -376,105 +434,206 @@ export class AirportScene3D {
     this.seaMesh = sea;
 
     const landHex = (ap.landCol[0] << 16) | (ap.landCol[1] << 8) | ap.landCol[2];
-    addBox(420, 0.2, 276, landHex, 0, -0.1, -11, { roughness: ap.snow ? 0.55 : 0.9 });
+    addBox(580, 0.2, 340, landHex, 0, -0.1, -10, { roughness: ap.snow ? 0.55 : 0.9 });
 
     if (ap.island) {
-      addBox(424, 1.5, 4.5, 0x8e98a6, 0, 0.3, -150);
-      addBox(4.5, 1.5, 280, 0x8e98a6, -212, 0.3, -12);
-      addBox(4.5, 1.5, 280, 0x8e98a6, 212, 0.3, -12);
+      addBox(586, 1.8, 5.5, 0x8e98a6, 0, 0.35, -180);
+      addBox(5.5, 1.8, 346, 0x8e98a6, -292, 0.35, -10);
+      addBox(5.5, 1.8, 346, 0x8e98a6, 292, 0.35, -10);
     }
     if (ap.bridge) {
-      addBox(18, 1.6, 200, 0xbac6d4, 0, 5.4, 225, { metalness: 0.3 });
+      addBox(18, 1.6, 200, 0xbac6d4, 0, 5.4, 245, { metalness: 0.3 });
     }
     if (ap.city) {
-      [[-230, -300, 18, 54], [-185, -315, 22, 72], [175, -310, 20, 66], [225, -295, 18, 50]].forEach(([bx, bz, bw, bh]) => {
+      [[-280, -340, 18, 54], [-220, -355, 22, 72], [210, -350, 20, 66], [265, -335, 18, 50]].forEach(([bx, bz, bw, bh]) => {
         addBox(bw, bh, bw, 0xc3d7ee, bx, bh * 0.5, bz, { map: this.texGlass, roughness: 0.2, metalness: 0.65 });
       });
     }
     if (ap.snow) {
-      for (let tx = -190; tx <= 190; tx += 38) {
+      for (let tx = -260; tx <= 260; tx += 40) {
         const pine = new THREE.Mesh(new THREE.ConeGeometry(4.2, 11.5, 7), new THREE.MeshStandardMaterial({ color: 0x305642, roughness: 0.85 }));
-        pine.position.set(tx, 5.6, -138);
+        pine.position.set(tx, 5.6, -168);
         pine.castShadow = true;
         this.staticGroup.add(pine);
       }
     }
 
     // Distant Mountains
-    [[-45, -420, 115, 76], [-210, -400, 130, 42], [145, -410, 140, 48]].forEach(([mx, mz, mr, mh]) => {
+    [[-45, -450, 115, 76], [-230, -430, 130, 42], [175, -440, 140, 48]].forEach(([mx, mz, mr, mh]) => {
       const mtn = new THREE.Mesh(new THREE.ConeGeometry(mr, mh, 12), new THREE.MeshStandardMaterial({ color: ap.snow ? 0xa8bcd4 : 0x5f7694, roughness: 0.92 }));
       mtn.position.set(mx, mh * 0.45, mz);
       this.staticGroup.add(mtn);
     });
 
-    // 2. Runway with Dynamic Airport Designator Texture
+    // Helper for flat painted decals on concrete/asphalt
+    const addDecal = (tex, w, d, x, y, z, rotY = 0) => {
+      const m = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, d),
+        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.72 })
+      );
+      m.rotation.x = -Math.PI / 2;
+      m.rotation.z = rotY;
+      m.position.set(x, y, z);
+      m.receiveShadow = true;
+      this.staticGroup.add(m);
+      return m;
+    };
+
+    const texPriority = makeFrontPrioritySignTexture();
+    const texStop = makeRoadMarkingTexture('STOP', '#334155', '#FFFFFF');
+    const texBlast = makeRoadMarkingTexture('ブラスト注意', '#334155', '#FACC15', '#FACC15');
+    const texNoPar = makeRoadMarkingTexture('並走禁止', '#334155', '#FACC15');
+    const texIls = makeRoadMarkingTexture('ILS制限', '#334155', '#FFFFFF', '#2563EB');
+    const texH38 = makeRoadMarkingTexture('高さ制限 3.8m', '#FACC15', '#0F172A', '#DC2626');
+
+    // 2. Expanded Runway 36/18 (460m length) + Dual Parallel Taxiways (A-TWY, B-TWY) & High-Speed Exits (A3–A6)
     const rwyTex = makeRunwayTexture(ap.rwy, ap.snow);
     this.runwayMat = new THREE.MeshStandardMaterial({ map: rwyTex, roughness: 0.72, metalness: 0.08 });
-    const rwy = new THREE.Mesh(new THREE.PlaneGeometry(310, 30), this.runwayMat);
+    const rwy = new THREE.Mesh(new THREE.PlaneGeometry(460, 32), this.runwayMat);
     rwy.rotation.x = -Math.PI / 2;
-    rwy.position.set(0, 0.06, -97);
+    rwy.position.set(0, 0.06, -104);
     rwy.receiveShadow = true;
     this.staticGroup.add(rwy);
 
-    // 3. Taxiway A + Connectors + Yellow Centerlines
-    addBox(300, 0.08, 18, 0x3d4756, 0, 0.01, -55, { roughness: 0.78 });
-    addBox(16, 0.08, 20, 0x3d4756, -95, 0.01, -73, { roughness: 0.78 });
-    addBox(16, 0.08, 20, 0x3d4756, 95, 0.01, -73, { roughness: 0.78 });
-    addBox(296, 0.04, 0.6, 0xf5c818, 0, 0.08, -55);
+    // Parallel Taxiways A-TWY (-72) & B-TWY / Apron Taxiway C-TWY (-55) + Angled High-Speed Exits (A3, A4, A5, A6)
+    addBox(460, 0.08, 16, 0x3b4453, 0, 0.01, -72, { roughness: 0.78 });
+    addBox(456, 0.04, 0.55, 0xf5c818, 0, 0.08, -72);
+    addBox(460, 0.08, 18, 0x3d4756, 0, 0.01, -55, { roughness: 0.78 });
+    addBox(456, 0.04, 0.6, 0xf5c818, 0, 0.08, -55);
+    [-190, -95, 0, 95, 190].forEach(cx => {
+      addBox(15, 0.08, 38, 0x3d4756, cx, 0.01, -86, { roughness: 0.78 });
+      addBox(0.5, 0.04, 34, 0xf5c818, cx, 0.08, -86);
+    });
+    // High-Speed Rapid Exits (A4 / A5 angled)
+    [-135, -45, 45, 135].forEach((rx, idx) => {
+      const ang = addBox(12, 0.08, 34, 0x3d4756, rx, 0.015, -88, { roughness: 0.78 });
+      ang.rotation.y = idx % 2 === 0 ? 0.45 : -0.45;
+    });
 
-    // 4. Concrete Apron + Service Roads + Stand Numbers (6, 7, 14) + Red ERA Boundaries
+    // 4. Expanded Concrete Apron (covering T1 Center Pier, T2 #71-#80, Remote #200-#600, Cargo #101-#119, N-Area)
     this.apronMat = new THREE.MeshStandardMaterial({ map: this.texConcrete, roughness: 0.78, metalness: 0.06 });
-    const apron = new THREE.Mesh(new THREE.PlaneGeometry(276, 140), this.apronMat);
+    const apron = new THREE.Mesh(new THREE.PlaneGeometry(510, 165), this.apronMat);
     apron.rotation.x = -Math.PI / 2;
-    apron.position.set(0, 0.04, 28);
+    apron.position.set(0, 0.04, 34);
     apron.receiveShadow = true;
     this.staticGroup.add(apron);
 
-    addBox(272, 0.06, 12, 0x475364, 0, 0.05, 50, { roughness: 0.76 });
-    addBox(272, 0.06, 8, 0x475364, 0, 0.05, -38, { roughness: 0.76 });
-    addBox(276, 0.08, 0.8, 0xdc2626, 0, 0.08, -42.1);
-
-    // NGO Official Perimeter Road (場周道路 40km/h) + ILS Restricted Area Sign & Red Beacon
-    addBox(340, 0.06, 14, 0x3b4554, 0, 0.05, -129, { roughness: 0.76 });
-    for (let px = -155; px <= 155; px += 14) {
-      addBox(6, 0.04, 0.35, 0xf8fafc, px, 0.09, -129);
+    // Main Head-of-Stand GSE Road (3.8m Height Limit) & Behind-Stand Vehicle Road (スポット後方車両通行帯) + Red ABL Line
+    addBox(480, 0.06, 12, 0x475364, 0, 0.05, 50, { roughness: 0.76 });
+    addBox(480, 0.06, 8.5, 0x475364, 0, 0.05, -38, { roughness: 0.76 });
+    // Red Solid Apron Boundary Line (ABL / スポット誘導経路境界線)
+    addBox(495, 0.08, 0.9, 0xdc2626, 0, 0.09, -42.3);
+    // White Dashed / Solid GSE Centerline markings along Head Road & Behind-Stand Road
+    for (let gx = -225; gx <= 225; gx += 12) {
+      addBox(5.5, 0.04, 0.28, 0xf8fafc, gx, 0.09, 50);
     }
-    // ILS Restricted Area Blue Border & Red Lamp Post (West side of Perimeter Road)
-    addBox(50, 0.05, 0.65, 0x2563eb, -110, 0.10, -122.2);
-    addBox(50, 0.05, 0.65, 0x2563eb, -110, 0.10, -135.8);
-    addBox(0.4, 4.2, 0.4, 0x94a3b8, -85, 2.1, -121.5);
-    addBox(3.6, 1.8, 0.25, 0xf8fafc, -85, 3.6, -121.5);
-    this.ilsLampMesh = new THREE.Mesh(
-      new THREE.SphereGeometry(0.55, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0xef4444 })
-    );
-    this.ilsLampMesh.position.set(-85, 4.95, -121.5);
-    this.staticGroup.add(this.ilsLampMesh);
+    // Solid white no-overtaking curve at Spot #1 (+X curve) + Yellow 並走禁止
+    addBox(46, 0.05, 0.36, 0xf8fafc, 125, 0.095, 50);
+    addDecal(texNoPar, 14, 4.4, 126, 0.11, 50);
 
-    // NGO Official Service Lane (交互破線 alternating white dashes + solid centerline + Red Priority Triangle)
-    addBox(14, 0.06, 28, 0x475364, -31, 0.06, -56, { roughness: 0.75 });
-    addBox(0.35, 0.04, 28, 0xf8fafc, -31, 0.10, -56);
-    for (let sz = -68; sz <= -44; sz += 4.2) {
-      addBox(0.32, 0.04, 1.9, 0xf8fafc, -37.5, 0.10, sz);
-      addBox(0.32, 0.04, 1.9, 0xf8fafc, -36.8, 0.10, sz + 1.8);
-      addBox(0.32, 0.04, 1.9, 0xf8fafc, -24.5, 0.10, sz);
-      addBox(0.32, 0.04, 1.9, 0xf8fafc, -25.2, 0.10, sz + 1.8);
+    // Green Pedestrian & Bicycle Lane (歩行者・自転車通行帯) vs White Zebra Crosswalk (横断歩道 near #8/#9)
+    addBox(120, 0.04, 2.6, 0x16a34a, -25, 0.095, 57.2);
+    for (let zx = 34; zx <= 46; zx += 2.2) {
+      addBox(1.1, 0.05, 9.6, 0xf8fafc, zx, 0.10, 50);
     }
-    // Red Aircraft Priority Ahead Triangle (前方航空機優先標識) + Stop Line at Service Lane entry
-    addBox(12, 0.05, 0.7, 0xf8fafc, -31, 0.10, -40.5);
-    const triGeo = new THREE.ConeGeometry(2.6, 0.06, 3);
-    const triMat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
-    const triMesh = new THREE.Mesh(triGeo, triMat);
-    triMesh.position.set(-31, 0.11, -38.0);
-    triMesh.rotation.y = Math.PI;
-    this.staticGroup.add(triMesh);
 
-    // NGO T2 Blast Caution Zone (#71 / #77 Yellow Box)
-    addBox(26, 0.05, 0.7, 0xfacc15, -117, 0.10, -26);
-    addBox(26, 0.05, 0.7, 0xfacc15, -117, 0.10, -8);
-    addBox(0.7, 0.05, 18, 0xfacc15, -130, 0.10, -17);
-    addBox(0.7, 0.05, 18, 0xfacc15, -104, 0.10, -17);
-    addBox(24.5, 0.03, 16.5, 0xfacc15, -117, 0.07, -17, { transparent: true, opacity: 0.16 });
+    // Full 3-Sided NGO Airport Perimeter Road (場周道路 40 km/h) wrapping West, South, North seawalls!
+    addBox(540, 0.06, 14, 0x3b4554, 0, 0.05, -142, { roughness: 0.76 });
+    addBox(14, 0.06, 260, 0x3b4554, -264, 0.05, -16, { roughness: 0.76 });
+    addBox(14, 0.06, 260, 0x3b4554, 264, 0.05, -16, { roughness: 0.76 });
+    for (let px = -255; px <= 255; px += 16) addBox(7, 0.04, 0.35, 0xf8fafc, px, 0.09, -142);
+    for (let pz = -132; pz <= 105; pz += 16) {
+      addBox(0.35, 0.04, 7, 0xf8fafc, -264, 0.09, pz);
+      addBox(0.35, 0.04, 7, 0xf8fafc, 264, 0.09, pz);
+    }
+    // STOP markings at BOTH South & North Runway Extensions on Perimeter Road!
+    addDecal(texStop, 10, 4.2, -264, 0.11, -104, Math.PI / 2);
+    addDecal(texStop, 10, 4.2, 264, 0.11, -104, Math.PI / 2);
+
+    // Dual ILS Restricted Areas (ILS制限区域) + 50m No-Stopping/Parking Zones + Glowing Red Lamp Posts!
+    [-115, 115].forEach((ix, idx) => {
+      addBox(54, 0.05, 0.75, 0x2563eb, ix, 0.10, -135.2);
+      addBox(54, 0.05, 0.75, 0x2563eb, ix, 0.10, -148.8);
+      addDecal(texIls, 14, 4.8, ix, 0.11, -142);
+      addBox(0.45, 4.4, 0.45, 0x94a3b8, ix + (idx === 0 ? 28 : -28), 2.2, -134.2);
+      addBox(4.0, 2.0, 0.3, 0xf8fafc, ix + (idx === 0 ? 28 : -28), 3.7, -134.2);
+      const lamp = new THREE.Mesh(
+        new THREE.SphereGeometry(0.62, 12, 12),
+        new THREE.MeshBasicMaterial({ color: 0xef4444 })
+      );
+      lamp.position.set(ix + (idx === 0 ? 28 : -28), 5.2, -134.2);
+      this.staticGroup.add(lamp);
+      if (idx === 0) this.ilsLampMesh = lamp;
+    });
+
+    // NGO Official Service Lanes (交互破線 alternating dashes + solid centerline + Red Priority Triangle)
+    const addServiceLane = (xCenter, zStart, zEnd) => {
+      const len = Math.abs(zEnd - zStart);
+      const zMid = (zStart + zEnd) * 0.5;
+      addBox(14, 0.06, len, 0x475364, xCenter, 0.06, zMid, { roughness: 0.75 });
+      addBox(0.38, 0.04, len, 0xf8fafc, xCenter, 0.10, zMid);
+      for (let sz = Math.min(zStart, zEnd) + 2; sz <= Math.max(zStart, zEnd) - 2; sz += 4.2) {
+        addBox(0.32, 0.04, 1.9, 0xf8fafc, xCenter - 6.6, 0.10, sz);
+        addBox(0.32, 0.04, 1.9, 0xf8fafc, xCenter - 5.9, 0.10, sz + 1.8);
+        addBox(0.32, 0.04, 1.9, 0xf8fafc, xCenter + 6.6, 0.10, sz);
+        addBox(0.32, 0.04, 1.9, 0xf8fafc, xCenter + 5.9, 0.10, sz + 1.8);
+      }
+      addDecal(texPriority, 9.5, 9.5, xCenter, 0.11, Math.max(zStart, zEnd) + 4.8);
+    };
+    // Service Lane 1 (Main Apron -> Taxiway crossing), Service Lane 2 (E3/E4 Remote #300-#500), Service Lane 3 (T2 Taxilane P)
+    addServiceLane(-31, -68, -42);
+    addServiceLane(-155, -68, -42);
+    addServiceLane(118, -68, -42);
+
+    // NGO Terminal 2 (第2ターミナル — South-West: Stands #71-#76 & #77-#80 + Blast Caution #71/#77 + Blast Fence + Management Road)
+    addBox(64, 8.2, 22, 0xdbe4ef, -188, 4.1, 74);
+    addBox(66, 1.4, 24, 0x0284c7, -188, 8.8, 74);
+    // T2 Stand Numbers (#71, #72, #74, #77, #79) + Yellow Blast Caution Zones (#71 & #77)!
+    [[-145, 24, '71'], [-170, 24, '72'], [-195, 24, '74'], [-212, 54, '77'], [-185, 54, '79']].forEach(([sx, sz, no]) => {
+      addDecal(makeStandBadgeTexture(no), 6.2, 3.8, sx, 0.10, sz);
+      addBox(0.45, 0.04, 26, 0xf5c818, sx, 0.08, sz - 12);
+    });
+    // Yellow-Bordered Blast Caution Zones at #71 (-117, -17) and #77 (-228, 52)
+    [[-117, -17], [-228, 52]].forEach(([bx, bz]) => {
+      addBox(26, 0.05, 0.75, 0xfacc15, bx, 0.10, bz - 9);
+      addBox(26, 0.05, 0.75, 0xfacc15, bx, 0.10, bz + 9);
+      addBox(0.75, 0.05, 18, 0xfacc15, bx - 13, 0.10, bz);
+      addBox(0.75, 0.05, 18, 0xfacc15, bx + 13, 0.10, bz);
+      addBox(24.5, 0.03, 16.5, 0xfacc15, bx, 0.075, bz, { transparent: true, opacity: 0.16 });
+      addDecal(texBlast, 18, 5.4, bx, 0.11, bz);
+    });
+    // T2 Blast Fence with Tug Refuge Gap (隙間) + Unlit Single-Lane Management Road
+    addBox(0.9, 4.2, 22, 0x64748b, -238, 2.1, 32);
+    addBox(0.9, 4.2, 22, 0x64748b, -238, 2.1, 68);
+    addBox(5.5, 0.05, 76, 0x334155, -245, 0.06, 48);
+
+    // Remote Stands #300 / #400 / #500 / #601 (South-West) & #200 (North-East) + Cargo #101-#119 + N-Area
+    [[-148, -20, '301'], [-178, -20, '401'], [-208, -20, '501'], [-236, -20, '601'], [148, -20, '201'], [178, -20, '204'], [208, -20, '101'], [234, -20, '105']].forEach(([rx, rz, no]) => {
+      addDecal(makeStandBadgeTexture(no), 6.2, 3.8, rx, 0.10, rz + 10);
+      addBox(0.45, 0.04, 24, 0xf5c818, rx, 0.08, rz);
+      addBox(8.0, 0.04, 0.5, 0xf5c818, rx, 0.08, rz + 6);
+    });
+    // Cargo Warehouses 1, 2, 3 (貨物上屋) & N-Area Coast Guard Hangar (海保航空基地 + Helipad)
+    addBox(52, 9.5, 24, 0xcbd5e1, 188, 4.75, 78);
+    addBox(54, 1.4, 26, 0x334155, 188, 10.2, 78);
+    addBox(30, 8.8, 22, 0xe2e8f0, 236, 4.4, 42);
+    addBox(31, 1.2, 23, 0x0f766e, 236, 9.4, 42);
+    // Airport Fire Station Red No-Stopping Box & Twin Red Beacons ①② (空港消防所)
+    addBox(24, 0.05, 16, 0xdc2626, 125, 0.09, -28, { transparent: true, opacity: 0.25 });
+    [113, 137].forEach(fx => {
+      addBox(0.35, 3.8, 0.35, 0x94a3b8, fx, 1.9, -20);
+      const fLamp = new THREE.Mesh(new THREE.SphereGeometry(0.48, 10, 10), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+      fLamp.position.set(fx, 4.1, -20);
+      this.staticGroup.add(fLamp);
+    });
+    // 3.8m Height Clearance Warning Beams above Fixed Bridges on Head-of-Stand GSE Road!
+    [-48, 19, 92].forEach(bx => {
+      addDecal(texH38, 10, 2.8, bx, 0.11, 50);
+    });
+    // 4 Official ERA Intersection Priority Signs (#7-#8, #18-#19, #76 S, #77 S)
+    [[-34, -38], [34, -38], [-145, -38], [-212, 34]].forEach(([ex, ez]) => {
+      addDecal(texPriority, 7.2, 7.2, ex, 0.11, ez);
+    });
 
     A3D_SPOTS.forEach(sp => {
       addBox(0.55, 0.04, 62, 0xf5c818, sp.cx, 0.08, -3);
@@ -489,7 +648,7 @@ export class AirportScene3D {
       addBox(1.8, 0.05, 1.8, 0xeab308, sp.cx - 11.4, 0.09, 7.6);
       // NGO Official PBB Red-Hatched Danger Zone (PBB危険区域) on Port (+X) side
       const px = sp.cx + 12.2, pz = sp.cz + 11.5;
-      addBox(18.0, 0.04, 9.6, 0xdc2626, px, 0.08, pz, { transparent: true, opacity: 0.20 });
+      addBox(18.0, 0.04, 9.6, 0xdc2626, px, 0.08, pz, { transparent: true, opacity: 0.22 });
       addBox(18.0, 0.05, 0.35, 0xdc2626, px, 0.09, pz - 4.8);
       addBox(18.0, 0.05, 0.35, 0xdc2626, px, 0.09, pz + 4.8);
       for (let hx = -7; hx <= 7; hx += 3.5) {
@@ -1026,9 +1185,9 @@ export class AirportScene3D {
       if (state.labelMode === 'smart' && priority < 1) return;
       const p = this.projectToScreen(pt, W, H);
       if (!p || p.x < -30 || p.x > W + 30 || p.y < 44 || p.y > H - 46) return;
-      ctx.font = '600 10.5px "Hiragino Sans", system-ui, sans-serif';
+      ctx.font = '600 11px "Be Vietnam Pro", "Noto Sans JP", system-ui, sans-serif';
       const tw = ctx.measureText(text).width + 12;
-      const th = 19;
+      const th = 20;
       let rx = p.x - tw / 2, ry = p.y - th / 2;
       const hit = (x1, y1) => placed.some(r => !(x1 + tw + 4 < r.x || x1 > r.x + r.w + 4 || y1 + th + 3 < r.y || y1 > r.y + r.h + 3));
       if (hit(rx, ry)) {
@@ -1046,6 +1205,7 @@ export class AirportScene3D {
     };
 
     const ap = A3D_AIRPORTS[state.airportId] || A3D_AIRPORTS.NGO;
+    const lang = state.lang || 'ja';
     if (state.subtab === 'ops3d') {
       state.handsOn.fods.filter(f => !f.cleared).forEach(f => {
         drawTag([f.x, 1.8, f.z], `⚠ CLICK FOD ${f.id}`, 'rgba(225,29,72,0.95)', '#FEF08A', 2);
@@ -1054,13 +1214,18 @@ export class AirportScene3D {
       drawTag([-7.6, 4.5, 18.5], 'CLICK: High-Loader', 'rgba(14,116,144,0.88)', '#FFF', 1);
     } else if (state.subtab === 'flight' && flightPose) {
       const ph = A3D_FLIGHT_PHASES[state.flightPhaseIdx];
+      const phTag = lang === 'ja' ? ph.tagJa : (lang === 'en' ? ph.id.toUpperCase() : ph.tagVi);
       if (povKind !== 'pilot') {
-        drawTag([flightPose.ac.x, flightPose.ac.y + 12.8, flightPose.ac.z], `✈ ${state.fleetAircraftId} (${ap.id} Spot 7) · ${ph.tagJa}`, 'rgba(14,116,144,0.92)', '#FFF', 2);
+        drawTag([flightPose.ac.x, flightPose.ac.y + 12.8, flightPose.ac.z], `✈ ${state.fleetAircraftId} (${ap.id} Spot 7) · ${phTag}`, 'rgba(14,116,144,0.92)', '#FFF', 2);
       }
     }
     if (povKind !== 'pilot' && povKind !== 'gse_cab') {
-      drawTag([0, 2.2, -97], `${ap.id} RWY ${ap.rwy}`, 'rgba(185,28,28,0.86)', '#FFF', 1);
-      drawTag([-120, 38, 76], ap.twr, 'rgba(15,23,42,0.86)', '#FFF', 1);
+      drawTag([0, 2.5, -104], `${ap.id} RWY ${ap.rwy} (3500m)`, 'rgba(185,28,28,0.88)', '#FFF', 2);
+      drawTag([-120, 38, 76], ap.twr, 'rgba(15,23,42,0.88)', '#FFF', 1);
+      drawTag([-188, 12, 74], 'T2 (#71–#80)', 'rgba(2,132,199,0.88)', '#FFF', 1);
+      drawTag([188, 14, 78], 'CARGO (#101–#119)', 'rgba(71,85,105,0.88)', '#FFF', 1);
+      drawTag([-31, 2.2, -55], 'SERVICE LANE', 'rgba(15,23,42,0.88)', '#7DD3FC', 1);
+      drawTag([-115, 6.5, -142], state.ilsRedOn ? 'ILS RED: NO ENTRY' : 'ILS ZONE', state.ilsRedOn ? 'rgba(220,38,38,0.92)' : 'rgba(37,99,235,0.86)', '#FFF', 1);
     }
 
     // Pilot Glass-Cockpit HUD

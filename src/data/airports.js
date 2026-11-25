@@ -554,9 +554,11 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
     const ilsRedOn = Boolean(opts.ilsRedOn);
     const blastActive = Boolean(opts.blastActive);
 
-    // 0. Đường vành đai sân bay (場周道路: z = -138..-120, 40 km/h) & Khu hạn chế ILS
-    if (z <= -120 && z >= -138 && x >= -165 && x <= 165) {
-      const inIls = x >= -135 && x <= -85;
+    // 0. Đường vành đai sân bay 3 mặt (場周道路: Tây z=-150..-134, Nam x=-274..-254, Bắc x=254..274, 40 km/h) & Khu hạn chế ILS
+    const onWestPerim = z <= -134 && z >= -152 && x >= -274 && x <= 274;
+    const onSidePerim = (x <= -254 && x >= -274 || x >= 254 && x <= 274) && z >= -152 && z <= 115;
+    if (onWestPerim || onSidePerim) {
+      const inIls = onWestPerim && ((x >= -145 && x <= -85) || (x >= 85 && x <= 145));
       if (inIls && ilsRedOn) {
         return {
           zone: 'ILS_RESTRICTED',
@@ -579,13 +581,13 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
         speeding,
         penalty: speeding ? 5 : 0,
         ja: speeding ? `場周道路 速度超過（制限${lim}km/h！）` : `場周道路（制限${lim}km/h${inIls ? '・ILS駐停車禁止50m区間' : ''}）`,
-        vi: speeding ? `Quá tốc độ Đường vành đai (Tối đa ${lim} km/h!)` : `Đường vành đai 場周道路 (Tối đa ${lim} km/h${inIls ? ' · Đoạn ILS cấm dừng đỗ' : ''})`,
+        vi: speeding ? `Quá tốc độ Đường vành đai (Tối đa ${lim} km/h!)` : `Đường vành đai sân bay (Tối đa ${lim} km/h${inIls ? ' · Đoạn ILS cấm dừng đỗ' : ''})`,
         en: speeding ? `Perimeter Road Speeding (Max ${lim} km/h!)` : `Airport Perimeter Road (Max ${lim} km/h${inIls ? ' · ILS No-Stopping Zone' : ''})`
       };
     }
 
-    // 1. Đường băng & Dải hạ cánh (滑走路・着陸帯等: z <= -72)
-    if (z <= -72) {
+    // 1. Đường băng & Dải hạ cánh (滑走路・着陸帯等: z <= -78)
+    if (z <= -78) {
       return {
         zone: 'RUNWAY',
         allowed: false,
@@ -593,13 +595,14 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
         speedLimit: 0,
         penalty: 30,
         ja: '滑走路・着陸帯等（管制許可なき進入厳禁！滑走路誤進入）',
-        vi: 'Đường băng / Dải hạ cánh 着陸帯等 (CẤM TUYỆT ĐỐI khi chưa có phép ATC!)',
+        vi: 'Đường băng / Dải hạ cánh (CẤM TUYỆT ĐỐI khi chưa có phép ATC!)',
         en: 'Active Runway / Landing Strip (Runway Incursion — ATC Clearance Mandatory!)'
       };
     }
 
-    // 1b. Service Lane cắt ngang Đường lăn (x = -38..-24, z = -72..-42)
-    if (x >= -38 && x <= -24 && z > -72 && z < -42) {
+    // 1b. 3 tuyến Service Lane cắt ngang Đường lăn (x = -31, -155, +118; z = -70..-42)
+    const inSrvLane = (z > -70 && z < -42) && ((x >= -38 && x <= -24) || (x >= -162 && x <= -148) || (x >= 111 && x <= 125));
+    if (inSrvLane) {
       const lim = towingCarts ? 15 : 30;
       const speeding = speedKmh > lim + 1.5;
       return {
@@ -629,8 +632,10 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
       };
     }
 
-    // 2b. Khu vực cảnh báo luồng phản lực T2 (#71 / #77 Blast Caution Zone)
-    if (x >= -130 && x <= -104 && z >= -26 && z <= -8) {
+    // 2b. 2 Khu vực cảnh báo luồng phản lực T2 (#71 tại -117,-17 và #77 tại -228,52)
+    const inBlast71 = x >= -130 && x <= -104 && z >= -26 && z <= -8;
+    const inBlast77 = x >= -241 && x <= -215 && z >= 43 && z <= 61;
+    if (inBlast71 || inBlast77) {
       if (blastActive) {
         return {
           zone: 'BLAST_CAUTION_ACTIVE',

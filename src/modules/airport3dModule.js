@@ -373,8 +373,8 @@ function stepPhysics(dt, now) {
     if (a3d.keys.left) v.heading -= 1.95 * dt * dir;
     if (a3d.keys.right) v.heading += 1.95 * dt * dir;
   }
-  const nx = Math.max(-154, Math.min(154, v.x + Math.cos(v.heading) * v.speed * dt));
-  const nz = Math.max(-135, Math.min(96, v.z + Math.sin(v.heading) * v.speed * dt));
+  const nx = Math.max(-270, Math.min(270, v.x + Math.cos(v.heading) * v.speed * dt));
+  const nz = Math.max(-148, Math.min(96, v.z + Math.sin(v.heading) * v.speed * dt));
   const hitObs = A3D_OBSTACLES.some(o => nx >= o.x1 - 2 && nx <= o.x2 + 2 && nz >= o.z1 - 2 && nz <= o.z2 + 2);
   if (hitObs) v.speed = 0; else { v.x = nx; v.z = nz; }
 
@@ -408,6 +408,67 @@ export function stopAirport3dLoop() {
   if (a3d.rafId) { cancelAnimationFrame(a3d.rafId); a3d.rafId = null; }
 }
 
+function drawNgoMinimap() {
+  const c = document.getElementById('a3d-minimap');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width = 230, H = c.height = 145;
+  const mx = wx => ((wx + 290) / 580) * W;
+  const mz = wz => ((wz + 165) / 280) * H;
+  // Sea & Island
+  ctx.fillStyle = '#0B2340'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#1E293B'; ctx.fillRect(mx(-278), mz(-154), (556 / 580) * W, (268 / 280) * H);
+  // Perimeter Road (pink/magenta matching NGO PDF J04!)
+  ctx.strokeStyle = '#EC4899'; ctx.lineWidth = 2.2;
+  ctx.strokeRect(mx(-264), mz(-142), (528 / 580) * W, (240 / 280) * H);
+  // ILS Restricted Zones (blue)
+  ctx.strokeStyle = a3d.ilsRedOn ? '#EF4444' : '#38BDF8'; ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(mx(-142), mz(-142)); ctx.lineTo(mx(-88), mz(-142));
+  ctx.moveTo(mx(88), mz(-142)); ctx.lineTo(mx(142), mz(-142));
+  ctx.stroke();
+  // Runway 36/18 (Red strip matching PDF J08-1)
+  ctx.fillStyle = '#DC2626'; ctx.fillRect(mx(-230), mz(-118), (460 / 580) * W, (28 / 280) * H);
+  // Taxiways A/B/C
+  ctx.fillStyle = '#475569';
+  ctx.fillRect(mx(-230), mz(-78), (460 / 580) * W, 4);
+  ctx.fillRect(mx(-230), mz(-61), (460 / 580) * W, 5);
+  // Apron (Green matching PDF J08-4)
+  ctx.fillStyle = 'rgba(34,197,94,0.28)';
+  ctx.fillRect(mx(-245), mz(-42), (490 / 580) * W, (116 / 280) * H);
+  // Red ABL Boundary
+  ctx.strokeStyle = '#EF4444'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(mx(-245), mz(-42)); ctx.lineTo(mx(245), mz(-42)); ctx.stroke();
+  // 3 Service Lanes (dashed white)
+  ctx.strokeStyle = '#F8FAFC'; ctx.lineWidth = 2; ctx.setLineDash([2, 2]);
+  [-155, -31, 118].forEach(sx => {
+    ctx.beginPath(); ctx.moveTo(mx(sx), mz(-68)); ctx.lineTo(mx(sx), mz(-40)); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  // T1 + Center Pier + T2 + Cargo
+  ctx.fillStyle = '#38BDF8';
+  ctx.fillRect(mx(-98), mz(66), (146 / 580) * W, (24 / 280) * H);
+  ctx.fillRect(mx(-218), mz(64), (62 / 580) * W, (18 / 280) * H);
+  ctx.fillStyle = '#94A3B8';
+  ctx.fillRect(mx(162), mz(66), (52 / 580) * W, (20 / 280) * H);
+  // Blast Caution Zones (#71 / #77 yellow)
+  ctx.fillStyle = '#FACC15';
+  ctx.fillRect(mx(-128), mz(-24), 10, 8);
+  ctx.fillRect(mx(-238), mz(45), 10, 8);
+  // Labels
+  ctx.fillStyle = '#F8FAFC'; ctx.font = '700 8px monospace'; ctx.textAlign = 'center';
+  ctx.fillText('RWY 36/18 (3500m)', mx(0), mz(-101));
+  ctx.fillText('T2 #71-80', mx(-186), mz(95));
+  ctx.fillText('T1 (#1-25)', mx(-25), mz(101));
+  ctx.fillText('CARGO #101+', mx(188), mz(98));
+  ctx.fillStyle = '#F472B6'; ctx.fillText('PERIMETER 40', mx(0), mz(-145));
+  // Live GSE Vehicle Arrow
+  const vx = mx(a3d.veh.x), vz = mz(a3d.veh.z);
+  ctx.fillStyle = '#38BDF8';
+  ctx.beginPath(); ctx.arc(vx, vz, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1.4; ctx.stroke();
+}
+
 export async function startAirport3dLoop() {
   const glCanvas = document.getElementById('airport3d-gl');
   const hudCanvas = document.getElementById('airport3d-hud2d');
@@ -434,7 +495,8 @@ export async function startAirport3dLoop() {
       const dt = a3d.lastFrame ? Math.min(0.05, (now - a3d.lastFrame) / 1000) : 0.016;
       a3d.lastFrame = now;
       stepPhysics(dt, now);
-      scene3d.renderFrame({ ...a3d, wbConseq: wbState.aircraftId === a3d.fleetAircraftId ? wbState.lastConseq : null }, now);
+      scene3d.renderFrame({ ...a3d, lang: appState.lang, wbConseq: wbState.aircraftId === a3d.fleetAircraftId ? wbState.lastConseq : null }, now);
+      drawNgoMinimap();
       a3d.rafId = requestAnimationFrame(loop);
     };
     a3d.rafId = requestAnimationFrame(loop);
@@ -556,6 +618,9 @@ export function renderAirport3dUI() {
           <div class="airport3d-stage ${a3d.expanded ? 'expanded' : ''}" id="a3d-stage-box">
             <canvas id="airport3d-gl"></canvas>
             <canvas id="airport3d-hud2d"></canvas>
+            <div class="a3d-minimap-wrap" title="NGO Centrair Official Tactical Map">
+              <canvas id="a3d-minimap"></canvas>
+            </div>
             <div class="raycast-toast" id="a3d-raycast-toast"></div>
             <div class="hud-top">
               <div class="hud-pill ok" id="a3d-hud-zone">THREE.JS PBR READY</div>

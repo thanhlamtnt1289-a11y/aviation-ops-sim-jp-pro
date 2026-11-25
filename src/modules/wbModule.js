@@ -263,7 +263,7 @@ export function renderWbInputs() {
   const u = appState.unit;
   document.querySelectorAll('.wb-u').forEach(el => { el.textContent = u; });
   document.getElementById('wb-unit-badge').textContent = `Unit: ${u} / m`;
-  document.getElementById('wb-unit-toggle').textContent = `${t('単位', 'Đơn vị')}: ${u.toUpperCase()} ⇄ ${u === 'kg' ? 'LB' : 'KG'}`;
+  document.getElementById('wb-unit-toggle').textContent = `${t('単位', 'Đơn vị', 'Unit')}: ${u.toUpperCase()} ⇄ ${u === 'kg' ? 'LB' : 'KG'}`;
 
   const specBar = document.getElementById('wb-fleet-spec');
   if (specBar) {

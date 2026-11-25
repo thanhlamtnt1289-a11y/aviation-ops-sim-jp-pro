@@ -7,7 +7,7 @@ import { initCommandPalette } from './core/commandPalette.js';
 import { renderDashboard } from './modules/dashboard.js';
 import {
   wbState, initWbModule, selectWbAircraft, loadWbScenario,
-  recalcAndRenderWb, ensureWbSplit3D, stopWbSplit3D
+  renderWbScenarioInfo, renderWbInputs, recalcAndRenderWb, ensureWbSplit3D, stopWbSplit3D
 } from './modules/wbModule.js';
 import {
   a3d, initAirport3dModule, renderAirport3dUI,
@@ -229,13 +229,15 @@ function bootstrap() {
       appState.lang = btn.dataset.lang;
       saveState();
       updateLangToggleUI();
-      // Refresh scenario dropdown language in W&B
+      // Refresh W&B scenario dropdown, scenario card & cabin/hold input labels cleanly
       const scSel = document.getElementById('wb-scenario');
       if (scSel) {
         const cur = wbState.scenarioId;
         scSel.innerHTML = WB_SCENARIOS.map(s => `<option value="${s.id}">${t(s.titleJa, s.titleVi, s.titleEn || `${s.id}: ${s.aircraft} Load Case`)}</option>`).join('');
         scSel.value = cur;
       }
+      renderWbScenarioInfo();
+      renderWbInputs();
       renderActiveModule();
     };
   });
@@ -291,7 +293,7 @@ function bootstrap() {
 
   window.addEventListener('hashchange', applyHashRoute);
   if (!applyHashRoute()) {
-    switchModule(appState.activeModule || 'dashboard', true);
+    switchModule('dashboard', true);
   }
 
   registerPWA();

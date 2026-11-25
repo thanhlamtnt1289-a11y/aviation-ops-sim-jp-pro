@@ -25,35 +25,40 @@
       --danger: #C92A2A;
       --danger-soft: #FDECEC;
 
-      --radius: 8px;
-      --radius-sm: 5px;
-      --shadow-sm: 0 1px 2px rgba(23, 33, 48, 0.05);
-      --sidebar-w: 256px;
-      --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans JP", system-ui, -apple-system, "Segoe UI", sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
+      --surface-2: #F8FAFC;
+      --sidebar-w: 264px;
+      --font-sans: "Be Vietnam Pro", "Noto Sans JP", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    html[lang="ja"] {
+      --font-sans: "Noto Sans JP", "Be Vietnam Pro", "Hiragino Sans", "Yu Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     /* Chế độ Glass-Cockpit Tương lai cho toàn ứng dụng (Dark EFB Mode) */
     body.theme-dark {
-      --bg-canvas: #060D1A;
-      --bg-surface: #0C1729;
-      --bg-subtle: #12223C;
-      --border: #1E3354;
-      --border-strong: #2C4872;
-      --text-primary: #E6F0FA;
-      --text-secondary: #9BB2CC;
-      --text-muted: #6C86A6;
+      --bg-canvas: #070E1C;
+      --bg-surface: #0D182B;
+      --bg-subtle: #14243E;
+      --surface-2: #112038;
+      --border: #1E3456;
+      --border-strong: #2D4A75;
+      --text-primary: #ECF3FC;
+      --text-secondary: #9CB4D0;
+      --text-muted: #708AA9;
       --accent: #38BDF8;
       --accent-hover: #0EA5E9;
       --accent-soft: rgba(56, 189, 248, 0.14);
-      --accent-border: rgba(56, 189, 248, 0.42);
+      --accent-border: rgba(56, 189, 248, 0.45);
       --ok: #34D399;
       --ok-soft: rgba(16, 185, 129, 0.16);
       --warn: #FBBF24;
       --warn-soft: rgba(245, 158, 11, 0.16);
       --danger: #FB7185;
       --danger-soft: rgba(244, 63, 94, 0.18);
-      --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.35);
+      --shadow-sm: 0 6px 20px rgba(0, 0, 0, 0.35);
     }
     body.theme-dark .btn,
     body.theme-dark input,
@@ -190,11 +195,15 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Ngắt dòng tiếng Nhật theo cụm từ, không ngắt giữa từ */
-    .ja, [lang="ja"] {
+    /* Ngắt dòng tiếng Nhật theo cụm từ, không ảnh hưởng tiếng Việt/Anh */
+    html[lang="ja"] .ja {
       word-break: keep-all;
       overflow-wrap: anywhere;
       line-break: strict;
+    }
+    html[lang="vi"] .ja, html[lang="en"] .ja {
+      word-break: normal;
+      overflow-wrap: break-word;
     }
 
     .term-ja {
@@ -1447,3 +1456,336 @@
   transition: opacity 0.25s;
 }
 .raycast-toast.show { opacity: 1; }
+
+/* =========================================================
+   PRO NEXT-GEN EFB LAYOUT & COMPONENT SYSTEM (COMPLETE FIX)
+   ========================================================= */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.08), transparent);
+}
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0284C7, #1E3A8A);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+}
+.nav-scroll {
+  padding: 10px 10px 14px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+  line-height: 1.3;
+}
+.nav-btn > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border);
+}
+.nav-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent);
+  font-weight: 700;
+}
+.nav-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 5px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.nav-btn.active .nav-code {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #061326;
+}
+.nav-btn.active .nav-badge {
+  background: var(--accent);
+  color: #061326;
+  font-weight: 700;
+}
+
+/* Main Content Offset — NEVER occluded by fixed sidebar */
+.main-area {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 20px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  min-height: 56px;
+}
+.topbar-title {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.mobile-menu-btn {
+  display: none;
+}
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  gap: 2px;
+}
+.lang-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+  white-space: nowrap;
+}
+.lang-btn:hover {
+  color: var(--text-primary);
+  background: rgba(148, 163, 184, 0.14);
+}
+.lang-btn.active {
+  background: var(--accent);
+  color: #061326;
+  font-weight: 700;
+}
+body:not(.theme-dark) .lang-btn.active {
+  color: #FFFFFF;
+}
+
+.content {
+  padding: 18px 22px 28px;
+  flex: 1;
+  min-width: 0;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Segmented Tabs (Module C / F) */
+.seg-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+}
+.seg-tab {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 13px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.14s;
+}
+.seg-tab:hover {
+  color: var(--text-primary);
+  background: rgba(148, 163, 184, 0.12);
+}
+.seg-tab.active {
+  background: var(--accent);
+  color: #061326;
+  font-weight: 700;
+}
+body:not(.theme-dark) .seg-tab.active {
+  color: #FFFFFF;
+}
+
+/* Dashboard Hero Grid — never collapses Readiness KPI */
+.dash-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+}
+@media (max-width: 980px) {
+  .dash-hero { grid-template-columns: 1fr; }
+}
+
+/* W&B Split-Screen 3D Box & Pulse Strip */
+.wb-split-3d {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--accent-border);
+  background: #06101F;
+  box-shadow: var(--shadow-sm);
+}
+.wb-split-3d-label {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 6;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(6, 16, 31, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #7DD3FC;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
+}
+.efb-pulse-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+.wb-u { font-family: var(--font-mono); }
+
+/* Quiz Visual Box & Tables */
+.quiz-visual-box {
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.data-table th, .data-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+/* 3D Avionics Deck & Responsive Mobile Drawer */
+.a3d-deck {
+  grid-template-columns: minmax(220px, 1.15fr) minmax(240px, 1.3fr) minmax(190px, 0.95fr);
+}
+.airport3d-stage #airport3d-gl,
+.airport3d-stage #airport3d-hud2d {
+  height: 500px;
+}
+.a3d-minimap-wrap {
+  position: absolute;
+  left: 12px;
+  bottom: 50px;
+  z-index: 9;
+  width: 230px;
+  height: 145px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1.5px solid rgba(56, 189, 248, 0.55);
+  background: rgba(6, 14, 28, 0.88);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+.a3d-minimap-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .main-area {
+    margin-left: 0;
+  }
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
+  .content {
+    padding: 14px 14px 24px;
+  }
+}
+
