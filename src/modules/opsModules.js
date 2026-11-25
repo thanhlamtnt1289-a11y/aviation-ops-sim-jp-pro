@@ -1,17 +1,23 @@
-// Modules A (Turnaround), B (Passenger), C (Cargo & DGR), E (Safety & SMS)
+// Modules A (Turnaround + Live Real-Geo 3D Engine), B (Passenger), C (Cargo & DGR), E (Safety & SMS)
 import {
   JP_AIRPORTS, TA_STEPS, TA_EVENTS,
   PAX_SCENARIOS,
   ULD_CATALOG, EXPORT_STEPS, IMPORT_STEPS, DGR_CASES, renderDgrSvg,
   SAFETY_CHECKLIST_GROUPS
 } from '../data/airports.js';
+import { AIRPORT_GEO_DATA } from '../data/airport_geo_data.js';
+import { AIRCRAFT_3D_SPECS, AIRLINE_LIVERIES } from '../three3d/aircraft_3d_models.js';
 import { appState, saveState, updateProgressBadges, t, bi } from '../core/state.js';
 
 // ============================================================
-// MODULE A: TURNAROUND SIMULATOR (On-block → Off-block)
+// MODULE A: TURNAROUND SIMULATOR + REAL-GEO 3D AIRPORT ENGINE
 // ============================================================
-const taState = {
+export const taState = {
   airport: 'NGO',
+  spotId: 'S07',
+  aircraftType: 'B789',
+  liveryId: appState.livery || 'ANA',
+  cameraPreset: 'spot', // 'overview' | 'tower' | 'spot'
   done: [],
   elapsedMin: 0,
   safetyScore: 100,
@@ -20,104 +26,304 @@ const taState = {
   logs: []
 };
 
+let taScene3d = null;
+let taOpenWbCb = null;
+
+export function setTurnaroundNavCallback(cb) {
+  taOpenWbCb = cb;
+}
+
+export function stopTurnaround3D() {
+  if (taScene3d) taScene3d.stop();
+}
+
+async function ensureTurnaround3D() {
+  const canvas = document.getElementById('ta-3d-canvas');
+  if (!canvas) return;
+  if (!taScene3d || taScene3d.canvas !== canvas) {
+    if (taScene3d) taScene3d.dispose();
+    try {
+      const { TurnaroundScene3D } = await import('../three3d/TurnaroundScene3D.js');
+      taScene3d = new TurnaroundScene3D(canvas, {
+        airportCode: taState.airport,
+        spotId: taState.spotId,
+        aircraftType: taState.aircraftType,
+        liveryId: taState.liveryId
+      });
+      taScene3d.setCameraPreset(taState.cameraPreset, true);
+      taScene3d.syncTurnaroundSteps(taState.done);
+      taScene3d.start();
+    } catch (err) {
+      const overlay = document.getElementById('ta-3d-status');
+      if (overlay) overlay.textContent = `3D Standby: ${err.message}`;
+    }
+  } else {
+    if (taScene3d.airportCode !== taState.airport) {
+      taScene3d.loadAirport(taState.airport, taState.spotId);
+    } else if (taScene3d.spotId !== taState.spotId) {
+      taScene3d.setSpot(taState.spotId);
+    }
+    if (taScene3d.aircraftType !== taState.aircraftType || taScene3d.liveryId !== taState.liveryId) {
+      taScene3d.setAircraftAndLivery(taState.aircraftType, taState.liveryId);
+    }
+    taScene3d.syncTurnaroundSteps(taState.done);
+    taScene3d.start();
+  }
+}
+
 function resetTurnaround(airportCode) {
-  if (airportCode) taState.airport = airportCode;
+  if (airportCode && AIRPORT_GEO_DATA[airportCode]) {
+    taState.airport = airportCode;
+    taState.spotId = AIRPORT_GEO_DATA[airportCode].spots[0].id;
+  }
   taState.done = [];
   taState.elapsedMin = 0;
   taState.safetyScore = 100;
   taState.activeEvent = null;
   taState.eventResolved = {};
   taState.logs = [];
-  renderTurnaroundModule();
+  if (taScene3d) {
+    if (airportCode) taScene3d.loadAirport(taState.airport, taState.spotId);
+    taScene3d.syncTurnaroundSteps([]);
+    taScene3d.setCameraPreset(taState.cameraPreset, false);
+  }
+  renderTurnaroundControlsAndChecklist();
 }
 
-export function renderTurnaroundModule() {
+function renderTurnaroundShell(mount) {
+  if (mount.querySelector('#ta-3d-canvas')) return;
+  mount.innerHTML = `
+    <div id="ta-top-bar"></div>
+    <div class="card ta-3d-card" style="margin-bottom:14px;padding:12px;">
+      <div id="ta-3d-controls"></div>
+      <div class="ta-3d-stage">
+        <canvas id="ta-3d-canvas"></canvas>
+        <div class="ta-3d-hud-top">
+          <span class="ta-hud-pill" id="ta-3d-status">✈ 3D GEO ENGINE LIVE</span>
+          <span class="ta-hud-pill" id="ta-3d-hint">🖱 Drag: Orbit · Wheel: Zoom · Shift+Drag: Pan</span>
+        </div>
+        <div class="ta-cam-bar" id="ta-cam-bar"></div>
+      </div>
+      <div id="ta-attach-strip" class="ta-attach-strip"></div>
+    </div>
+    <div id="ta-body-mount"></div>
+  `;
+}
+
+function renderTurnaroundControlsAndChecklist() {
   const mount = document.getElementById('turnaround-mount');
   if (!mount) return;
+  renderTurnaroundShell(mount);
+
   const ap = JP_AIRPORTS[taState.airport] || JP_AIRPORTS.NGO;
+  const geo = AIRPORT_GEO_DATA[taState.airport] || AIRPORT_GEO_DATA.NGO;
+  const spec = AIRCRAFT_3D_SPECS[taState.aircraftType] || AIRCRAFT_3D_SPECS.B789;
+  const liv = AIRLINE_LIVERIES[taState.liveryId] || AIRLINE_LIVERIES.ANA;
   const finished = taState.done.length === TA_STEPS.length;
   const delayMin = Math.max(0, taState.elapsedMin - ap.targetMin);
 
-  mount.innerHTML = `
-    <div class="card" style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-        <div>
-          <div style="font-size:12px;color:var(--text-muted);">${t('空港選択（5大拠点）', 'Chọn sân bay Nhật Bản (5 sân bay lớn)')}</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
-            ${Object.values(JP_AIRPORTS).map(a => `
-              <button class="btn btn-sm ${taState.airport === a.code ? 'btn-primary' : ''}" data-ta-ap="${a.code}">${a.code} (${a.targetMin}m)</button>
+  // 1. Airport Selector + Timer Bar
+  const topBar = document.getElementById('ta-top-bar');
+  if (topBar) {
+    topBar.innerHTML = `
+      <div class="card" style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="font-size:12px;color:var(--text-muted);">${t('空港選択（5大拠点・実測WGS84 3D同期）', 'Chọn sân bay Nhật Bản (5 sân bay thực tế · Đồng bộ 3D WGS84)', 'Select Japanese Airport (5 Real WGS84 3D Airports)')}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+              ${Object.values(JP_AIRPORTS).map(a => `
+                <button class="btn btn-sm ${taState.airport === a.code ? 'btn-primary' : ''}" data-ta-ap="${a.code}">${a.code} (${a.targetMin}m)</button>
+              `).join('')}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="badge badge-accent">⏱ ${taState.elapsedMin} / ${ap.targetMin} min</span>
+            <span class="badge ${taState.safetyScore >= 85 ? 'badge-ok' : 'badge-danger'}">🛡 Safety ${taState.safetyScore}pt</span>
+            <button class="btn btn-sm" id="ta-sync-wb">⚖ ${t('W&Bへ同期', 'Mở W&B tàu bay này', 'Sync to W&B')}</button>
+            <button class="btn btn-sm" id="ta-reset">↺ ${t('リセット', 'Làm lại', 'Reset')}</button>
+          </div>
+        </div>
+        <div class="alert alert-info" style="margin-top:10px;margin-bottom:0;font-size:12.5px;">
+          <strong class="ja">${bi(geo.nameJa, geo.nameVi, geo.nameEn)}</strong> ·
+          <span style="font-family:var(--font-mono);font-size:11.5px;">RWY ${geo.runways.map(r => `${r.label} (${r.lengthM}m)`).join(' · ')} · Elev ${geo.origin.alt}m</span><br/>
+          <span class="ja">${t(ap.ruleJa, ap.ruleVi, geo.regionEn)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // 2. 3D Aircraft + Livery + Spot Toolbar
+  const ctrlEl = document.getElementById('ta-3d-controls');
+  if (ctrlEl) {
+    ctrlEl.innerHTML = `
+      <div class="ta-3d-toolbar">
+        <div class="ta-tool-grp">
+          <span class="ta-tool-lbl">${t('機種 (3D実寸)', 'Tàu bay (Tỷ lệ thật)', 'Aircraft (1:1m)')}</span>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            ${Object.values(AIRCRAFT_3D_SPECS).map(ac => `
+              <button class="btn btn-sm ${taState.aircraftType === ac.id ? 'btn-primary' : ''}" data-ta-ac="${ac.id}">${ac.shortName}</button>
             `).join('')}
           </div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <span class="badge badge-accent">⏱ ${taState.elapsedMin} / ${ap.targetMin} min</span>
-          <span class="badge ${taState.safetyScore >= 85 ? 'badge-ok' : 'badge-danger'}">🛡 Safety ${taState.safetyScore}pt</span>
-          <button class="btn btn-sm" id="ta-reset">↺ ${t('リセット', 'Làm lại')}</button>
+        <div class="ta-tool-grp">
+          <span class="ta-tool-lbl">${t('航空会社塗装', 'Màu sơn hãng (Livery)', 'Airline Livery')}</span>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            ${Object.values(AIRLINE_LIVERIES).map(l => `
+              <button class="btn btn-sm ${taState.liveryId === l.id ? 'btn-primary' : ''}" data-ta-liv="${l.id}" style="${taState.liveryId === l.id ? `background:${l.badgeColor};border-color:${l.badgeColor};color:#fff;` : ''}">${l.shortName}</button>
+            `).join('')}
+          </div>
+        </div>
+        <div class="ta-tool-grp">
+          <span class="ta-tool-lbl">${t('駐機スポット', 'Vị trí đỗ (Spot)', 'Gate / Spot')}</span>
+          <select id="ta-spot-sel" style="min-width:170px;height:30px;font-size:12px;">
+            ${geo.spots.map(s => `<option value="${s.id}" ${s.id === taState.spotId ? 'selected' : ''}>${s.label}</option>`).join('')}
+          </select>
         </div>
       </div>
-      <div class="alert alert-info" style="margin-top:10px;margin-bottom:0;font-size:12.5px;">
-        <strong class="ja">${bi(ap.nameJa, ap.nameVi)}</strong><br/>
-        <span class="ja">${t(ap.ruleJa, ap.ruleVi)}</span>
-      </div>
-    </div>
+    `;
+  }
 
-    ${taState.activeEvent ? `
-      <div class="card" style="margin-bottom:14px;border:2px solid var(--warn);">
-        <div class="card-title"><span class="ja">⚡ ${bi(taState.activeEvent.titleJa, taState.activeEvent.titleVi)}</span><span class="badge badge-warn">ABNORMAL EVENT</span></div>
-        <p class="ja" style="font-size:13px;margin-top:0;">${t(taState.activeEvent.descJa, taState.activeEvent.descVi)}</p>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          ${taState.activeEvent.options.map((ch, idx) => `
-            <button class="btn" data-ta-ev="${idx}" style="justify-content:flex-start;text-align:left;height:auto;padding:10px 12px;">
-              <span class="ja">${bi(ch.ja, ch.vi)}</span>
-            </button>
-          `).join('')}
+  // 3. Camera Presets Overlay inside 3D Viewport
+  const camBar = document.getElementById('ta-cam-bar');
+  if (camBar) {
+    const presets = [
+      { id: 'overview', icon: '🌐', ja: '空港全体 (Overview)', vi: 'Toàn cảnh sân bay (Overview)', en: 'Airport Overview' },
+      { id: 'tower', icon: '🗼', ja: '管制塔視点 (ATC Tower)', vi: 'Tháp không lưu (ATC Tower)', en: 'ATC Tower View' },
+      { id: 'spot', icon: '✈', ja: 'スポット近接 (Apron)', vi: 'Cận cảnh sân đỗ (Apron/Spot)', en: 'Apron / Spot View' }
+    ];
+    camBar.innerHTML = presets.map(p => `
+      <button class="btn btn-sm ${taState.cameraPreset === p.id ? 'btn-primary' : ''}" data-ta-cam="${p.id}">
+        ${p.icon} ${t(p.ja, p.vi, p.en)}
+      </button>
+    `).join('');
+  }
+
+  const statusEl = document.getElementById('ta-3d-status');
+  if (statusEl) {
+    statusEl.textContent = `✈ ${geo.code} (${geo.icao}) · ${taState.spotId} · ${spec.shortName} [${liv.shortName}] · ${spec.lengthM}m × ${spec.wingspanM}m`;
+  }
+
+  // 4. Exact GSE Attach Points Telemetry Strip (proves zero clipping & exact meter coordinates!)
+  const attEl = document.getElementById('ta-attach-strip');
+  if (attEl) {
+    const apPts = spec.attachPoints;
+    const loaderTag = spec.gseCargoType === 'highloader'
+      ? t('ハイリフトローダー (LD3/ULD)', 'Xe nâng High-Loader (Container LD3)', 'High-Lift Loader (LD3)')
+      : t('ベルトローダー (Bulk)', 'Xe băng chuyền Belt Loader', 'Belt Loader (Bulk)');
+    attEl.innerHTML = `
+      <span><strong>${t('GSE接続座標 (機首基準)', 'Tọa độ GSE Attach Points (từ mũi tàu bay)', 'GSE Attach Points (from Nose)')}:</strong></span>
+      <span class="badge badge-neutral">L1: ${apPts.doorL1.metersFromNose}m (H:${apPts.doorL1.y}m)</span>
+      <span class="badge badge-neutral">Cargo Fwd/Aft: ${apPts.cargoFwd.metersFromNose}m / ${apPts.cargoAft.metersFromNose}m</span>
+      <span class="badge badge-neutral">Fuel: ${apPts.fuelPort.metersFromNose}m</span>
+      <span class="badge badge-neutral">Nose Gear: ${apPts.noseGear.metersFromNose}m</span>
+      <span class="badge badge-accent">${loaderTag}</span>
+    `;
+  }
+
+  // 5. Turnaround Event + 12-Step Checklist + Log
+  const body = document.getElementById('ta-body-mount');
+  if (body) {
+    body.innerHTML = `
+      ${taState.activeEvent ? `
+        <div class="card" style="margin-bottom:14px;border:2px solid var(--warn);">
+          <div class="card-title"><span class="ja">⚡ ${bi(taState.activeEvent.titleJa, taState.activeEvent.titleVi)}</span><span class="badge badge-warn">ABNORMAL EVENT</span></div>
+          <p class="ja" style="font-size:13px;margin-top:0;">${t(taState.activeEvent.descJa, taState.activeEvent.descVi)}</p>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${taState.activeEvent.options.map((ch, idx) => `
+              <button class="btn" data-ta-ev="${idx}" style="justify-content:flex-start;text-align:left;height:auto;padding:10px 12px;">
+                <span class="ja">${bi(ch.ja, ch.vi)}</span>
+              </button>
+            `).join('')}
+          </div>
         </div>
-      </div>
-    ` : ''}
+      ` : ''}
 
-    ${finished ? `
-      <div class="alert ${taState.safetyScore >= 80 && delayMin <= 5 ? 'alert-ok' : 'alert-warn'}" style="margin-bottom:14px;">
-        <strong>🏁 OFF-BLOCK COMPLETE!</strong>
-        ${t(`総時間: ${taState.elapsedMin}分（遅延 ${delayMin}分） / 安全スコア: ${taState.safetyScore}点`,
-            `Tổng thời gian: ${taState.elapsedMin} phút (Trễ ${delayMin} phút) / Điểm an toàn: ${taState.safetyScore}đ`)}
-      </div>
-    ` : ''}
+      ${finished ? `
+        <div class="alert ${taState.safetyScore >= 80 && delayMin <= 5 ? 'alert-ok' : 'alert-warn'}" style="margin-bottom:14px;">
+          <strong>🏁 OFF-BLOCK COMPLETE!</strong>
+          ${t(`総時間: ${taState.elapsedMin}分（遅延 ${delayMin}分） / 安全スコア: ${taState.safetyScore}点`,
+              `Tổng thời gian: ${taState.elapsedMin} phút (Trễ ${delayMin} phút) / Điểm an toàn: ${taState.safetyScore}đ`,
+              `Total time: ${taState.elapsedMin} min (Delay ${delayMin} min) / Safety Score: ${taState.safetyScore}pt`)}
+        </div>
+      ` : ''}
 
-    <div class="workspace-grid">
-      <div class="card">
-        <div class="card-title"><span class="ja">${t('12ステップ ターンアラウンド手順（依存関係順）', '12 bước Turnaround (Phải đúng trình tự an toàn)')}</span><span class="badge badge-neutral">${taState.done.length}/${TA_STEPS.length}</span></div>
-        <div style="display:flex;flex-direction:column;gap:7px;">
-          ${TA_STEPS.map((st, idx) => {
-            const isDone = taState.done.includes(st.id);
-            const missingReqs = st.req.filter(r => !taState.done.includes(r));
-            const ready = !isDone && missingReqs.length === 0;
-            return `
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid ${isDone ? 'var(--ok)' : (ready ? 'var(--accent)' : 'var(--border)')};background:${isDone ? 'var(--ok-soft)' : 'var(--surface-2)'};">
-                <div>
-                  <div class="ja" style="font-size:13px;font-weight:700;">${idx + 1}. ${t(st.ja, st.vi)} <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">(${st.duration}m)</span></div>
-                  <div class="ja" style="font-size:11.5px;color:var(--text-secondary);">${t(st.detailJa, st.detailVi)}</div>
+      <div class="workspace-grid">
+        <div class="card">
+          <div class="card-title">
+            <span class="ja">${t('12ステップ ターンアラウンド手順（3D GSE自動出動）', '12 bước Turnaround (Xe GSE tự động di chuyển trên sân 3D)', '12-Step Turnaround (Auto-Dispatches 3D GSE on Service Road)')}</span>
+            <span class="badge badge-neutral">${taState.done.length}/${TA_STEPS.length}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            ${TA_STEPS.map((st, idx) => {
+              const isDone = taState.done.includes(st.id);
+              const missingReqs = st.req.filter(r => !taState.done.includes(r));
+              const ready = !isDone && missingReqs.length === 0;
+              return `
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid ${isDone ? 'var(--ok)' : (ready ? 'var(--accent)' : 'var(--border)')};background:${isDone ? 'var(--ok-soft)' : 'var(--surface-2)'};">
+                  <div>
+                    <div class="ja" style="font-size:13px;font-weight:700;">${idx + 1}. ${t(st.ja, st.vi)} <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">(${st.duration}m)</span></div>
+                    <div class="ja" style="font-size:11.5px;color:var(--text-secondary);">${t(st.detailJa, st.detailVi)}</div>
+                  </div>
+                  <button class="btn btn-sm ${isDone ? '' : (ready ? 'btn-primary' : '')}" data-ta-step="${st.id}" ${isDone || taState.activeEvent ? 'disabled' : ''}>
+                    ${isDone ? '✓ DONE' : t('実行', 'Thực hiện', 'Execute')}
+                  </button>
                 </div>
-                <button class="btn btn-sm ${isDone ? '' : (ready ? 'btn-primary' : '')}" data-ta-step="${st.id}" ${isDone || taState.activeEvent ? 'disabled' : ''}>
-                  ${isDone ? '✓ DONE' : t('実行', 'Thực hiện')}
-                </button>
-              </div>
-            `;
-          }).join('')}
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="ja">${t('運用ログ（安全違反・GSE出動・遅延履歴）', 'Nhật ký vận hành, GSE 3D & An toàn', 'Operations, 3D GSE & Safety Log')}</span></div>
+          <div style="display:flex;flex-direction:column;gap:6px;max-height:540px;overflow-y:auto;">
+            ${taState.logs.length === 0
+              ? `<div style="font-size:12.5px;color:var(--text-muted);">${t('ステップ1「駐機誘導」から開始すると、3D画面上でGSE車両がサービスロードを通って自動接近します。', 'Bắt đầu từ bước 1 (Marshalling) — các xe GSE trên sân đỗ 3D sẽ tự động chạy theo đường dịch vụ tới đúng vị trí quanh tàu bay.', 'Start from Step 1 (Marshalling) to watch GSE vehicles drive along the 3D service road to exact aircraft attach points.')}</div>`
+              : taState.logs.map(l => `<div class="alert alert-${l.type}" style="margin:0;padding:7px 10px;font-size:12px;">${l.msg}</div>`).join('')}
+          </div>
         </div>
       </div>
+    `;
+  }
 
-      <div class="card">
-        <div class="card-title"><span class="ja">${t('運用ログ（安全違反・遅延履歴）', 'Nhật ký vận hành & An toàn')}</span></div>
-        <div style="display:flex;flex-direction:column;gap:6px;max-height:540px;overflow-y:auto;">
-          ${taState.logs.length === 0
-            ? `<div style="font-size:12.5px;color:var(--text-muted);">${t('ステップ1「駐機誘導」から開始してください。', 'Bắt đầu từ bước 1 (Marshalling) để ghi nhận nhật ký.')}</div>`
-            : taState.logs.map(l => `<div class="alert alert-${l.type}" style="margin:0;padding:7px 10px;font-size:12px;">${l.msg}</div>`).join('')}
-        </div>
-      </div>
-    </div>
-  `;
-
+  // Bind Listeners
   mount.querySelectorAll('[data-ta-ap]').forEach(b => { b.onclick = () => resetTurnaround(b.dataset.taAp); });
+  mount.querySelectorAll('[data-ta-ac]').forEach(b => {
+    b.onclick = () => {
+      taState.aircraftType = b.dataset.taAc;
+      if (taScene3d) taScene3d.setAircraftAndLivery(taState.aircraftType, taState.liveryId);
+      renderTurnaroundControlsAndChecklist();
+    };
+  });
+  mount.querySelectorAll('[data-ta-liv]').forEach(b => {
+    b.onclick = () => {
+      taState.liveryId = b.dataset.taLiv;
+      appState.livery = taState.liveryId;
+      saveState();
+      if (taScene3d) taScene3d.setAircraftAndLivery(taState.aircraftType, taState.liveryId);
+      renderTurnaroundControlsAndChecklist();
+    };
+  });
+  mount.querySelectorAll('[data-ta-cam]').forEach(b => {
+    b.onclick = () => {
+      taState.cameraPreset = b.dataset.taCam;
+      if (taScene3d) taScene3d.setCameraPreset(taState.cameraPreset, false);
+      renderTurnaroundControlsAndChecklist();
+    };
+  });
+  const spotSel = document.getElementById('ta-spot-sel');
+  if (spotSel) {
+    spotSel.onchange = () => {
+      taState.spotId = spotSel.value;
+      if (taScene3d) taScene3d.setSpot(taState.spotId);
+      renderTurnaroundControlsAndChecklist();
+    };
+  }
+  const syncWbBtn = document.getElementById('ta-sync-wb');
+  if (syncWbBtn) {
+    syncWbBtn.onclick = () => {
+      if (taOpenWbCb) taOpenWbCb(spec.wbId || 'B789', taState.airport, taState.liveryId);
+    };
+  }
   const rBtn = document.getElementById('ta-reset');
   if (rBtn) rBtn.onclick = () => resetTurnaround();
 
@@ -133,7 +339,7 @@ export function renderTurnaroundModule() {
       });
       taState.eventResolved[ev.id] = true;
       taState.activeEvent = null;
-      renderTurnaroundModule();
+      renderTurnaroundControlsAndChecklist();
     };
   });
 
@@ -148,12 +354,13 @@ export function renderTurnaroundModule() {
           type: 'danger',
           msg: `⚠ ${t('手順違反 (-15pt): 先に必要工程を完了してください → ', 'Vi phạm quy trình (-15đ): Phải hoàn thành bước trước → ')}${missing.join(', ')}`
         });
-        renderTurnaroundModule();
+        renderTurnaroundControlsAndChecklist();
         return;
       }
       taState.done.push(st.id);
       taState.elapsedMin += st.duration;
       taState.logs.unshift({ type: 'ok', msg: `✓ ${t(st.ja, st.vi)} (+${st.duration}m)` });
+      if (taScene3d) taScene3d.syncTurnaroundSteps(taState.done);
 
       if ((taState.done.length === 5 || taState.done.length === 9) && TA_EVENTS.length > 0) {
         const pending = TA_EVENTS.filter(ev => !taState.eventResolved[ev.id]);
@@ -170,9 +377,14 @@ export function renderTurnaroundModule() {
           updateProgressBadges();
         }
       }
-      renderTurnaroundModule();
+      renderTurnaroundControlsAndChecklist();
     };
   });
+}
+
+export function renderTurnaroundModule() {
+  renderTurnaroundControlsAndChecklist();
+  ensureTurnaround3D();
 }
 
 // ============================================================

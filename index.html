@@ -14,12 +14,11 @@
   <link rel="icon" type="image/svg+xml" href="./public/icon.svg" />
   <link rel="apple-touch-icon" href="./public/icon.svg" />
   <link rel="stylesheet" href="./src/styles/app.css" />
-  <!-- Zero-Node ESM Import Map (cached offline by sw.js; overridden by Vite during npm run build) -->
+  <!-- Zero-Node 100% Local Offline Three.js Import Map (Zero external CDN dependency) -->
   <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      "three": "./vendor/three.module.min.js"
     }
   }
   </script>

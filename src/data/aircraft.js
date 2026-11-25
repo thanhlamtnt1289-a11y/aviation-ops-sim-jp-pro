@@ -299,6 +299,51 @@ export const AIRCRAFT_PROFILES = {
         aft: [{ w: 118000, mac: 39.0 }, { w: 165000, mac: 38.0 }, { w: 227930, mac: 35.5 }]
       }
     },
+    B789: {
+      id: 'B789',
+      name: 'Boeing 787-9 Dreamliner (模擬 / Wide-body · 290席 · 62.8m)',
+      category: 'Wide-body',
+      gseType: '2× Wide-Body High-Loader (LD3/PMC) + Bulk Belt',
+      isFreighter: false,
+      dow: 128850,
+      dowArm: 30.80,
+      lemac: 28.90,
+      mac: 6.27,
+      indexRefArm: 30.80,
+      indexDivisor: 5500,
+      indexConstant: 50,
+      mzfw: 181437,
+      mtow: 254011,
+      mlw: 192777,
+      fuelArm: 30.40,
+      maxFuel: 101520,
+      trimStyle: 'boeing',
+      trimRange: { fwdUnits: 7.5, aftUnits: 2.2, optMac: 27.2 },
+      perf: { v1Base: 152, vrBase: 159, v2Base: 168, minRunwayM: 2040, mtowRunwayM: 2920, tailStrikePitchDeg: 10.6, tipMacOffset: 2.7 },
+      visual3d: { isWide: true, isProp: false, isFreighter: false, fuseLen: 50, wingHalf: 25, tailColor: [11, 59, 140], bodyColor: [252, 253, 255], reg: 'JA899A' },
+      paxZones: [
+        { id: 'A', labelJa: '前部 Cクラス (Zone A)', labelVi: 'Khoang trước C (Zone A)', maxPax: 48, arm: 17.20 },
+        { id: 'B', labelJa: '中部 Y1クラス (Zone B)', labelVi: 'Khoang giữa Y1 (Zone B)', maxPax: 118, arm: 30.60 },
+        { id: 'C', labelJa: '後部 Y2クラス (Zone C)', labelVi: 'Khoang sau Y2 (Zone C)', maxPax: 124, arm: 44.20 }
+      ],
+      holds: [
+        { id: 'H1', labelJa: '前部貨物室 (Fwd Hold)', labelVi: 'Hầm trước (前部貨物室)', maxWeight: 19500, arm: 19.60 },
+        { id: 'H3', labelJa: '後部貨物室 (Aft Hold)', labelVi: 'Hầm sau (後部貨物室)', maxWeight: 17500, arm: 41.20 },
+        { id: 'H5', labelJa: 'バルク貨物室 (Bulk Hold)', labelVi: 'Hầm Bulk (バルク室)', maxWeight: 3800, arm: 48.20 }
+      ],
+      uldPositions: [
+        { id: '11L', holdId: 'H1', type: 'AKE', arm: 17.40, maxWeight: 3500 },
+        { id: '12R', holdId: 'H1', type: 'AKE', arm: 19.80, maxWeight: 3500 },
+        { id: '21P', holdId: 'H1', type: 'PMC', arm: 22.80, maxWeight: 4626 },
+        { id: '31L', holdId: 'H3', type: 'AKE', arm: 38.60, maxWeight: 3500 },
+        { id: '32R', holdId: 'H3', type: 'AKE', arm: 41.20, maxWeight: 3500 },
+        { id: '41P', holdId: 'H3', type: 'PMC', arm: 44.00, maxWeight: 4626 }
+      ],
+      envelope: {
+        fwd: [{ w: 128000, mac: 16.0 }, { w: 181437, mac: 18.5 }, { w: 254011, mac: 21.5 }],
+        aft: [{ w: 128000, mac: 39.5 }, { w: 181437, mac: 38.2 }, { w: 254011, mac: 35.8 }]
+      }
+    },
     A359: {
       id: 'A359',
       name: 'Airbus A350-900 (模擬 / Next-Gen Wide-body · 369席)',

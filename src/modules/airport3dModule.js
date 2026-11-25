@@ -658,7 +658,7 @@ export async function startAirport3dLoop() {
       const dt = a3d.lastFrame ? Math.min(0.05, (now - a3d.lastFrame) / 1000) : 0.016;
       a3d.lastFrame = now;
       stepPhysics(dt, now);
-      scene3d.renderFrame({ ...a3d, lang: appState.lang, wbConseq: wbState.aircraftId === a3d.fleetAircraftId ? wbState.lastConseq : null }, now);
+      scene3d.renderFrame({ ...a3d, lang: appState.lang, liveryId: appState.livery || 'ANA', wbConseq: wbState.aircraftId === a3d.fleetAircraftId ? wbState.lastConseq : null }, now);
       drawNgoMinimap();
       a3d.rafId = requestAnimationFrame(loop);
     };

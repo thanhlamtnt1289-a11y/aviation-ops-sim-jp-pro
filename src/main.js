@@ -18,7 +18,8 @@ import {
 } from './modules/fieldDrillsModule.js';
 import { renderQuizModule, openNgoExamMode, stopQuizTimer } from './modules/quizModule.js';
 import {
-  renderTurnaroundModule, renderPaxModule, renderCargoModule, renderSafetyModule
+  taState, renderTurnaroundModule, stopTurnaround3D, setTurnaroundNavCallback,
+  renderPaxModule, renderCargoModule, renderSafetyModule
 } from './modules/opsModules.js';
 import { AIRCRAFT_PROFILES, WB_SCENARIOS } from './data/aircraft.js';
 import { A3D_AIRPORTS } from './data/airports.js';
@@ -111,6 +112,7 @@ export function switchModule(mod, skipHash = false) {
   if (!VALID_MODULES.has(mod)) mod = 'dashboard';
   if (appState.activeModule === 'airport3d' && mod !== 'airport3d') stopAirport3dLoop();
   if (appState.activeModule === 'wb' && mod !== 'wb') stopWbSplit3D();
+  if (appState.activeModule === 'turnaround' && mod !== 'turnaround') stopTurnaround3D();
   if (appState.activeModule === 'quiz' && mod !== 'quiz') stopQuizTimer();
 
   appState.activeModule = mod;
@@ -290,6 +292,20 @@ function bootstrap() {
   initWbModule(navActions);
   initAirport3dModule();
   initCommandPalette(navActions);
+  setTurnaroundNavCallback((wbAcId, airportCode, liveryId) => {
+    if (liveryId) {
+      appState.livery = liveryId;
+      saveState();
+    }
+    if (airportCode) wbState.env.airport = airportCode;
+    wbState.split3dOpen = true;
+    switchModule('wb');
+    if (AIRCRAFT_PROFILES[wbAcId]) selectWbAircraft(wbAcId);
+    const envAp = document.getElementById('wb-env-airport');
+    if (envAp && airportCode) envAp.value = airportCode;
+    recalcAndRenderWb();
+    ensureWbSplit3D();
+  });
 
   window.addEventListener('hashchange', applyHashRoute);
   if (!applyHashRoute()) {

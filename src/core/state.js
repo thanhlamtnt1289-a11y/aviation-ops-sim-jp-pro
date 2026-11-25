@@ -7,6 +7,7 @@ export const DEFAULT_STATE = {
   lang: 'ja', // 'ja' | 'vi' | 'en'
   theme: 'dark',
   unit: 'kg',
+  livery: 'ANA', // 'ANA' | 'JAL' | 'PEACH' | 'JETSTAR'
   activeModule: 'dashboard',
   wbSolved: [],
   taBestScore: null,

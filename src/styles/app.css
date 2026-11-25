@@ -1784,6 +1784,103 @@ body:not(.theme-dark) .seg-tab.active {
   display: block;
 }
 
+/* Turnaround Real-Geo 3D Viewport & Controls */
+.ta-3d-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ta-tool-grp {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ta-tool-lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+.ta-3d-stage {
+  position: relative;
+  width: 100%;
+  height: 410px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0b1628;
+}
+.ta-3d-stage canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+}
+.ta-3d-stage canvas:active {
+  cursor: grabbing;
+}
+.ta-3d-hud-top {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 5;
+}
+.ta-hud-pill {
+  background: rgba(7, 14, 28, 0.78);
+  color: #E2E8F0;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  backdrop-filter: blur(6px);
+}
+.ta-cam-bar {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  z-index: 6;
+}
+.ta-cam-bar .btn {
+  background: rgba(10, 20, 38, 0.84);
+  color: #F8FAFC;
+  border-color: rgba(148, 163, 184, 0.45);
+  backdrop-filter: blur(6px);
+}
+.ta-cam-bar .btn.btn-primary {
+  background: #0284C7;
+  border-color: #38BDF8;
+  color: #FFFFFF;
+}
+.ta-attach-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
 @media (max-width: 1024px) {
   .sidebar {
     transform: translateX(-100%);

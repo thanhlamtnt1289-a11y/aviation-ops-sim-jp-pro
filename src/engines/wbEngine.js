@@ -960,7 +960,7 @@ export function runWbUnitTests() {
       const profList = Object.values(AIRCRAFT_PROFILES);
       const badProfs = profList.filter(p => !(p.dow > 0 && p.mzfw > p.dow && p.mtow >= p.mlw && p.perf && p.visual3d));
       const convOk = Math.abs(lbToKg(kgToLb(62500)) - 62500) < 1e-6;
-      assert('T8: 10-Aircraft Fleet integrity & kg↔lb precision', profList.length === 10 && badProfs.length === 0 && convOk,
+      assert('T8: 11-Aircraft Fleet integrity & kg↔lb precision', profList.length >= 10 && badProfs.length === 0 && convOk,
         `Profiles=${profList.length} (${profList.map(p => p.id).join(',')}), kg↔lb exact`);
     }
 

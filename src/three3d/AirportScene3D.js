@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { AIRCRAFT_PROFILES } from '../data/aircraft.js';
 import { A3D_AIRPORTS, A3D_SPOTS, A3D_CLOUDS, A3D_FLIGHT_PHASES, computeFlightCyclePose, computeViewpointCamera } from '../data/airports.js';
 import { createDetailedAirliner3D } from './aircraftBuilder3D.js';
+import { createProceduralAirliner3D } from './aircraft_3d_models.js';
 import {
   createOpenCabTowingTractor3D,
   createBaggageCart3D,
@@ -352,23 +353,8 @@ export class AirportScene3D {
   }
 
   async initPostProcessing() {
-    if (this.compact) return;
-    try {
-      const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }] = await Promise.all([
-        import('three/addons/postprocessing/EffectComposer.js'),
-        import('three/addons/postprocessing/RenderPass.js'),
-        import('three/addons/postprocessing/UnrealBloomPass.js')
-      ]);
-      if (this.disposed) return;
-      const composer = new EffectComposer(this.renderer);
-      composer.addPass(new RenderPass(this.scene, this.camera));
-      const bloom = new UnrealBloomPass(new THREE.Vector2(800, 560), 0.32, 0.55, 0.86);
-      composer.addPass(bloom);
-      this.composer = composer;
-      this.bloomPass = bloom;
-    } catch {
-      // Graceful fallback to direct renderer (zero crash)
-    }
+    // 100% Offline-first direct ACESFilmic WebGL rendering (zero external CDN addon fetches)
+    return;
   }
 
   createSkyDome() {
@@ -992,12 +978,21 @@ export class AirportScene3D {
     leg.position.set(tipX + 2.2, doorH * 0.5, doorZ);
   }
 
-  setActiveFleetAircraft(acId) {
-    if (this.builtFleetId === acId && this.activeAc) return;
+  setActiveFleetAircraft(acId, liveryId = 'ANA') {
+    const key = `${acId}_${liveryId}`;
+    if (this.builtFleetId === key && this.activeAc) return;
     if (this.activeAc) this.dynamicGroup.remove(this.activeAc);
-    this.builtFleetId = acId;
-    const prof = AIRCRAFT_PROFILES[acId] || AIRCRAFT_PROFILES.A320;
-    this.activeAc = createDetailedAirliner3D(prof.visual3d || {});
+    this.builtFleetId = key;
+    const highDetailIds = new Set(['B789', 'B788', 'B773', 'B77W', 'A321', 'B738']);
+    if (highDetailIds.has(acId)) {
+      this.activeAc = createProceduralAirliner3D(acId, liveryId);
+      // Scale slightly so 62.8m-73.9m true-scale widebodies fit Spot 7 apron proportions cleanly in Module G
+      const s = (acId === 'B773' || acId === 'B77W') ? 0.76 : ((acId === 'B789' || acId === 'B788') ? 0.80 : 0.92);
+      this.activeAc.scale.setScalar(s);
+    } else {
+      const prof = AIRCRAFT_PROFILES[acId] || AIRCRAFT_PROFILES.A320;
+      this.activeAc = createDetailedAirliner3D(prof.visual3d || {});
+    }
     this.activeAc.position.set(0, 0, 10);
     this.dynamicGroup.add(this.activeAc);
   }
@@ -1051,7 +1046,7 @@ export class AirportScene3D {
     if (this.builtAirportId !== state.airportId) {
       this.buildStaticAirport(state.airportId);
     }
-    this.setActiveFleetAircraft(state.fleetAircraftId || 'A320');
+    this.setActiveFleetAircraft(state.fleetAircraftId || 'A320', state.liveryId || 'ANA');
 
     // Time of Day & Weather Lighting + Wet Runway Reflections
     const tod = state.timeOfDay || 'day';

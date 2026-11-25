@@ -70,6 +70,7 @@ export async function ensureWbSplit3D() {
         subtab: 'flight',
         airportId: wbState.env.airport || 'NGO',
         fleetAircraftId: wbState.aircraftId,
+        liveryId: appState.livery || 'ANA',
         weather: wbState.env.surface === 'SNOW' ? 'snow' : (wbState.env.surface === 'WET' ? 'rain' : 'clear'),
         timeOfDay: appState.theme === 'dark' ? 'sunset' : 'day',
         gfxQuality: 'med',
