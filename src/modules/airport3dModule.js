@@ -48,7 +48,10 @@ export const a3d = {
   showZones: true,
   syncWbFailure: true,
   spot101BeaconOn: true,
-  ngoVehMode: 'standard', // 'standard' (30km/h) | 'towing' (6 carts, 15km/h) | 'high38' (>3.8m, no fixed bridge)
+  ngoVehMode: 'standard', // 'standard' (TT 30km/h) | 'towing' (TT + 6 carts 15km/h) | 'high38' (>3.8m)
+  ngoDriveScenario: 'SC1', // 'SC1' (Pushback Hold) | 'SC2' (Service Lane 100m) | 'SC3' (Run-Up 24h & #71 Blast) | 'SC4' (>3.8m + Fire/ILS)
+  ngoScenarioTime: 0,
+  marshallerDemoSignal: null, // null = auto phase | 'm_straight' | 'm_left' | 'm_right' | 'm_slow' | 'm_stop' | 'm_emerg_stop' | 'm_chocks' | 'm_allclear'
   ilsRedOn: true,
   blastActive: false,
   camMode: 'flight_follow',
@@ -66,7 +69,15 @@ export const a3d = {
   flightSpeed: 1,
   handsOn: makeInitialHandsOn(),
   aiTime: 0,
-  veh: { x: -112, z: 28, heading: Math.PI / 2, speed: 0 },
+  veh: { x: -48, z: -38, heading: 0, speed: 0, steerAngle: 0 },
+  vehTrail: [],
+  cartPoses: [],
+  ngoLiveAc: null,
+  spotterAlert: { pushback: false, service: false, blast: false, blastDist: 999 },
+  impactFlash: 0,
+  impactPos: null,
+  camShake: 0,
+  lastSpotterWarnTime: 0,
   cam: { tx: 0, ty: 2, tz: 10, dist: 105, yaw: 0.45, pitch: 0.50 },
   keys: { up: false, down: false, left: false, right: false, brake: false },
   dragging: false,
@@ -361,30 +372,176 @@ function stepPhysics(dt, now) {
     return;
   }
 
-  // GSE Driving Physics
+  // Decay impact flash & camera shake smoothly
+  a3d.impactFlash = Math.max(0, (a3d.impactFlash || 0) - dt * 2.2);
+  a3d.camShake = Math.max(0, (a3d.camShake || 0) - dt * 2.6);
+
+  // Live Chubu Centrair (NGO) Driving Scenarios (Moving Departing / Taxiing Aircraft + Active Spotters!)
+  a3d.ngoScenarioTime = (a3d.ngoScenarioTime || 0) + dt;
+  const st = a3d.ngoScenarioTime;
+  let liveAc = { x: 0, z: 10, heading: Math.PI / 2, beaconOn: false, chocksOn: true, blastOn: false, mode: 'parked' };
+  const sAlert = { pushback: false, service: false, blast: false, blastDist: 999 };
+
+  if (a3d.ngoDriveScenario === 'SC1') {
+    // SC1: Aircraft at Spot 7 activates 6 Pushback/Self-Taxi-Out signs & pushes across Behind-Stand Road (-38)!
+    const cyc = st % 28;
+    if (cyc < 5) {
+      liveAc = { x: 0, z: 10, heading: Math.PI / 2, beaconOn: true, chocksOn: false, blastOn: false, mode: 'pushback' };
+      sAlert.pushback = true;
+    } else if (cyc < 16) {
+      const p = (cyc - 5) / 11;
+      liveAc = { x: 0, z: 10 - p * 54, heading: Math.PI / 2, beaconOn: true, chocksOn: false, blastOn: true, mode: 'pushback' };
+      sAlert.pushback = true;
+    } else if (cyc < 22) {
+      const p = (cyc - 16) / 6;
+      liveAc = { x: p * 75, z: -44 - p * 11, heading: Math.PI / 2 - p * (Math.PI / 2), beaconOn: true, chocksOn: false, blastOn: true, mode: 'pushback' };
+      sAlert.pushback = p < 0.7;
+    } else {
+      // Safe window — Spotter waves CLEAR!
+      liveAc = { x: 110, z: -55, heading: 0, beaconOn: true, chocksOn: false, blastOn: false, mode: 'clear' };
+      sAlert.pushback = false;
+    }
+  } else if (a3d.ngoDriveScenario === 'SC2') {
+    // SC2: Taxiing aircraft crosses Service Lane (-31, -55) — player MUST wait until >=100m clearance!
+    const cyc = st % 24;
+    const tx = -115 + (cyc / 24) * 260;
+    liveAc = { x: tx, z: -55, heading: 0, beaconOn: true, chocksOn: false, blastOn: true, mode: 'taxi_cross' };
+    // Distance behind tail along X when aircraft is heading +X past Service Lane (-31)
+    const distFromLane = tx < -31 ? Math.abs(-31 - tx) : (tx - (-31));
+    const tailDist = tx >= -31 ? Math.round(tx - (-31)) : 0;
+    sAlert.blastDist = tailDist;
+    sAlert.service = (tx > -95 && tx < 70); // Active hold until aircraft is 100m (approx 70 units scaled) past -31!
+  } else if (a3d.ngoDriveScenario === 'SC3') {
+    // SC3: 24h Engine Run-Up at Spot 7 (Anti-collision ON + Chocks STILL IN!) + #71 Blast Active
+    liveAc = { x: 0, z: 10, heading: Math.PI / 2, beaconOn: true, chocksOn: true, blastOn: true, mode: 'runup' };
+    sAlert.pushback = true;
+    sAlert.blast = true;
+  } else {
+    // SC4: High Vehicle >3.8m + ILS Red Lamp + Fire Station Check
+    liveAc = { x: 0, z: 10, heading: Math.PI / 2, beaconOn: false, chocksOn: true, blastOn: false, mode: 'parked' };
+  }
+  a3d.ngoLiveAc = liveAc;
+  a3d.spotterAlert = sAlert;
+
+  // Open-Cab TT Driving & Realistic Steering Physics
   const v = a3d.veh;
-  if (a3d.keys.brake) v.speed = Math.abs(v.speed) < 0.35 ? 0 : v.speed - Math.sign(v.speed) * 18 * dt;
-  else if (a3d.keys.up) v.speed = Math.min(11.2, v.speed + 9.0 * dt);
-  else if (a3d.keys.down) v.speed = Math.max(-4.2, v.speed - 9.0 * dt);
-  else v.speed = Math.abs(v.speed) < 0.15 ? 0 : v.speed - Math.sign(v.speed) * 4.5 * dt;
+  const targetSteer = (a3d.keys.left ? -0.52 : 0) + (a3d.keys.right ? 0.52 : 0);
+  v.steerAngle = (v.steerAngle || 0) + (targetSteer - (v.steerAngle || 0)) * Math.min(1, dt * 11);
+
+  if (a3d.keys.brake) v.speed = Math.abs(v.speed) < 0.35 ? 0 : v.speed - Math.sign(v.speed) * 20 * dt;
+  else if (a3d.keys.up) v.speed = Math.min(12.2, v.speed + 9.2 * dt);
+  else if (a3d.keys.down) v.speed = Math.max(-4.5, v.speed - 9.0 * dt);
+  else v.speed = Math.abs(v.speed) < 0.15 ? 0 : v.speed - Math.sign(v.speed) * 4.8 * dt;
 
   if (Math.abs(v.speed) > 0.12) {
     const dir = v.speed >= 0 ? 1 : -1;
-    if (a3d.keys.left) v.heading -= 1.95 * dt * dir;
-    if (a3d.keys.right) v.heading += 1.95 * dt * dir;
+    v.heading += v.steerAngle * 3.6 * dt * dir * Math.min(1, Math.abs(v.speed) / 3.5);
   }
   const nx = Math.max(-270, Math.min(270, v.x + Math.cos(v.heading) * v.speed * dt));
   const nz = Math.max(-148, Math.min(96, v.z + Math.sin(v.heading) * v.speed * dt));
-  const hitObs = A3D_OBSTACLES.some(o => nx >= o.x1 - 2 && nx <= o.x2 + 2 && nz >= o.z1 - 2 && nz <= o.z2 + 2);
-  if (hitObs) v.speed = 0; else { v.x = nx; v.z = nz; }
+
+  // Expanded Realistic Collision Detection (Buildings, Center Pier, T2, Blast Fence, Parked Aircraft, Live Scenario Aircraft!)
+  const dynamicObs = [
+    ...A3D_OBSTACLES,
+    { x1: 27, x2: 41, z1: 6, z2: 38, name: 'Center Pier' },
+    { x1: -220, x2: -156, z1: 63, z2: 85, name: 'Terminal 2' },
+    { x1: -239.5, x2: -236.5, z1: 21, z2: 43, name: 'Blast Fence' },
+    { x1: -239.5, x2: -236.5, z1: 57, z2: 79, name: 'Blast Fence' },
+    { x1: 162, x2: 214, z1: 66, z2: 90, name: 'Cargo Warehouse' },
+    { x1: -72, x2: -64, z1: -7, z2: 26, name: 'Spot 6 Aircraft' },
+    { x1: 64, x2: 72, z1: -7, z2: 26, name: 'Spot 14 Aircraft' },
+    { x1: liveAc.x - 5.5, x2: liveAc.x + 5.5, z1: liveAc.z - 15, z2: liveAc.z + 15, name: 'Active Aircraft' }
+  ];
+  const pad = 1.65;
+  const hitObj = dynamicObs.find(o => nx >= o.x1 - pad && nx <= o.x2 + pad && nz >= o.z1 - pad && nz <= o.z2 + pad);
+
+  if (hitObj) {
+    const impactKmh = Math.abs(v.speed) * 3.6;
+    // Realistic physical bounce & push-out along shortest penetration axis!
+    const dL = Math.abs(nx - (hitObj.x1 - pad));
+    const dR = Math.abs((hitObj.x2 + pad) - nx);
+    const dT = Math.abs(nz - (hitObj.z1 - pad));
+    const dB = Math.abs((hitObj.z2 + pad) - nz);
+    const mMin = Math.min(dL, dR, dT, dB);
+    if (mMin === dL) v.x = hitObj.x1 - pad - 0.35;
+    else if (mMin === dR) v.x = hitObj.x2 + pad + 0.35;
+    else if (mMin === dT) v.z = hitObj.z1 - pad - 0.35;
+    else v.z = hitObj.z2 + pad + 0.35;
+
+    v.speed = -v.speed * 0.42;
+    v.heading += (Math.random() - 0.5) * Math.min(0.24, impactKmh * 0.012);
+    if (impactKmh > 3.0 && now - a3d.lastViolTime > 1200) {
+      a3d.lastViolTime = now;
+      a3d.impactFlash = Math.min(1.0, 0.45 + impactKmh / 28);
+      a3d.impactPos = { x: nx, z: nz };
+      a3d.camShake = Math.min(1.0, 0.35 + impactKmh / 25);
+      const pen = impactKmh > 15 ? 25 : 15;
+      a3d.score = Math.max(0, a3d.score - pen);
+      a3dAudio.playCrash(Math.min(1.4, impactKmh / 14));
+      logA3d(
+        'danger',
+        `💥 衝突事故発生 (${impactKmh.toFixed(0)}km/h · -${pen}pt): 現場保存し直ちにCOC (0569-38-1500 / 内線3000) へ通報せよ！`,
+        `💥 VA CHẠM CHƯỚNG NGẠI (${impactKmh.toFixed(0)} km/h · -${pen}đ): Giữ nguyên hiện trường và báo ngay COC (0569-38-1500 / nội bộ 3000)!`,
+        `💥 COLLISION (${impactKmh.toFixed(0)} km/h · -${pen}pt): Preserve the scene and report immediately to COC (0569-38-1500 / Ext. 3000)!`
+      );
+    }
+  } else {
+    v.x = nx;
+    v.z = nz;
+    // Record TT path trail for 6 articulated towed baggage carts!
+    if (!a3d.vehTrail.length || Math.hypot(v.x - a3d.vehTrail[0].x, v.z - a3d.vehTrail[0].z) > 0.65) {
+      a3d.vehTrail.unshift({ x: v.x, z: v.z, heading: v.heading });
+      if (a3d.vehTrail.length > 90) a3d.vehTrail.pop();
+    }
+    const cartPoses = [];
+    for (let ci = 0; ci < 6; ci++) {
+      const targetDist = 3.8 + ci * 3.15;
+      let acc = 0, pose = null;
+      for (let ti = 1; ti < a3d.vehTrail.length; ti++) {
+        const p0 = a3d.vehTrail[ti - 1], p1 = a3d.vehTrail[ti];
+        acc += Math.hypot(p1.x - p0.x, p1.z - p0.z);
+        if (acc >= targetDist) { pose = p1; break; }
+      }
+      if (!pose) {
+        pose = { x: v.x - Math.cos(v.heading) * targetDist, z: v.z - Math.sin(v.heading) * targetDist, heading: v.heading };
+      }
+      cartPoses.push(pose);
+    }
+    a3d.cartPoses = cartPoses;
+  }
 
   const kmh = Math.abs(v.speed) * 3.6;
   const ev = evaluateAirportZone(v.x, v.z, kmh, a3d.spot101BeaconOn, {
     towingCarts: a3d.ngoVehMode === 'towing',
     over38m: a3d.ngoVehMode === 'high38',
     ilsRedOn: a3d.ilsRedOn,
-    blastActive: a3d.blastActive
+    blastActive: a3d.blastActive || a3d.ngoDriveScenario === 'SC3'
   });
+
+  // Live Ground Spotter Danger Intervention (whistle + STOP alert if driver ignores active Pushback / Service Lane 100m / Run-Up!)
+  const inPushbackDanger = sAlert.pushback && v.x >= -17 && v.x <= 18 && v.z >= -44 && v.z <= -28;
+  const inServiceBlastDanger = sAlert.service && v.x >= -38 && v.x <= -24 && v.z < -42 && v.z > -70;
+  if ((inPushbackDanger || inServiceBlastDanger) && now - a3d.lastSpotterWarnTime > 2400) {
+    a3d.lastSpotterWarnTime = now;
+    a3d.score = Math.max(0, a3d.score - 20);
+    a3dAudio.playWhistle();
+    if (inPushbackDanger) {
+      logA3d(
+        'danger',
+        '🛑 [地上監視員 警告 -20pt] 航空機出発／エンジン試運転中！後方の通行禁止、監視員の手前で停止せよ！',
+        '🛑 [GIÁM SÁT VIÊN CẢNH BÁO -20đ] Máy bay đang đẩy lùi / thử nổ động cơ! Cấm đi phía sau, hãy dừng trước giám sát viên!',
+        '🛑 [SPOTTER WARNING -20pt] Aircraft departing / engine run-up active! Stop short of the spotter!'
+      );
+    } else {
+      logA3d(
+        'danger',
+        `🛑 [地上監視員 警告 -20pt] 航空機通過後の離隔不足（${sAlert.blastDist}m）！ブラスト回避のため100m以上待機せよ！`,
+        `🛑 [GIÁM SÁT VIÊN CẢNH BÁO -20đ] Chưa đủ 100m sau tàu bay (mới ${sAlert.blastDist}m)! Dừng tránh luồng phản lực Jet Blast!`,
+        `🛑 [SPOTTER WARNING -20pt] Insufficient jet blast clearance (${sAlert.blastDist}m)! Wait until ≥100m behind aircraft!`
+      );
+    }
+  }
+
   if ((!ev.allowed || ev.speeding) && now - a3d.lastViolTime > 2500) {
     a3d.lastViolTime = now;
     a3d.score = Math.max(0, a3d.score - ev.penalty);
@@ -399,7 +556,13 @@ function stepPhysics(dt, now) {
       logA3d('ok', `🎉 ミッション ${m.id} 達成 (${a3d.score}/100)`, `🎉 Hoàn thành ${m.id} (${a3d.score}/100)!`, `🎉 Mission ${m.id} Complete (${a3d.score}/100)!`);
     }
   }
-  if (hudZone) { hudZone.textContent = t(ev.ja, ev.vi, ev.en); hudZone.className = `hud-pill ${!ev.allowed || ev.speeding ? 'danger' : 'ok'}`; }
+  if (hudZone) {
+    const warnTxt = inPushbackDanger
+      ? t('🛑 地上監視員停止指示 — 航空機出発待機！', '🛑 GIÁM SÁT VIÊN RA HIỆU DỪNG — CHỜ MÁY BAY RA!', '🛑 SPOTTER STOP — HOLD FOR DEPARTING AIRCRAFT!')
+      : (inServiceBlastDanger ? t(`🛑 ブラスト危険！後方100m待機 (${sAlert.blastDist}m)`, `🛑 NGUY HIỂM JET BLAST! ĐỢI ĐỦ 100m (${sAlert.blastDist}m)`, `🛑 JET BLAST HAZARD! HOLD FOR 100m (${sAlert.blastDist}m)`) : t(ev.ja, ev.vi, ev.en));
+    hudZone.textContent = warnTxt;
+    hudZone.className = `hud-pill ${!ev.allowed || ev.speeding || inPushbackDanger || inServiceBlastDanger ? 'danger' : 'ok'}`;
+  }
   if (hudSpd) hudSpd.textContent = `${kmh.toFixed(0)} / ${ev.speedLimit} km/h`;
   if (hudScr) hudScr.textContent = `SCORE ${a3d.score}/100`;
 }
@@ -648,14 +811,45 @@ export function renderAirport3dUI() {
 
       <div>
         ${isFlight ? `
-          <div class="card"><div class="card-title"><span class="ja">${t('地上スタッフ担当役割', 'Vai trò Nhân viên Mặt đất')}</span><span class="badge badge-ok">LIVE</span></div><div id="a3d-flight-roles-panel"></div></div>
+          <div class="card" style="margin-bottom:12px;">
+            <div class="card-title">
+              <span class="ja">🚧 ${t('3Dマーシャラー 標準手信号練習 (8種)', 'Luyện 8 Tín hiệu Tay Marshaller Chuẩn 3D', '3D Marshaller Official Hand Signals (8)')}</span>
+              <button class="btn btn-sm btn-primary" id="a3d-focus-marsh">👁 ${t('近接視点', 'Zoom Marshaller', 'Zoom In')}</button>
+            </div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              ${[
+                [null, t('自動連動', 'Tự động theo pha', 'Auto Sync')],
+                ['m_straight', t('1. 直進', '1. Đi thẳng', '1. Straight')],
+                ['m_left', t('2. 左折', '2. Rẽ trái', '2. Turn Left')],
+                ['m_right', t('3. 右折', '3. Rẽ phải', '3. Turn Right')],
+                ['m_slow', t('4. 減速', '4. Giảm tốc', '4. Slow Down')],
+                ['m_stop', t('5. 停止', '5. Dừng lại', '5. Stop')],
+                ['m_emerg_stop', t('6. 緊急停止', '6. Dừng khẩn cấp', '6. Emerg Stop')],
+                ['m_chocks', t('7. 輪止め設置', '7. Chèn bánh', '7. Chocks In')],
+                ['m_allclear', t('8. 出発OK', '8. An toàn / OK', '8. All Clear')]
+              ].map(([sid, lbl]) => `<button class="btn btn-sm ${a3d.marshallerDemoSignal === sid ? 'btn-primary' : ''}" data-msig="${sid || ''}">${lbl}</button>`).join('')}
+            </div>
+          </div>
+          <div class="card"><div class="card-title"><span class="ja">${t('地上スタッフ担当役割', 'Vai trò Nhân viên Mặt đất', 'Ground Crew Roles')}</span><span class="badge badge-ok">LIVE</span></div><div id="a3d-flight-roles-panel"></div></div>
         ` : (isOps3d ? `
-          <div class="card"><div class="card-title"><span class="ja">${t('3D直接クリック ＆ 実技検定', 'Thao tác 3D trực tiếp & Thi 100đ')}</span><span class="badge badge-warn">RAYCAST</span></div><div id="a3d-handson-panel"></div></div>
+          <div class="card"><div class="card-title"><span class="ja">${t('3D直接クリック ＆ 実技検定', 'Thao tác 3D trực tiếp & Thi 100đ', 'Direct 3D Ops & 100pt Exam')}</span><span class="badge badge-warn">RAYCAST</span></div><div id="a3d-handson-panel"></div></div>
         ` : `
           <div class="card">
-            <div class="card-title"><span class="ja">${t('ミッション & 施設ガイド', 'Nhiệm vụ lái GSE & Vùng cấm')}</span></div>
-            <div class="alert alert-info" style="font-size:12.5px;"><strong>${t(m.titleJa, m.titleVi)}</strong><br/>${t(m.descJa, m.descVi)}</div>
-            <div class="alert alert-warn" style="font-size:12px;"><strong>${bi(fac.ja, fac.vi)}</strong><br/>${t(fac.ruleJa, fac.ruleVi)}</div>
+            <div class="card-title"><span class="ja">🚜 ${t('NGOセントレア 実戦運転シナリオ (TT mui trần)', '4 Tình huống Lái xe TT Mui Trần Thực tế NGO', '4 Live NGO Centrair TT Driving Scenarios')}</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+              ${[
+                ['SC1', t('SC1: 航空機プッシュバック・自走アウト待機（地上監視員の停止合図）', 'SC1: Máy bay sắp đẩy lùi / tự chạy ra — Dừng chờ hiệu lệnh Giám sát viên', 'SC1: Aircraft Pushback / Self-Taxi-Out — Hold for Ground Spotter')],
+                ['SC2', t('SC2: サービスレーン横断・通過後100mブラスト待機', 'SC2: Băng qua Service Lane — Đợi tàu bay đi xa ≥100m tránh Jet Blast', 'SC2: Service Lane Crossing — Wait ≥100m Behind Passing Aircraft')],
+                ['SC3', t('SC3: 24時間エンジン試運転（チョーク有＋赤灯）＆ #71ブラスト警戒', 'SC3: Thử nổ động cơ 24h (còn chèn bánh + đèn đỏ) & Cảnh báo #71', 'SC3: 24h Engine Run-Up (Chocks In + Red Beacon) & #71 Blast Caution')],
+                ['SC4', t('SC4: 全高3.8m超迂回・消防所赤回転灯・場周道路ILS赤灯', 'SC4: Xe cao >3.8m vòng mũi Center Pier, Trạm cứu hỏa & Đèn đỏ ILS', 'SC4: High Vehicle >3.8m Detour, Fire Station & Perimeter ILS Red Lamp')]
+              ].map(([scid, lbl]) => `<button class="btn btn-sm ${a3d.ngoDriveScenario === scid ? 'btn-primary' : ''}" data-ngosc="${scid}" style="justify-content:flex-start;text-align:left;height:auto;padding:7px 10px;">${lbl}</button>`).join('')}
+            </div>
+            <div class="alert alert-warn" style="font-size:12px;margin-bottom:8px;">
+              <strong>${t('実車衝突＆COC通報訓練', 'Va chạm vật lý & Quy trình báo COC', 'Collision Physics & COC Protocol')}:</strong>
+              ${t('障害物へ接触すると衝撃・反動・衝突音が発生し、現場保存＆COC（0569-38-1500 / 内線3000）通報指示が出ます。',
+                  'Đụng chướng ngại vật sẽ có phản lực bật lại, rung camera, âm thanh va chạm và lệnh giữ nguyên hiện trường báo COC (0569-38-1500 / nội bộ 3000).',
+                  'Hitting obstacles triggers physical recoil, camera shake, crash audio, and the Centrair COC (0569-38-1500 / Ext. 3000) accident alert.')}
+            </div>
             <div id="a3d-log-list" style="max-height:200px;overflow-y:auto;"></div>
           </div>
         `)}
@@ -696,6 +890,21 @@ export function renderAirport3dUI() {
     document.getElementById('a3d-flight-prev').onclick = () => { a3d.flightPhaseIdx = (a3d.flightPhaseIdx + 9) % 10; a3d.flightProgress = 0; renderFlightPhasePanel(); };
     document.getElementById('a3d-flight-next').onclick = () => { a3d.flightPhaseIdx = (a3d.flightPhaseIdx + 1) % 10; a3d.flightProgress = 0; renderFlightPhasePanel(); };
     document.getElementById('a3d-flight-spd').onclick = () => { a3d.flightSpeed = a3d.flightSpeed === 1 ? 2 : (a3d.flightSpeed === 2 ? 0.5 : 1); document.getElementById('a3d-flight-spd').textContent = `${a3d.flightSpeed}x`; };
+    const fm = document.getElementById('a3d-focus-marsh');
+    if (fm) fm.onclick = () => {
+      a3d.camMode = 'orbit';
+      a3d.cam = { tx: 0, ty: 1.8, tz: 32.5, dist: 8.5, yaw: 0.12, pitch: 0.22 };
+    };
+    mount.querySelectorAll('[data-msig]').forEach(b => {
+      b.onclick = () => {
+        a3d.marshallerDemoSignal = b.dataset.msig || null;
+        if (a3d.marshallerDemoSignal) {
+          a3d.camMode = 'orbit';
+          a3d.cam = { tx: 0, ty: 1.8, tz: 32.5, dist: 8.5, yaw: 0.12, pitch: 0.22 };
+        }
+        renderAirport3dUI();
+      };
+    });
     renderFlightPhasePanel();
   } else if (isOps3d) {
     renderHandsOnPanel();
@@ -708,6 +917,20 @@ export function renderAirport3dUI() {
     if (ti) ti.onclick = () => { a3d.ilsRedOn = !a3d.ilsRedOn; ti.textContent = `ILS:${a3d.ilsRedOn ? '🔴' : '⚪'}`; ti.classList.toggle('btn-danger-outline', a3d.ilsRedOn); };
     const tbl = document.getElementById('a3d-toggle-blast');
     if (tbl) tbl.onclick = () => { a3d.blastActive = !a3d.blastActive; tbl.textContent = `#71:${a3d.blastActive ? '🔥' : '⚪'}`; tbl.classList.toggle('btn-danger-outline', a3d.blastActive); };
+    mount.querySelectorAll('[data-ngosc]').forEach(b => {
+      b.onclick = () => {
+        a3d.ngoDriveScenario = b.dataset.ngosc;
+        a3d.ngoScenarioTime = 0;
+        a3d.vehTrail = [];
+        a3d.veh.speed = 0;
+        if (a3d.ngoDriveScenario === 'SC1') { a3d.veh.x = -38; a3d.veh.z = -38; a3d.veh.heading = 0; }
+        else if (a3d.ngoDriveScenario === 'SC2') { a3d.veh.x = -31; a3d.veh.z = -32; a3d.veh.heading = -Math.PI / 2; }
+        else if (a3d.ngoDriveScenario === 'SC3') { a3d.veh.x = -85; a3d.veh.z = -38; a3d.veh.heading = 0; a3d.blastActive = true; }
+        else { a3d.veh.x = -12; a3d.veh.z = 50; a3d.veh.heading = 0; a3d.ngoVehMode = 'high38'; a3d.ilsRedOn = true; }
+        a3d.camMode = 'chase';
+        renderAirport3dUI();
+      };
+    });
     mount.querySelectorAll('#a3d-drive-pad .drive-key').forEach(btn => {
       const k = btn.dataset.k;
       const on = e => { e.preventDefault(); a3d.keys[k] = true; btn.classList.add('pressed'); };

@@ -3,6 +3,12 @@ import * as THREE from 'three';
 import { AIRCRAFT_PROFILES } from '../data/aircraft.js';
 import { A3D_AIRPORTS, A3D_SPOTS, A3D_CLOUDS, A3D_FLIGHT_PHASES, computeFlightCyclePose, computeViewpointCamera } from '../data/airports.js';
 import { createDetailedAirliner3D } from './aircraftBuilder3D.js';
+import {
+  createOpenCabTowingTractor3D,
+  createBaggageCart3D,
+  createArticulatedCrew3D,
+  animateCrewSignal
+} from './crewBuilder3D.js';
 
 // Procedural Canvas Textures (Runway w/ Dynamic Designator, Concrete Slabs, Glass Curtain Wall, Grass)
 function makeRunwayTexture(rwyPair = '36/18', isSnow = false) {
@@ -672,9 +678,26 @@ export class AirportScene3D {
     termGlass.receiveShadow = true;
     this.staticGroup.add(termGlass);
     addBox(152, 1.8, 35, 0x1b4f9c, -26, 13.7, 76, { metalness: 0.35, roughness: 0.35 });
-    // Sky Deck
+    // Sky Deck + Iconic T-Shaped NGO Center Pier (センターピア jutting toward runway + 3.8m Root Tunnel!)
     addBox(16, 0.9, 19, 0xa6764e, 0, 14.0, 54.5, { roughness: 0.75 });
     addBox(12, 13.6, 5.5, 0xd7e0ec, 0, 6.8, 61);
+    // Center Pier (x = 28..42, extending from Main Terminal z=64 out toward z=4 between Domestic #8-#12 & Int'l #14-#18)
+    const pierBridge = new THREE.Mesh(new THREE.BoxGeometry(12.5, 6.4, 24), this.glassMat);
+    pierBridge.position.set(34, 7.6, 50);
+    pierBridge.castShadow = true;
+    this.staticGroup.add(pierBridge);
+    addBox(13.2, 0.9, 25, 0x1b4f9c, 34, 11.2, 50, { metalness: 0.35 });
+    // Center Pier Root Tunnel Overhead 3.8m Hazard Beam (z=44..56 tunnel clearance!)
+    addBox(13.4, 0.75, 0.9, 0xfacc15, 34, 4.15, 43.8);
+    addBox(13.4, 0.75, 0.9, 0xfacc15, 34, 4.15, 56.2);
+    addDecal(texH38, 10, 2.8, 34, 0.11, 50);
+    addDecal(texStop, 7.5, 3.2, 34, 0.11, 39.5);
+    // Outer Center Pier Finger (z = 6..38) + Tip Corridor along Red ABL (for >3.8m vehicles!)
+    const pierFinger = new THREE.Mesh(new THREE.BoxGeometry(12.2, 9.2, 32), this.glassMat);
+    pierFinger.position.set(34, 4.6, 22);
+    pierFinger.castShadow = true;
+    this.staticGroup.add(pierFinger);
+    addBox(13.0, 1.1, 33, 0x1b4f9c, 34, 9.75, 22, { metalness: 0.35 });
 
     // Port-Side (+X) Fixed Piers & Rotundas
     const addPortPier = (rotX, rotZ1, rotZ2) => {
@@ -856,9 +879,73 @@ export class AirportScene3D {
     this.aiJet.rotation.y = Math.PI / 2;
     this.dynamicGroup.add(this.aiJet);
 
-    // Player Drivable GSE Vehicle
-    this.playerVeh = createGseMesh('tractor');
+    // Player Drivable Open-Cab Airport Towing Tractor ("TT Mui Trần") + 6 Articulated Towed Baggage Carts!
+    this.playerVeh = createOpenCabTowingTractor3D();
     this.dynamicGroup.add(this.playerVeh);
+    this.towedCarts = [];
+    for (let ci = 0; ci < 6; ci++) {
+      const cart = createBaggageCart3D(ci);
+      cart.visible = false;
+      this.dynamicGroup.add(cart);
+      this.towedCarts.push(cart);
+    }
+
+    // Articulated 3D Ground Crew: Marshaller (8 ICAO signals), 2 Wing Walkers, Headset Man & 3 Warning Spotters!
+    this.crewMarshaller = createArticulatedCrew3D('marshaller');
+    this.crewMarshaller.position.set(0, 0, 32.5);
+    this.crewMarshaller.rotation.y = Math.PI; // Facing Spot 7 aircraft (-Z)
+    this.dynamicGroup.add(this.crewMarshaller);
+
+    this.crewWingL = createArticulatedCrew3D('marshaller');
+    this.crewWingL.position.set(21.5, 0, 11.5);
+    this.crewWingL.rotation.y = Math.PI;
+    this.dynamicGroup.add(this.crewWingL);
+
+    this.crewWingR = createArticulatedCrew3D('marshaller');
+    this.crewWingR.position.set(-21.5, 0, 11.5);
+    this.crewWingR.rotation.y = Math.PI;
+    this.dynamicGroup.add(this.crewWingR);
+
+    this.crewHeadset = createArticulatedCrew3D('headset');
+    this.crewHeadset.position.set(-4.6, 0, 24.5);
+    this.crewHeadset.rotation.y = Math.PI * 0.75;
+    this.dynamicGroup.add(this.crewHeadset);
+
+    // 3 Live Warning Ground Spotters (地上監視員) waving glowing red stop wands in danger zones!
+    this.spotterPushback = createArticulatedCrew3D('spotter');
+    this.spotterPushback.position.set(-19, 0, -35.5);
+    this.spotterPushback.rotation.y = -Math.PI / 2;
+    this.dynamicGroup.add(this.spotterPushback);
+
+    this.spotterService = createArticulatedCrew3D('spotter');
+    this.spotterService.position.set(-22.5, 0, -40.5);
+    this.spotterService.rotation.y = 0;
+    this.dynamicGroup.add(this.spotterService);
+
+    this.spotterBlast = createArticulatedCrew3D('spotter');
+    this.spotterBlast.position.set(-103, 0, -24);
+    this.spotterBlast.rotation.y = Math.PI / 2;
+    this.dynamicGroup.add(this.spotterBlast);
+
+    // 3D Jet Blast Danger Plume Cone (shown behind departing / engine run-up / taxiing aircraft!)
+    const blastGeo = new THREE.ConeGeometry(7.2, 46, 16, 1, true);
+    blastGeo.rotateX(-Math.PI / 2);
+    blastGeo.translate(0, 2.2, -28);
+    this.jetBlastCone = new THREE.Mesh(
+      blastGeo,
+      new THREE.MeshBasicMaterial({ color: 0xf97316, transparent: true, opacity: 0.24, side: THREE.DoubleSide, depthWrite: false })
+    );
+    this.jetBlastCone.visible = false;
+    this.dynamicGroup.add(this.jetBlastCone);
+
+    // 3D Collision Impact Shockwave Ring
+    this.impactRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.8, 3.2, 24).rotateX(-Math.PI / 2),
+      new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.88, side: THREE.DoubleSide })
+    );
+    this.impactRing.position.y = 0.25;
+    this.impactRing.visible = false;
+    this.dynamicGroup.add(this.impactRing);
 
     // Drifting Volumetric Cloud Clusters
     this.cloudGroup = new THREE.Group();
@@ -1070,18 +1157,99 @@ export class AirportScene3D {
       this.playerVeh.visible = false;
       Object.values(this.fodMeshes).forEach(m => { m.visible = false; });
     } else {
-      // Drive mode
-      this.updatePbbExt(this.spot7Pbb, 1.0);
-      this.spot7Loader.visible = true;
-      this.spot7Belt.visible = true;
+      // Drive mode — Live NGO Scenarios (Pushback/Self-Taxi-Out, Service Lane 100m, Run-Up 24h, High >3.8m)
+      const drvSc = state.ngoLiveAc || null;
+      if (drvSc) {
+        acPose = { x: drvSc.x, y: 0, z: drvSc.z, heading: drvSc.heading, pitch: 0, beaconOn: drvSc.beaconOn };
+      }
+      const isDeparting = drvSc && (drvSc.mode === 'pushback' || drvSc.mode === 'taxi_cross');
+      this.updatePbbExt(this.spot7Pbb, isDeparting ? 0.0 : 1.0);
+      this.spot7Loader.visible = !isDeparting;
+      this.spot7Belt.visible = !isDeparting;
       this.spot7Hydrant.visible = false;
-      this.chocksGroup.visible = true;
-      this.conesGroup.visible = true;
+      this.chocksGroup.visible = drvSc ? drvSc.chocksOn : true;
+      this.conesGroup.visible = !isDeparting;
       this.tipRing.visible = false;
       this.playerVeh.visible = state.camMode !== 'gse_cab';
       this.playerVeh.position.set(state.veh.x, 0, state.veh.z);
       this.playerVeh.rotation.y = Math.PI / 2 - state.veh.heading;
+
+      // Animate Open-Cab TT Turning Wheels, Spinning Tires, Steering Wheel, Beacon & High-Mast (>3.8m)
+      const ud = this.playerVeh.userData || {};
+      if (ud.frontPivots) ud.frontPivots.forEach(p => { p.rotation.y = -(state.veh.steerAngle || 0); });
+      if (ud.steerWheel) ud.steerWheel.rotation.z = -(state.veh.steerAngle || 0) * 3.2;
+      if (ud.allWheels) ud.allWheels.forEach(w => { w.rotation.x += (state.veh.speed || 0) * 0.055; });
+      if (ud.beaconHalo) ud.beaconHalo.visible = beaconBlink;
+      if (ud.highMast) ud.highMast.visible = state.ngoVehMode === 'high38';
+
+      // Position up to 6 Articulated Towed Baggage Carts along TT trail history!
+      const showCarts = state.ngoVehMode === 'towing' && Array.isArray(state.cartPoses);
+      this.towedCarts.forEach((cart, ci) => {
+        if (showCarts && state.cartPoses[ci]) {
+          cart.visible = true;
+          cart.position.set(state.cartPoses[ci].x, 0, state.cartPoses[ci].z);
+          cart.rotation.y = Math.PI / 2 - state.cartPoses[ci].heading;
+        } else {
+          cart.visible = false;
+        }
+      });
+
+      // Live Jet Blast Plume behind active scenario aircraft when engines running!
+      if (this.jetBlastCone) {
+        this.jetBlastCone.visible = Boolean(drvSc && drvSc.blastOn);
+        if (this.jetBlastCone.visible) {
+          this.jetBlastCone.position.set(acPose.x, 0, acPose.z);
+          this.jetBlastCone.rotation.y = Math.PI / 2 - acPose.heading;
+          this.jetBlastCone.material.opacity = 0.18 + Math.sin(tSec * 12) * 0.07;
+        }
+      }
+
+      // Collision Impact Shockwave Ring
+      if (this.impactRing) {
+        if ((state.impactFlash || 0) > 0.02) {
+          this.impactRing.visible = true;
+          this.impactRing.position.set(state.impactPos ? state.impactPos.x : state.veh.x, 0.3, state.impactPos ? state.impactPos.z : state.veh.z);
+          const sc = 1 + (1 - state.impactFlash) * 2.4;
+          this.impactRing.scale.set(sc, sc, 1);
+          this.impactRing.material.opacity = state.impactFlash;
+        } else {
+          this.impactRing.visible = false;
+        }
+      }
       Object.values(this.fodMeshes).forEach(m => { m.visible = false; });
+    }
+
+    // Hide towed carts & jet blast outside drive mode
+    if (isFlight || isOps3d || this.compact) {
+      this.towedCarts.forEach(c => { c.visible = false; });
+      if (this.jetBlastCone) this.jetBlastCone.visible = false;
+      if (this.impactRing) this.impactRing.visible = false;
+    }
+
+    // Animate Articulated Ground Crew (Marshaller 8 Authentic ICAO Signals + Wing Walkers + Warning Spotters!)
+    if (!this.compact) {
+      let marshSig = state.marshallerDemoSignal || 'm_straight';
+      if (isFlight && !state.marshallerDemoSignal) {
+        if (state.flightPhaseIdx === 1) {
+          marshSig = state.flightProgress < 0.55 ? 'm_straight' : (state.flightProgress < 0.85 ? 'm_slow' : 'm_stop');
+        } else if (state.flightPhaseIdx === 2) {
+          marshSig = 'm_chocks';
+        } else if (state.flightPhaseIdx === 7 || state.flightPhaseIdx === 8) {
+          marshSig = 'm_allclear';
+        } else {
+          marshSig = 'm_stop';
+        }
+      }
+      animateCrewSignal(this.crewMarshaller, marshSig, tSec);
+      animateCrewSignal(this.crewWingL, 'wing_watch', tSec);
+      animateCrewSignal(this.crewWingR, 'wing_watch', tSec);
+      animateCrewSignal(this.crewHeadset, state.flightPhaseIdx >= 7 ? 'm_allclear' : 'm_chocks', tSec);
+
+      // Warning Ground Spotters wave urgent crossing RED wands whenever hazard is active or player nears!
+      const spotAlert = state.spotterAlert || {};
+      animateCrewSignal(this.spotterPushback, spotAlert.pushback ? 'spotter_stop' : 'spotter_clear', tSec);
+      animateCrewSignal(this.spotterService, spotAlert.service ? 'spotter_stop' : 'spotter_clear', tSec);
+      animateCrewSignal(this.spotterBlast, (state.blastActive || spotAlert.blast) ? 'spotter_stop' : 'spotter_clear', tSec);
     }
 
     // Apply Transform to Active Airliner (heading: 0 = +X, PI/2 = +Z -> Three.js rotation.y = Math.PI/2 - heading)
@@ -1122,7 +1290,10 @@ export class AirportScene3D {
 
     this.camera.fov = this.smoothCam.fov;
     this.camera.updateProjectionMatrix();
-    this.camera.position.set(...this.smoothCam.pos);
+    const shk = state.camShake || 0;
+    const sx = shk > 0.01 ? (Math.random() - 0.5) * shk * 1.4 : 0;
+    const sy = shk > 0.01 ? (Math.random() - 0.5) * shk * 1.1 : 0;
+    this.camera.position.set(this.smoothCam.pos[0] + sx, this.smoothCam.pos[1] + sy, this.smoothCam.pos[2]);
     this.camera.lookAt(...this.smoothCam.target);
 
     // Render with Post-Processing Bloom if ready
@@ -1222,10 +1393,34 @@ export class AirportScene3D {
     if (povKind !== 'pilot' && povKind !== 'gse_cab') {
       drawTag([0, 2.5, -104], `${ap.id} RWY ${ap.rwy} (3500m)`, 'rgba(185,28,28,0.88)', '#FFF', 2);
       drawTag([-120, 38, 76], ap.twr, 'rgba(15,23,42,0.88)', '#FFF', 1);
+      drawTag([34, 13.5, 22], 'CENTER PIER (#8–#18)', 'rgba(27,79,156,0.9)', '#FFF', 1);
       drawTag([-188, 12, 74], 'T2 (#71–#80)', 'rgba(2,132,199,0.88)', '#FFF', 1);
       drawTag([188, 14, 78], 'CARGO (#101–#119)', 'rgba(71,85,105,0.88)', '#FFF', 1);
       drawTag([-31, 2.2, -55], 'SERVICE LANE', 'rgba(15,23,42,0.88)', '#7DD3FC', 1);
       drawTag([-115, 6.5, -142], state.ilsRedOn ? 'ILS RED: NO ENTRY' : 'ILS ZONE', state.ilsRedOn ? 'rgba(220,38,38,0.92)' : 'rgba(37,99,235,0.86)', '#FFF', 1);
+    }
+
+    // Live Ground Spotter Warning Callouts in Drive Mode!
+    if (state.subtab === 'drive') {
+      const sa = state.spotterAlert || {};
+      if (sa.pushback) {
+        drawTag([-19, 3.6, -35.5], lang === 'ja' ? '🛑 地上監視員: 停止！航空機出発中' : (lang === 'en' ? '🛑 SPOTTER: STOP! AIRCRAFT DEPARTING' : '🛑 GIÁM SÁT VIÊN: DỪNG LẠI! MÁY BAY SẮP RA'), 'rgba(220,38,38,0.95)', '#FEF08A', 2);
+      }
+      if (sa.service) {
+        drawTag([-22.5, 3.6, -40.5], lang === 'ja' ? `🛑 監視員: 後方100m待機 (現在 ${sa.blastDist || 0}m)` : (lang === 'en' ? `🛑 SPOTTER: HOLD FOR 100m BLAST (${sa.blastDist || 0}m)` : `🛑 GIÁM SÁT VIÊN: ĐỢI CÁCH 100m (Hiện ${sa.blastDist || 0}m)`), 'rgba(220,38,38,0.95)', '#FEF08A', 2);
+      }
+      if (state.blastActive || sa.blast) {
+        drawTag([-103, 3.6, -24], lang === 'ja' ? '🛑 監視員: #71 ブラスト注意・進入禁止！' : (lang === 'en' ? '🛑 SPOTTER: #71 JET BLAST — NO ENTRY!' : '🛑 GIÁM SÁT VIÊN: #71 LUỒNG PHẢN LỰC — CẤM VÀO!'), 'rgba(234,88,12,0.95)', '#FEF08A', 2);
+      }
+    }
+
+    // Realistic Red Collision Vignette Flash on Impact!
+    if ((state.impactFlash || 0) > 0.02) {
+      const grd = ctx.createRadialGradient(W * 0.5, H * 0.5, H * 0.15, W * 0.5, H * 0.5, W * 0.65);
+      grd.addColorStop(0, 'rgba(220,38,38,0)');
+      grd.addColorStop(1, `rgba(220,38,38,${(state.impactFlash * 0.68).toFixed(2)})`);
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, W, H);
     }
 
     // Pilot Glass-Cockpit HUD
