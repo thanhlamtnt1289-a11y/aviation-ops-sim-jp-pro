@@ -826,13 +826,22 @@ export class TurnaroundScene3D {
     this.radarDish = radar;
     this.airportGroup.add(towerGroup);
 
-    // 8. ALL 8 NUMBERED SPOTS / GATES PAINTED ON APRON (y=0.52, depthWrite=false -> zero Z-fighting!)
+    // 8. ALL 8 NUMBERED SPOTS / GATES PAINTED ON APRON (Authentic Japanese Diamond-Cut Octagonal ERA Envelope!)
     const redEraMat = new THREE.MeshBasicMaterial({
       color: 0xdc2626,
       depthWrite: false,
       polygonOffset: true,
       polygonOffsetFactor: -6,
       polygonOffsetUnits: -6
+    });
+    const eraFillMat = new THREE.MeshBasicMaterial({
+      color: 0xdc2626,
+      transparent: true,
+      opacity: 0.08,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -5,
+      polygonOffsetUnits: -5
     });
     for (const sp of g.spotsXYZ) {
       const sg = new THREE.Group();
@@ -846,14 +855,58 @@ export class TurnaroundScene3D {
         m.renderOrder = 6;
         sg.add(m);
       };
+      const addSeg = (ax, az, bx, bz, thickness, mat, yOff = 0) => {
+        const len = Math.hypot(bx - ax, bz - az);
+        const seg = new THREE.Mesh(new THREE.PlaneGeometry(thickness, len + thickness * 0.45), mat);
+        seg.rotation.x = -Math.PI / 2;
+        const wrap = new THREE.Group();
+        wrap.position.set((ax + bx) * 0.5, yOff, (az + bz) * 0.5);
+        wrap.rotation.y = Math.atan2(bx - ax, bz - az);
+        seg.renderOrder = 6;
+        wrap.add(seg);
+        sg.add(wrap);
+      };
       addFlatLine(0.65, 78, 0, -2, yellowMat);
       addFlatLine(8.5, 0.7, 0, 26, yellowMat);
 
-      const eraW = 68, eraL = 78;
-      addFlatLine(eraW, 0.5, 0, eraL * 0.5, redEraMat);
-      addFlatLine(eraW, 0.5, 0, -eraL * 0.5, redEraMat);
-      addFlatLine(0.5, eraL, -eraW * 0.5, 0, redEraMat);
-      addFlatLine(0.5, eraL, eraW * 0.5, 0, redEraMat);
+      // Authentic ICAO / Japanese Airport Diamond-Cut Chamfered Octagonal ERA (Nhát cắt kim cương ôm sát mũi, cánh, đuôi!)
+      const halfW = 35, halfL = 39;
+      const makeDiamondPts = scale => {
+        const hw = halfW * scale, hl = halfL * scale;
+        const noseW = hw * 0.34, tailW = hw * 0.38;
+        const wf = hl * 0.24, wa = hl * 0.36;
+        return [
+          [-noseW,  hl],
+          [ noseW,  hl],
+          [ hw,     wf],
+          [ hw,    -wa],
+          [ tailW, -hl],
+          [-tailW, -hl],
+          [-hw,    -wa],
+          [-hw,     wf]
+        ];
+      };
+      const outerPts = makeDiamondPts(1.0);
+      const innerPts = makeDiamondPts(0.955);
+
+      // Subtle translucent red tint inside diamond-cut personnel/equipment restraint area
+      const fillShape = new THREE.Shape();
+      fillShape.moveTo(outerPts[0][0], -outerPts[0][1]);
+      for (let i = 1; i < outerPts.length; i++) fillShape.lineTo(outerPts[i][0], -outerPts[i][1]);
+      fillShape.closePath();
+      const fillMesh = new THREE.Mesh(new THREE.ShapeGeometry(fillShape), eraFillMat);
+      fillMesh.rotation.x = -Math.PI / 2;
+      fillMesh.position.y = -0.01;
+      fillMesh.renderOrder = 5;
+      sg.add(fillMesh);
+
+      // Solid RED outer diamond-cut border + crisp inner WHITE clearance border
+      for (let i = 0; i < outerPts.length; i++) {
+        const a = outerPts[i], b = outerPts[(i + 1) % outerPts.length];
+        addSeg(a[0], a[1], b[0], b[1], 0.72, redEraMat, 0.01);
+        const ia = innerPts[i], ib = innerPts[(i + 1) % innerPts.length];
+        addSeg(ia[0], ia[1], ib[0], ib[1], 0.34, whiteMat, 0.015);
+      }
 
       // Painted Spot Number Placard on Apron
       const numPlane = new THREE.Mesh(

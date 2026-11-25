@@ -674,12 +674,59 @@ export class AirportScene3D {
         const bar = addBox(0.35, 0.04, 11.5, 0xef4444, px + hx, 0.095, pz);
         bar.rotation.y = 0.65;
       }
-      // ERA Red Perimeter
+      // Authentic Japanese Airport Diamond-Cut Octagonal ERA Envelope (Nhát cắt kim cương — bát giác vát 4 góc!)
       const e = sp.era;
-      addBox(e.x2 - e.x1, 0.05, 0.5, 0xdc2626, (e.x1 + e.x2) * 0.5, 0.09, e.z1);
-      addBox(e.x2 - e.x1, 0.05, 0.5, 0xdc2626, (e.x1 + e.x2) * 0.5, 0.09, e.z2);
-      addBox(0.5, 0.05, e.z2 - e.z1, 0xdc2626, e.x1, 0.09, (e.z1 + e.z2) * 0.5);
-      addBox(0.5, 0.05, e.z2 - e.z1, 0xdc2626, e.x2, 0.09, (e.z1 + e.z2) * 0.5);
+      const ecx = (e.x1 + e.x2) * 0.5;
+      const ecz = (e.z1 + e.z2) * 0.5;
+      const ehw = (e.x2 - e.x1) * 0.5;
+      const ehl = (e.z2 - e.z1) * 0.5;
+      const makeEraPoly = sc => {
+        const hw = ehw * sc, hl = ehl * sc;
+        const noseW = hw * 0.36, tailW = hw * 0.40;
+        const wf = hl * 0.24, wa = hl * 0.34;
+        return [
+          [ecx - noseW, ecz + hl],
+          [ecx + noseW, ecz + hl],
+          [ecx + hw,    ecz + wf],
+          [ecx + hw,    ecz - wa],
+          [ecx + tailW, ecz - hl],
+          [ecx - tailW, ecz - hl],
+          [ecx - hw,    ecz - wa],
+          [ecx - hw,    ecz + wf]
+        ];
+      };
+      const eraRedMat = new THREE.MeshBasicMaterial({ color: 0xdc2626, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -5 });
+      const eraWhtMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -6 });
+      const eraTintMat = new THREE.MeshBasicMaterial({ color: 0xdc2626, transparent: true, opacity: 0.07, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 });
+      const ptsO = makeEraPoly(1.0);
+      const ptsI = makeEraPoly(0.945);
+      const eShape = new THREE.Shape();
+      eShape.moveTo(ptsO[0][0], -ptsO[0][1]);
+      for (let i = 1; i < ptsO.length; i++) eShape.lineTo(ptsO[i][0], -ptsO[i][1]);
+      eShape.closePath();
+      const eFill = new THREE.Mesh(new THREE.ShapeGeometry(eShape), eraTintMat);
+      eFill.rotation.x = -Math.PI / 2;
+      eFill.position.y = 0.095;
+      eFill.renderOrder = 4;
+      this.staticGroup.add(eFill);
+
+      const addEraSeg = (ax, az, bx, bz, thick, mat, yPos) => {
+        const segLen = Math.hypot(bx - ax, bz - az);
+        const seg = new THREE.Mesh(new THREE.PlaneGeometry(thick, segLen + thick * 0.4), mat);
+        seg.rotation.x = -Math.PI / 2;
+        const w = new THREE.Group();
+        w.position.set((ax + bx) * 0.5, yPos, (az + bz) * 0.5);
+        w.rotation.y = Math.atan2(bx - ax, bz - az);
+        seg.renderOrder = 5;
+        w.add(seg);
+        this.staticGroup.add(w);
+      };
+      for (let i = 0; i < ptsO.length; i++) {
+        const a = ptsO[i], b = ptsO[(i + 1) % ptsO.length];
+        addEraSeg(a[0], a[1], b[0], b[1], 0.58, eraRedMat, 0.11);
+        const ia = ptsI[i], ib = ptsI[(i + 1) % ptsI.length];
+        addEraSeg(ia[0], ia[1], ib[0], ib[1], 0.26, eraWhtMat, 0.115);
+      }
     });
 
     // 5. Passenger Terminal + Glass Facade + Sky Deck + Port-Side Fixed PBB Piers & Rotundas
