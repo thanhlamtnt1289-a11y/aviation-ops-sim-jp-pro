@@ -1,0 +1,148 @@
+// 8 ICAO Marshalling Signals, 5 Headset Pushback Steps & 66 Bilingual Aviation Terms
+export const OPS_MARSHALLING_SIGNALS = [
+    { id: 'marshal_straight', en: 'Straight Ahead / Move Ahead', ja: '直進せよ（前進）', vi: 'Tiến thẳng về phía trước', descJa: '両腕を曲げて頭上で前後に招き続ける。', descVi: 'Hai tay cầm gậy phát sáng vẫy đều về phía mình.' },
+    { id: 'marshal_left', en: 'Turn Left (Pilot View)', ja: '左折せよ（機長視点で左）', vi: 'Rẽ trái (theo hướng phi công)', descJa: '右腕を水平に固定し、左腕で招き続ける。', descVi: 'Duỗi ngang tay phải giữ nguyên, tay trái vẫy liên tục.' },
+    { id: 'marshal_right', en: 'Turn Right (Pilot View)', ja: '右折せよ（機長視点で右）', vi: 'Rẽ phải (theo hướng phi công)', descJa: '左腕を水平に固定し、右腕で招き続ける。', descVi: 'Duỗi ngang tay trái giữ nguyên, tay phải vẫy liên tục.' },
+    { id: 'marshal_slow', en: 'Slow Down', ja: '減速せよ', vi: 'Giảm tốc độ lăn', descJa: '両腕を下げ、手のひらを下に向けて上下にゆっくり振る。', descVi: 'Hạ thấp hai tay và vẫy nhẹ lên xuống đều.' },
+    { id: 'marshal_stop', en: 'Normal Stop', ja: '通常停止（停止線）', vi: 'Dừng bình thường tại vạch đỗ', descJa: '停止線に合わせて両ワンドを頭上でゆっくり交差させる。', descVi: 'Từ từ đưa hai gậy giao chéo chữ X trên đỉnh đầu.' },
+    { id: 'marshal_estop', en: 'Emergency Stop', ja: '緊急停止（即時停止）', vi: 'DỪNG KHẨN CẤP NGAY', descJa: '両腕を頭上で鋭く強く交差させ保持する（衝突・危険回避）。', descVi: 'Vung mạnh và khóa chặt chữ X trên đầu để dừng tức thì.' },
+    { id: 'marshal_chocks', en: 'Chocks Inserted', ja: '輪止め装着完了', vi: 'Đã chèn bánh xe xong', descJa: '両腕を下げて外から内側へ素早く合わせる（撤去は逆）。', descVi: 'Đưa hai tay phía dưới khép nhanh từ ngoài vào trong.' },
+    { id: 'marshal_cut', en: 'Cut Engines', ja: 'エンジン停止', vi: 'Tắt động cơ', descJa: '片手を首の前で水平に横切る動作（スロートカット）。', descVi: 'Đưa một tay kéo ngang dứt khoát qua trước cổ.' }
+  ];
+
+  export const OPS_PUSHBACK_STEPS = [
+    {
+      step: 1, phaseJa: '1. インターホン確認・ドア／チョーク点検', phaseVi: '1. Kiểm tra Intercom, Cửa & Chèn bánh',
+      pilotLine: 'Captain: "Ground from Cockpit, loud and clear. Ready for pushback, waiting your clearance."',
+      qJa: 'ヘッドセットマンとして最初に確認・返答すべき正しいフレーズは？',
+      qVi: 'Là Headset Man, bạn cần kiểm tra và trả lời Cơ trưởng câu nào là chuẩn an toàn nhất?',
+      opts: [
+        { ok: true, ja: '"Cockpit from Ground, all doors & hatches closed, PBB retracted, bypass pin inserted, ready for pushback. Confirm parking brake SET."', vi: '"Cockpit from Ground, toàn bộ cửa/hầm đã đóng kín, PBB đã thu, Bypass Pin đã cắm, sẵn sàng đẩy lùi. Xác nhận Phanh đỗ đang SET."' },
+        { ok: false, ja: '"Pushback OK, please release brake immediately!"（ドア・ピン確認なし）', vi: '"Đẩy luôn nhé, nhả phanh đi!" (Chưa xác nhận cửa, PBB & Bypass Pin)' },
+        { ok: false, ja: '"Start Engine 1 & 2 right now on the spot!"', vi: '"Cho nổ ngay cả 2 động cơ tại bãi đỗ!"' }
+      ],
+      expJa: 'プッシュバック前は全ドア閉鎖・PBB収納・周辺GSE撤去・バイパスピン挿入・ブレーキSETの5点確認が必須です。',
+      expVi: 'Trước khi Pushback bắt buộc xác nhận đủ: Đóng hết cửa, rút PBB/GSE khỏi ERA, cắm Bypass Pin và phanh đỗ đang SET.'
+    },
+    {
+      step: 2, phaseJa: '2. パーキングブレーキ解除 ＆ プッシュバック開始', phaseVi: '2. Nhả phanh đỗ & Bắt đầu đẩy lùi',
+      pilotLine: 'Captain: "ATC pushback approved facing North. Parking brake is SET."',
+      qJa: 'トーイングトラクター接続完了・後方安全よし。機長へ送る正しい指示は？',
+      qVi: 'Xe kéo đã nối chắc chắn, phía sau an toàn (Wing Walkers OK). Bạn báo gì với Cơ trưởng?',
+      opts: [
+        { ok: true, ja: '"Cleared to release parking brake. Commencing pushback, tail to the Left (facing North)."', vi: '"Mời nhả phanh đỗ (Release Parking Brake). Bắt đầu đẩy lùi, xoay đuôi sang Trái (mũi hướng Bắc)."' },
+        { ok: false, ja: '"Keep parking brake ON while we push!"', vi: '"Giữ nguyên phanh đỗ để chúng tôi đẩy!"' },
+        { ok: false, ja: '"Remove bypass pin now during pushback."', vi: '"Rút chốt Bypass Pin ngay lúc đang đẩy."' }
+      ],
+      expJa: 'ブレーキ解除指示＋プッシュバック方向（機尾の向き）を明確に復唱・共有することで誤進入やトーバー破損を防ぎます。',
+      expVi: 'Luôn báo rõ lệnh nhả phanh đỗ và hướng đẩy (đầu/đuôi xoay về hướng nào) để buồng lái kiểm soát đúng phương vị.'
+    },
+    {
+      step: 3, phaseJa: '3. エンジン始動クリアランス確認', phaseVi: '3. Cấp phép khởi động động cơ',
+      pilotLine: 'Captain: "Brakes released. Requesting clearance to start Engine 2 and 1."',
+      qJa: 'プッシュバック中にエンジン周囲の安全を確認した際の正しい返答は？',
+      qVi: 'Sau khi quan sát xung quanh hai động cơ hoàn toàn trống người/GSE, bạn trả lời Cơ trưởng thế nào?',
+      opts: [
+        { ok: true, ja: '"Clear to start Engine 2 and 1, area is clear!"（指差呼称で周囲確認後）', vi: '"Xung quanh an toàn (Area Clear), mời khởi động động cơ số 2 và số 1!"' },
+        { ok: false, ja: '"Wait, fuel truck is still connected, start Engine 2 anyway."', vi: '"Xe tra dầu vẫn đang nối nhưng cứ nổ máy số 2 trước đi."' },
+        { ok: false, ja: '返答せず無言で進める', vi: 'Im lặng không trả lời' }
+      ],
+      expJa: 'エンジン吸込・ブラスト区域内に人員や車両が一切いないことを目視・指差呼称して初めて「Clear to start」を出します。',
+      expVi: 'Chỉ cấp phép "Clear to start" sau khi chắc chắn 100% không còn người hay xe GSE trong vùng hút & luồng phản lực.'
+    },
+    {
+      step: 4, phaseJa: '4. プッシュバック完了 ＆ パーキングブレーキ再設定', phaseVi: '4. Hoàn tất đẩy lùi & Kéo lại phanh đỗ',
+      pilotLine: 'Captain: "Engine 2 and 1 stabilized. Standing by."',
+      qJa: '誘導路中心線上で停止完了しました。トーバーを外す前に必ず行う指示は？',
+      qVi: 'Máy bay đã dừng đúng vạch tim đường lăn. Trước khi tháo thanh kéo (Towbar), lệnh BẮT BUỘC phải gửi là gì?',
+      opts: [
+        { ok: true, ja: '"Pushback complete, please SET parking brake."（機長から"Brakes SET"復唱後にトーバー切離し！）', vi: '"Đẩy lùi hoàn tất, mời KÉO PHANH ĐỖ (Set Parking Brake)." (Chỉ tháo thanh kéo sau khi Cơ trưởng xác nhận Brakes SET!)' },
+        { ok: false, ja: 'ブレーキ確認を待たずにすぐトーバーを外す', vi: 'Tháo luôn thanh kéo không cần chờ xác nhận phanh đỗ' },
+        { ok: false, ja: '"Increase thrust to taxi now while towbar is attached."', vi: '"Tăng ga lăn luôn trong khi thanh kéo vẫn đang gắn."' }
+      ],
+      expJa: '機長から「Parking Brake SET」の明確な確認を得る前にトーバーを外すと、機体が動き出し重大人身事故になります。',
+      expVi: 'Tuyệt đối KHÔNG tháo Towbar khi chưa nghe Cơ trưởng xác nhận rõ "Parking Brake SET"!'
+    },
+    {
+      step: 5, phaseJa: '5. トーバー切離し・バイパスピン抜去 ＆ インターホン切断', phaseVi: '5. Tháo Towbar, Rút Bypass Pin & Ngắt Intercom',
+      pilotLine: 'Captain: "Parking brake is SET. Clear to disconnect."',
+      qJa: 'トーバー・トラクター退避＆バイパスピン抜去後の最後の無線フレーズは？',
+      qVi: 'Sau khi tháo xe kéo và rút chốt đỏ Bypass Pin, câu thoại cuối trước khi rút jack Headset là gì?',
+      opts: [
+        { ok: true, ja: '"Towbar disconnected, bypass pin removed. Disconnecting headset, watch for hand signal on the LEFT side. Have a safe flight!"', vi: '"Đã tháo thanh kéo & rút chốt Bypass Pin. Xin ngắt tai nghe, mời nhìn tín hiệu tay bên TRÁI. Chúc chuyến bay an toàn!"' },
+        { ok: false, ja: '"Disconnecting, watch behind the right engine!"', vi: '"Ngắt đây, nhìn ra sau động cơ phải nhé!"' },
+        { ok: false, ja: 'バイパスピンを挿したまま切断する', vi: 'Để nguyên chốt Bypass Pin trên càng mũi rồi rút tai nghe' }
+      ],
+      expJa: 'バイパスピン抜去を明言し、機長から見える「左側（Left Side）」で実物ピンを提示して敬礼・お見送りします。',
+      expVi: 'Báo rõ đã rút Bypass Pin, đứng bên TRÁI phía trước (tầm nhìn Cơ trưởng) giơ cờ đỏ xác nhận rồi vẫy chào tiễn bay (お見送り).' }
+  ];
+
+  // Từ điển 66 thuật ngữ Hàng không Nhật–Việt chuẩn 特定技能 & Khai thác sân đỗ (có đọc phát âm JA offline!)
+  export const OPS_DICTIONARY = [
+    { cat: 'ramp', ja: '指差呼称', kana: 'しさこしょう', en: 'Pointing & Calling', vi: 'Chỉ tay và hô xác nhận (chống lỗi chủ quan)' },
+    { cat: 'ramp', ja: '駐機誘導（マーシャリング）', kana: 'ちゅうきゆうどう', en: 'Marshalling', vi: 'Xi-nhan dẫn máy bay vào bãi đỗ' },
+    { cat: 'ramp', ja: '輪止め（チョーク）', kana: 'わどめ', en: 'Wheel Chocks', vi: 'Cục chèn bánh xe máy bay' },
+    { cat: 'ramp', ja: 'セーフティコーン', kana: 'せーふてぃこーん', en: 'Safety Cones', vi: 'Cọc tiêu cảnh báo quanh mũi, cánh & động cơ' },
+    { cat: 'ramp', ja: '衝突防止灯（ビーコン）', kana: 'しょうとつぼうしとう', en: 'Anti-Collision Beacon', vi: 'Đèn chớp đỏ báo động cơ đang hoạt động' },
+    { cat: 'ramp', ja: '地上電源車（GPU）', kana: 'ちじょうでんげんしゃ', en: 'Ground Power Unit', vi: 'Xe/nguồn cấp điện mặt đất 400Hz' },
+    { cat: 'ramp', ja: 'プッシュバック', kana: 'ぷっしゅばっく', en: 'Pushback', vi: 'Đẩy lùi máy bay khỏi bãi đỗ bằng xe kéo' },
+    { cat: 'ramp', ja: 'バイパスピン', kana: 'ばいぱすぴん', en: 'Steering Bypass Pin', vi: 'Chốt ngắt thủy lực lái bánh mũi (cờ đỏ)' },
+    { cat: 'ramp', ja: 'トーバー', kana: 'とーばー', en: 'Towbar', vi: 'Thanh kéo nối xe Tug với càng mũi máy bay' },
+    { cat: 'ramp', ja: '搭乗橋（PBB）', kana: 'とうじょうきょう', en: 'Passenger Boarding Bridge', vi: 'Ống lồng hành khách nối từ nhà ga vào cửa L1/L2' },
+    { cat: 'ramp', ja: 'ロータンダ', kana: 'ろーたんだ', en: 'PBB Rotunda', vi: 'Tháp xoay cố định của ống lồng PBB' },
+    { cat: 'ramp', ja: 'ハイドラント給油', kana: 'はいどらんときゅうゆ', en: 'Hydrant Refueling', vi: 'Tiếp nhiên liệu từ hệ thống ống ngầm dưới sân đỗ' },
+    { cat: 'ramp', ja: 'アース接続', kana: 'あーすせつぞく', en: 'Bonding / Grounding', vi: 'Nối dây tiếp địa chống tĩnh điện trước khi tra dầu' },
+    { cat: 'ramp', ja: 'ラバトリー作業', kana: 'らばとりーさぎょう', en: 'Lavatory Service', vi: 'Hút chất thải và xả rửa bồn vệ sinh máy bay' },
+    { cat: 'ramp', ja: '飲料水補給', kana: 'いんりょうすいほきゅう', en: 'Potable Water Service', vi: 'Cấp nước sạch sinh hoạt lên máy bay' },
+    { cat: 'ramp', ja: '機内清掃', kana: 'きないせいそう', en: 'Cabin Cleaning', vi: 'Vệ sinh khoang hành khách' },
+    { cat: 'ramp', ja: 'ケータリング（機内食搭載）', kana: 'けーたりんぐ', en: 'Catering Service', vi: 'Nâng và nạp suất ăn lên khoang bếp (Galley)' },
+    { cat: 'ramp', ja: 'デアイシング（除氷）', kana: 'であいしんぐ', en: 'De-icing (Type I)', vi: 'Phun dung dịch nóng tẩy băng tuyết trên cánh' },
+    { cat: 'ramp', ja: 'アンチアイシング（防氷）', kana: 'あんちあいしんぐ', en: 'Anti-icing (Type IV)', vi: 'Phủ màng chống đóng băng lại trước khi cất cánh' },
+    { cat: 'ramp', ja: 'ウォークアラウンド点検', kana: 'うぉーくあらうんど', en: 'Walkaround Inspection', vi: 'Đi vòng kiểm tra ngoại quan thân vỏ & FOD' },
+    { cat: 'ramp', ja: '左舷（ポートサイド）', kana: 'さげん', en: 'Port Side (Left)', vi: 'Mạn trái tàu bay (phía hành khách & PBB)' },
+    { cat: 'ramp', ja: '右舷（スターボード）', kana: 'うげん', en: 'Starboard Side (Right)', vi: 'Mạn phải tàu bay (phía hầm hàng, GPU, tra dầu)' },
+    { cat: 'ramp', ja: 'ハイリフトローダー（ローデッキ）', kana: 'はいりふとろーだー', en: 'Low-Deck High-Lift Loader', vi: 'Xe nâng sàn cắt kéo cho hầm container bụng (AKH/AKE/PMC)' },
+    { cat: 'ramp', ja: 'メインデッキローダー', kana: 'めいんでっきろーだー', en: 'Main-Deck High-Lift Loader', vi: 'Xe nâng sàn cao 5.2m chuyên cho máy bay chở hàng' },
+    { cat: 'ramp', ja: 'ベルトローダー', kana: 'べるとろーだー', en: 'Belt Loader', vi: 'Xe băng chuyền bốc xếp hành lý/hàng rời (Bulk)' },
+    { cat: 'ramp', ja: 'トーイングトラクター', kana: 'とーいんぐとらくたー', en: 'Baggage Towing Tractor', vi: 'Xe đầu kéo rơ-moóc hành lý & container dolly' },
+    { cat: 'ramp', ja: 'お見送り', kana: 'おみおくり', en: 'Departure Wave-Off', vi: 'Nghi thức vẫy tay chào tiễn máy bay đặc trưng Nhật Bản' },
+    { cat: 'wb', ja: '運航自重（DOW）', kana: 'うんこうじじゅう', en: 'Dry Operating Weight', vi: 'Trọng lượng rỗng khai thác (chưa khách, hàng, xăng)' },
+    { cat: 'wb', ja: '無燃料重量（ZFW）', kana: 'むねんりょうじゅうりょう', en: 'Zero Fuel Weight', vi: 'Trọng lượng không nhiên liệu (DOW + Payload)' },
+    { cat: 'wb', ja: '最大無燃料重量（MZFW）', kana: 'さいだいむねんりょうじゅうりょう', en: 'Max Zero Fuel Weight', vi: 'Giới hạn ZFW tối đa bảo vệ gốc cánh' },
+    { cat: 'wb', ja: '離陸重量（TOW / MTOW）', kana: 'りりくじゅうりょう', en: 'Takeoff Weight / Max TOW', vi: 'Trọng lượng cất cánh / Giới hạn cất cánh tối đa' },
+    { cat: 'wb', ja: '着陸重量（LW / MLW）', kana: 'ちゃくりくじゅうりょう', en: 'Landing Weight / Max LW', vi: 'Trọng lượng hạ cánh / Giới hạn hạ cánh tối đa' },
+    { cat: 'wb', ja: '平均空力翼弦（%MAC）', kana: 'へいきんくうりきよくげん', en: 'Mean Aerodynamic Chord', vi: 'Vị trí trọng tâm CG tính theo % chiều dài dây cung cánh chuẩn' },
+    { cat: 'wb', ja: '重心エンベロープ', kana: 'じゅうしんえんべろーぷ', en: 'CG Envelope', vi: 'Biểu đồ giới hạn trọng tâm an toàn theo trọng lượng' },
+    { cat: 'wb', ja: '水平安定板トリム（THS）', kana: 'すいへいあんていばんとりむ', en: 'Trimmable Horizontal Stabilizer', vi: 'Góc chỉnh cánh đuôi ngang cân bằng cất cánh theo %MAC' },
+    { cat: 'wb', ja: '搭載指示書（LIR）', kana: 'とうさいしじしょ', en: 'Load Instruction / Report', vi: 'Bảng chỉ thị & xác nhận xếp tải từng hầm/vị trí ULD' },
+    { cat: 'wb', ja: '直前変更（LMC）', kana: 'ちょくぜんへんこう', en: 'Last Minute Change', vi: 'Thay đổi tải trọng/hành khách giờ chót sau khi in Load Sheet' },
+    { cat: 'wb', ja: 'テールティッピング（尻もち）', kana: 'しりもち', en: 'Ground Tail-Tipping', vi: 'Tai nạn sập đuôi nhấc càng mũi ngay trên sân đỗ do nặng đuôi' },
+    { cat: 'wb', ja: 'テールストライク', kana: 'てーるすとらいく', en: 'Tail-Strike', vi: 'Tai nạn quệt đuôi xuống đường băng khi cất/hạ cánh' },
+    { cat: 'wb', ja: '離陸決心速度（V1）', kana: 'りりくけっしんそくど', en: 'Takeoff Decision Speed', vi: 'Tốc độ quyết định cất cánh (quá V1 không hủy cất cánh)' },
+    { cat: 'wb', ja: 'ローテーション速度（VR）', kana: 'ろーてーしょんそくど', en: 'Rotation Speed', vi: 'Tốc độ kéo cần lái nâng mũi cất cánh' },
+    { cat: 'wb', ja: '残搭載余裕（アンダーロード）', kana: 'ざんとうさいよゆう', en: 'Underload Before LMC', vi: 'Phần tải trọng thương mại còn dư cho phép xếp thêm' },
+    { cat: 'cargo', ja: '航空貨物運送状（AWB）', kana: 'こうくうかもつうんそうじょう', en: 'Air Waybill', vi: 'Vận đơn hàng không (kiểm tra check-digit Mod-7)' },
+    { cat: 'cargo', ja: 'ユニットロードデバイス（ULD）', kana: 'ゆにっとろーどでばいす', en: 'Unit Load Device', vi: 'Thùng container (AKE/AKH) & mâm pallet (PMC/PAG)' },
+    { cat: 'cargo', ja: '容積重量', kana: 'ようせきじゅうりょう', en: 'Volume Weight', vi: 'Trọng lượng quy đổi thể tích (L×W×H / 6000)' },
+    { cat: 'cargo', ja: '請求重量', kana: 'せいきゅうじゅうりょう', en: 'Chargeable Weight', vi: 'Trọng lượng tính cước = max(Gross, Volume)' },
+    { cat: 'cargo', ja: '危険物（DGR）', kana: 'きけんぶつ', en: 'Dangerous Goods', vi: 'Hàng nguy hiểm phân 9 nhóm theo quy định IATA DGR' },
+    { cat: 'cargo', ja: '危険物申告書（DGD）', kana: 'きけんぶつしんこくしょ', en: 'Shipper\'s Declaration', vi: 'Tờ khai hàng nguy hiểm bắt buộc có chữ ký chủ hàng' },
+    { cat: 'cargo', ja: '機長宛特別搭載通知書（NOTOC）', kana: 'のっとっく', en: 'Notification to Captain', vi: 'Bảng thông báo hàng nguy hiểm/đặc biệt giao Cơ trưởng' },
+    { cat: 'cargo', ja: '貨物専用機限定（CAO）', kana: 'かもつせんようきげんてい', en: 'Cargo Aircraft Only', vi: 'Nhãn cam cấm tuyệt đối lên máy bay chở khách' },
+    { cat: 'cargo', ja: '輸出入通関（NACCS）', kana: 'ゆしゅつにゅうつうかん', en: 'Export/Import Customs', vi: 'Thủ tục thông quan điện tử Nhật Bản qua hệ thống NACCS' },
+    { cat: 'cargo', ja: 'ビルドアップ／ブレイクダウン', kana: 'びるどあっぷ', en: 'Build-up / Breakdown', vi: 'Đóng hàng lên ULD / Dỡ hàng phân loại khỏi ULD' },
+    { cat: 'pax', ja: '預け入れ手荷物', kana: 'あずけいれてにもつ', en: 'Checked Baggage', vi: 'Hành lý ký gửi (giới hạn 32kg/kiện an toàn lao động)' },
+    { cat: 'pax', ja: '機内持込手荷物', kana: 'きないもちこみてにもつ', en: 'Carry-on Baggage', vi: 'Hành lý xách tay lên cabin (pin dự phòng bắt buộc xách tay)' },
+    { cat: 'pax', ja: '非常口座席', kana: 'ひじょうぐちざせき', en: 'Exit Row Seat', vi: 'Hàng ghế thoát hiểm (chỉ xếp khách đủ điều kiện hỗ trợ)' },
+    { cat: 'pax', ja: '最低乗継時間（MCT）', kana: 'さいていのりつぎじかん', en: 'Minimum Connecting Time', vi: 'Thời gian nối chuyến tối thiểu giữa 2 chặng' },
+    { cat: 'pax', ja: '旅客手荷物照合（PPBM）', kana: 'りょかくてにもつしょうごう', en: 'Positive Pax Bag Match', vi: 'Quy tắc an ninh: khách không lên máy bay phải dỡ hành lý' },
+    { cat: 'pax', ja: '援助必要旅客（PRM）', kana: 'えんじょひつようりょかく', en: 'Persons w/ Reduced Mobility', vi: 'Hành khách cần hỗ trợ xe lăn/y tế (WCHR/WCHS/WCHC)' },
+    { cat: 'safety', ja: '異物損傷（FOD）', kana: 'いぶつそんしょう', en: 'Foreign Object Debris/Damage', vi: 'Vật thể lạ trên sân đỗ gây hút động cơ/nổ lốp' },
+    { cat: 'safety', ja: '機材待機制限区域（ERA）', kana: 'きざいたいきせいげんくいき', en: 'Equipment Restraint Area', vi: 'Vùng vạch đỏ quanh tàu bay — phải trống khi máy bay vào/ra' },
+    { cat: 'safety', ja: '滑走路誤進入', kana: 'かっそうろごしんにゅう', en: 'Runway Incursion', vi: 'Xâm nhập trái phép đường băng (sự cố cực kỳ nghiêm trọng)' },
+    { cat: 'safety', ja: 'ヒヤリハット報告', kana: 'ひやりはっとほうこく', en: 'Near-Miss / Hazard Report', vi: 'Báo cáo sự cố suýt xảy ra để phòng ngừa trong SMS' },
+    { cat: 'safety', ja: '安全管理システム（SMS）', kana: 'あんぜんかんりしすてむ', en: 'Safety Management System', vi: 'Hệ thống quản lý an toàn dựa trên Văn hóa công bằng (Just Culture)' },
+    { cat: 'safety', ja: '国土交通省航空局（JCAB）', kana: 'こくどこうつうしょうこうくうきょく', en: 'Japan Civil Aviation Bureau', vi: 'Cục Hàng không Nhật Bản quản lý theo Luật Hàng không (航空法)' },
+    { cat: 'safety', ja: '運輸安全委員会（JTSB）', kana: 'うんゆあんぜんいいんかい', en: 'Japan Transport Safety Board', vi: 'Ủy ban điều tra độc lập tai nạn & sự cố nghiêm trọng' },
+    { cat: 'safety', ja: '止まる・呼ぶ・待つ', kana: 'とまる・よぶ・まつ', en: 'Stop, Call, Wait', vi: 'Nguyên tắc vàng khi gặp bất thường: Dừng lại · Gọi báo · Chờ chỉ thị' }
+  ];

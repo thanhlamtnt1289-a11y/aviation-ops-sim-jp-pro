@@ -1,0 +1,669 @@
+// Module G: Three.js PBR 5-Airport Simulator + Direct 3D Raycasting + 10 POVs + GSE Drive + 100pt 3D Exam
+import { AIRCRAFT_PROFILES } from '../data/aircraft.js';
+import {
+  A3D_AIRPORTS,
+  A3D_FACILITIES,
+  A3D_FLIGHT_PHASES,
+  A3D_MISSIONS,
+  A3D_OBSTACLES,
+  A3D_RADIO_COMMS,
+  A3D_VIEWPOINTS,
+  computeFlightCyclePose,
+  evaluateAirportZone
+} from '../data/airports.js';
+import { a3dAudio } from '../engines/audioEngine.js';
+import { appState, bi, saveState, t } from '../core/state.js';
+import { wbState } from './wbModule.js';
+
+function makeInitialHandsOn() {
+  return {
+    beaconOn: true,
+    chocksOn: false,
+    conesOn: false,
+    pbbExt: 0,
+    loaderH: 0,
+    uldLoaded: false,
+    fods: [
+      { id: 'F1', x: -5.5, z: 24.5, ja: '金属ボルト (Nose Gear前)', vi: 'Bu-lông kim loại (Trước càng mũi)', cleared: false },
+      { id: 'F2', x: -13.0, z: 12.0, ja: 'ビニール袋 (右エンジン前方)', vi: 'Túi nilon (Trước động cơ phải)', cleared: false },
+      { id: 'F3', x: 7.5, z: -2.0, ja: '手荷物ベルト (左主翼付近)', vi: 'Dây đai hành lý (Gần cánh trái)', cleared: false }
+    ],
+    violations: 0,
+    lastMsgJa: '到着完了！ビーコン消灯後、3D画面上の赤いFOD・PBB・ローダーを直接クリックまたは右パネルで操作して100点実技試験へ挑戦！',
+    lastMsgVi: 'Tàu bay vừa dừng tại Spot 7! Hãy tắt Beacon rồi CLICK TRỰC TIẾP lên FOD đỏ, PBB, High-Loader trên màn hình 3D (hoặc dùng bảng bên phải)!',
+    examResult: null
+  };
+}
+
+export const a3d = {
+  subtab: 'flight', // 'flight' | 'drive' | 'ops3d'
+  airportId: 'NGO',
+  fleetAircraftId: 'A320',
+  weather: 'clear',
+  timeOfDay: 'day',
+  gfxQuality: 'high',
+  labelMode: 'smart',
+  expanded: false,
+  soundOn: false,
+  showZones: true,
+  syncWbFailure: true,
+  spot101BeaconOn: true,
+  ngoVehMode: 'standard', // 'standard' (30km/h) | 'towing' (6 carts, 15km/h) | 'high38' (>3.8m, no fixed bridge)
+  ilsRedOn: true,
+  blastActive: false,
+  camMode: 'flight_follow',
+  gseType: 'tractor',
+  missionId: 'M1',
+  missionDone: false,
+  checkpointIdx: 0,
+  brakeCheckedForEra: false,
+  heldOutside101: false,
+  score: 100,
+  selectedFacility: 'serviceroad',
+  flightPlaying: true,
+  flightPhaseIdx: 0,
+  flightProgress: 0,
+  flightSpeed: 1,
+  handsOn: makeInitialHandsOn(),
+  aiTime: 0,
+  veh: { x: -112, z: 28, heading: Math.PI / 2, speed: 0 },
+  cam: { tx: 0, ty: 2, tz: 10, dist: 105, yaw: 0.45, pitch: 0.50 },
+  keys: { up: false, down: false, left: false, right: false, brake: false },
+  dragging: false,
+  lastMouse: { x: 0, y: 0 },
+  lastViolTime: 0,
+  logs: [],
+  rafId: null,
+  lastFrame: 0,
+  initialized: false
+};
+
+let scene3d = null;
+let toastTimer = null;
+
+function showRaycastToast(msg) {
+  const el = document.getElementById('a3d-raycast-toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function handle3DInteract(hit) {
+  if (a3d.subtab !== 'ops3d') {
+    showRaycastToast(t('「3. 操作実習」タブで3D直接クリック操作が使えます', 'Chuyển sang Tab 3 (Thực hành 3D) để click thao tác trực tiếp!'));
+    return;
+  }
+  if (hit.type === 'fod') {
+    collectHandsOnFod(hit.id);
+    showRaycastToast(`✓ ${t('3DクリックでFOD回収', 'Click 3D nhặt sạch FOD')} [${hit.id}]!`);
+  } else if (hit.type === 'pbb') {
+    setHandsOnPbb(a3d.handsOn.pbbExt > 0.5 ? 0 : 100);
+    renderHandsOnPanel();
+    showRaycastToast(a3d.handsOn.pbbExt > 0.5 ? '✓ PBB Docked (100%)' : 'PBB Retracted (0%)');
+  } else if (hit.type === 'loader') {
+    if (a3d.handsOn.loaderH < 0.85) {
+      setHandsOnLoader(100);
+      renderHandsOnPanel();
+      showRaycastToast('✓ High-Lift Loader Raised (100%) — Click again to load ULD!');
+    } else {
+      toggleHandsOnUld();
+      showRaycastToast(a3d.handsOn.uldLoaded ? '✓ AKH ULD Loaded!' : 'ULD Unloaded');
+    }
+  } else if (hit.type === 'chocks') {
+    toggleHandsOnChocks();
+    showRaycastToast(a3d.handsOn.chocksOn ? '✓ Chocks ON' : 'Chocks OFF');
+  }
+}
+
+function logA3d(type, ja, vi, en) {
+  a3d.logs.unshift({ type, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }), ja, vi, en: en || vi });
+  if (a3d.logs.length > 20) a3d.logs.pop();
+  const el = document.getElementById('a3d-log-list');
+  if (el) {
+    el.innerHTML = a3d.logs.map(l => `<div class="alert alert-${l.type === 'ok' ? 'ok' : (l.type === 'danger' ? 'danger' : (l.type === 'warn' ? 'warn' : 'info'))}" style="padding:6px 9px;font-size:12px;margin-bottom:5px;">[${l.time}] ${t(l.ja, l.vi, l.en)}</div>`).join('');
+  }
+}
+
+function checkHandsOnSafety(label) {
+  if (a3d.handsOn.beaconOn) {
+    a3d.handsOn.violations += 1;
+    a3dAudio.playBeep(360, 0.25);
+    a3d.handsOn.lastMsgJa = `⚠ 安全違反 (-15pt): 赤ビーコン点灯中に「${label}」を実施しました！先にビーコンOFFを確認してください。`;
+    a3d.handsOn.lastMsgVi = `⚠ VI PHẠM AN TOÀN (-15đ): Thao tác "${label}" khi đèn Beacon đỏ đang SÁNG! Phải tắt Beacon trước.`;
+    return false;
+  }
+  return true;
+}
+
+export function toggleHandsOnBeacon() {
+  a3d.handsOn.beaconOn = !a3d.handsOn.beaconOn;
+  a3dAudio.playChirp();
+  a3d.handsOn.lastMsgJa = a3d.handsOn.beaconOn ? '衝突防止灯 ON — 接近禁止！' : 'ビーコン消灯よし！3D上のFOD・PBB・ローダーをクリック操作できます。';
+  a3d.handsOn.lastMsgVi = a3d.handsOn.beaconOn ? 'Beacon ON — Cấm tiếp cận!' : 'Beacon OFF! Bạn có thể click thẳng FOD/PBB/Loader trên 3D hoặc thao tác bảng này.';
+  renderHandsOnPanel();
+}
+export function toggleHandsOnChocks() {
+  if (!a3d.handsOn.chocksOn && !checkHandsOnSafety('Chocks')) { renderHandsOnPanel(); return; }
+  a3d.handsOn.chocksOn = !a3d.handsOn.chocksOn;
+  a3dAudio.playChirp();
+  renderHandsOnPanel();
+}
+export function toggleHandsOnCones() {
+  if (!a3d.handsOn.conesOn && !checkHandsOnSafety('Cones')) { renderHandsOnPanel(); return; }
+  a3d.handsOn.conesOn = !a3d.handsOn.conesOn;
+  a3dAudio.playChirp();
+  renderHandsOnPanel();
+}
+export function collectHandsOnFod(fid) {
+  if (!checkHandsOnSafety('FOD Walkaround')) { renderHandsOnPanel(); return; }
+  const f = a3d.handsOn.fods.find(x => x.id === fid);
+  if (f) {
+    f.cleared = true;
+    a3dAudio.playChirp();
+    a3d.handsOn.lastMsgJa = `✓ FOD [${fid}] を回収しました！`;
+    a3d.handsOn.lastMsgVi = `✓ Đã nhặt sạch FOD [${fid}] trên sân đỗ!`;
+  }
+  renderHandsOnPanel();
+}
+export function setHandsOnPbb(val) {
+  const v = Math.max(0, Math.min(100, Number(val) || 0)) / 100;
+  if (v > 0.1 && !checkHandsOnSafety('PBB')) { renderHandsOnPanel(); return; }
+  a3d.handsOn.pbbExt = v;
+  const lbl = document.getElementById('ho-pbb-pct');
+  if (lbl) lbl.textContent = `${Math.round(v * 100)}%`;
+}
+export function setHandsOnLoader(val) {
+  const v = Math.max(0, Math.min(100, Number(val) || 0)) / 100;
+  if (v > 0.1 && !checkHandsOnSafety('High-Lift Loader')) { renderHandsOnPanel(); return; }
+  a3d.handsOn.loaderH = v;
+  const lbl = document.getElementById('ho-ldr-pct');
+  if (lbl) lbl.textContent = `${Math.round(v * 100)}%`;
+}
+export function toggleHandsOnUld() {
+  if (!checkHandsOnSafety('Load ULD')) { renderHandsOnPanel(); return; }
+  if (a3d.handsOn.loaderH < 0.85) {
+    a3dAudio.playBeep(480, 0.18);
+    a3d.handsOn.lastMsgJa = '⚠ ローダーを85%以上上げてからULDを押し込んでください！';
+    a3d.handsOn.lastMsgVi = '⚠ Hãy nâng sàn High-Lift Loader lên ≥85% trước khi nạp thùng ULD!';
+    renderHandsOnPanel();
+    return;
+  }
+  a3d.handsOn.uldLoaded = !a3d.handsOn.uldLoaded;
+  a3dAudio.playChirp();
+  renderHandsOnPanel();
+}
+export function gradeHandsOn3dExam() {
+  const ho = a3d.handsOn;
+  let score = 0;
+  const notes = [];
+  if (!ho.beaconOn) { score += 15; notes.push('✓ Beacon OFF (+15)'); } else notes.push('✗ Beacon still ON (0/15)');
+  if (ho.chocksOn && ho.conesOn) { score += 20; notes.push('✓ Chocks & Cones (+20)'); } else notes.push('✗ Missing Chocks/Cones (0/20)');
+  const fodCnt = ho.fods.filter(f => f.cleared).length;
+  score += fodCnt * 10;
+  notes.push(`${fodCnt === 3 ? '✓' : '⚠'} FOD Walkaround ${fodCnt}/3 (+${fodCnt * 10}/30)`);
+  if (ho.pbbExt >= 0.9) { score += 15; notes.push('✓ Port PBB Docked (+15)'); } else notes.push('✗ PBB not docked ≥90% (0/15)');
+  if (ho.loaderH >= 0.85 && ho.uldLoaded) { score += 20; notes.push('✓ High-Loader & AKH ULD (+20)'); } else notes.push('✗ ULD not loaded (0/20)');
+  if (ho.violations > 0) {
+    const pen = ho.violations * 15;
+    score = Math.max(0, score - pen);
+    notes.push(`⚠ Safety Violations: -${pen}pt`);
+  }
+  ho.examResult = { score, notes };
+  if (appState.exam3dBest === null || score > appState.exam3dBest) {
+    appState.exam3dBest = score;
+    saveState();
+  }
+  a3dAudio.playChirp();
+  renderHandsOnPanel();
+}
+export function resetHandsOn3d() {
+  a3d.handsOn = makeInitialHandsOn();
+  renderHandsOnPanel();
+}
+
+function renderHandsOnPanel() {
+  const el = document.getElementById('a3d-handson-panel');
+  if (!el) return;
+  const ho = a3d.handsOn;
+  const fodCleared = ho.fods.filter(f => f.cleared).length;
+  el.innerHTML = `
+    <div class="alert ${ho.violations > 0 ? 'alert-danger' : 'alert-info'}" style="font-size:12.5px;margin-bottom:10px;">
+      ${t(ho.lastMsgJa, ho.lastMsgVi)}
+    </div>
+    <div class="section-label">1. ${t('安全確認・輪止め・コーン', 'Khóa an toàn Beacon, Chèn bánh & Cọc tiêu')}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="btn btn-sm ${ho.beaconOn ? 'btn-danger-outline' : 'btn-primary'}" id="ho-btn-beacon">${ho.beaconOn ? '🔴 Beacon ON → OFF' : '⚪ Beacon OFF (SAFE)'}</button>
+      <button class="btn btn-sm ${ho.chocksOn ? 'btn-primary' : ''}" id="ho-btn-chocks">${ho.chocksOn ? '✓ Chocks ON' : '輪止め (Chocks)'}</button>
+      <button class="btn btn-sm ${ho.conesOn ? 'btn-primary' : ''}" id="ho-btn-cones">${ho.conesOn ? '✓ Cones ON' : 'コーン (Cones)'}</button>
+    </div>
+    <div class="section-label">2. ${t('ウォークアラウンド FOD回収（3D上を直接クリックも可）', 'Nhặt 3 FOD (Click thẳng trên 3D hoặc bấm bên dưới)')} (${fodCleared}/3)</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;">
+      ${ho.fods.map(f => `<button class="btn btn-sm ${f.cleared ? '' : 'btn-danger-outline'}" data-fod="${f.id}" ${f.cleared ? 'disabled' : ''} style="justify-content:space-between;"><span>${f.cleared ? '✓' : '⚠'} [${f.id}] ${t(f.ja, f.vi)}</span><span>${f.cleared ? 'CLEARED' : t('回収', 'Nhặt')}</span></button>`).join('')}
+    </div>
+    <div class="section-label">3. ${t('PBB ＆ Low-Deck ハイリフト操作', 'Điều khiển PBB & High-Lift Loader')}</div>
+    <div class="field" style="margin-bottom:8px;">
+      <label>${t('左舷 PBB スライド', 'Ống lồng PBB L1')}: <strong id="ho-pbb-pct">${Math.round(ho.pbbExt * 100)}%</strong></label>
+      <input type="range" id="ho-rng-pbb" min="0" max="100" value="${Math.round(ho.pbbExt * 100)}" />
+    </div>
+    <div class="field" style="margin-bottom:8px;">
+      <label>${t('右舷 High-Loader 昇降', 'Độ cao Low-Deck Loader')}: <strong id="ho-ldr-pct">${Math.round(ho.loaderH * 100)}%</strong></label>
+      <input type="range" id="ho-rng-ldr" min="0" max="100" value="${Math.round(ho.loaderH * 100)}" />
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="btn btn-sm ${ho.uldLoaded ? 'btn-primary' : ''}" id="ho-btn-uld">${ho.uldLoaded ? '✓ AKH ULD Loaded' : '📦 AKH ULD搭載 (Load ULD)'}</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-sm btn-primary" id="ho-btn-grade">🏆 ${t('3D実技試験 採点 (100点)', 'Chấm điểm Thi 3D (100đ)')}</button>
+      <button class="btn btn-sm" id="ho-btn-reset">↺ ${t('リセット', 'Làm lại')}</button>
+    </div>
+    ${ho.examResult ? `
+      <div class="alert ${ho.examResult.score >= 80 ? 'alert-ok' : 'alert-warn'}" style="margin-top:10px;margin-bottom:0;font-size:12.5px;">
+        <strong>SCORE: ${ho.examResult.score} / 100 (${ho.examResult.score >= 80 ? 'PASS 合格' : 'RETRY'})</strong>
+        <ul style="margin:5px 0 0 16px;padding:0;">${ho.examResult.notes.map(n => `<li>${n}</li>`).join('')}</ul>
+      </div>
+    ` : ''}
+  `;
+  document.getElementById('ho-btn-beacon').onclick = toggleHandsOnBeacon;
+  document.getElementById('ho-btn-chocks').onclick = toggleHandsOnChocks;
+  document.getElementById('ho-btn-cones').onclick = toggleHandsOnCones;
+  document.getElementById('ho-btn-uld').onclick = toggleHandsOnUld;
+  document.getElementById('ho-btn-grade').onclick = gradeHandsOn3dExam;
+  document.getElementById('ho-btn-reset').onclick = resetHandsOn3d;
+  document.getElementById('ho-rng-pbb').oninput = e => setHandsOnPbb(e.target.value);
+  document.getElementById('ho-rng-ldr').oninput = e => setHandsOnLoader(e.target.value);
+  el.querySelectorAll('[data-fod]').forEach(b => { b.onclick = () => collectHandsOnFod(b.dataset.fod); });
+}
+
+function renderFlightPhasePanel() {
+  const ph = A3D_FLIGHT_PHASES[a3d.flightPhaseIdx];
+  const radio = A3D_RADIO_COMMS[a3d.flightPhaseIdx];
+  const radioEl = document.getElementById('a3d-radio-bar');
+  if (radioEl && radio) {
+    radioEl.innerHTML = `<span class="radio-dot"></span><strong style="color:#38BDF8;flex-shrink:0;">[${radio.ch}]</strong><span class="ja">${t(radio.ja, radio.vi)}</span>`;
+  }
+  const strip = document.getElementById('a3d-phase-strip');
+  if (strip) {
+    strip.innerHTML = A3D_FLIGHT_PHASES.map((item, i) => `
+      <button class="phase-chip ${i === a3d.flightPhaseIdx ? 'active' : (i < a3d.flightPhaseIdx ? 'passed' : '')}" data-phase="${i}">
+        <strong>${i + 1}.</strong> ${t(item.tagJa, item.tagVi)}
+      </button>
+    `).join('');
+    strip.querySelectorAll('[data-phase]').forEach(b => {
+      b.onclick = () => { a3d.flightPhaseIdx = Number(b.dataset.phase); a3d.flightProgress = 0; a3dAudio.playChirp(); renderFlightPhasePanel(); };
+    });
+  }
+  const panel = document.getElementById('a3d-flight-roles-panel');
+  if (panel) {
+    panel.innerHTML = `
+      <div class="alert alert-info" style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+          <strong>${t(ph.titleJa, ph.titleVi)}</strong>
+          <span class="badge badge-accent">STEP ${a3d.flightPhaseIdx + 1} / 10</span>
+        </div>
+        <div class="progress-bar-wrap" style="margin:7px 0 4px;"><div class="progress-bar-fill" id="a3d-flight-prog" style="width:${Math.round(a3d.flightProgress * 100)}%"></div></div>
+        <div style="font-size:12px;margin-top:4px;"><strong>${t('安全ポイント:', 'Trọng điểm an toàn:')}</strong> ${t(ph.safetyJa, ph.safetyVi)}</div>
+      </div>
+      ${ph.roles.map(r => `
+        <div class="crew-role-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong style="font-size:13px;">${bi(r.roleJa, r.roleVi)}</strong>
+            <span class="badge badge-neutral">${r.badge}</span>
+          </div>
+          <ul>${(appState.lang === 'ja' ? r.tasksJa : r.tasksVi).map(tk => `<li class="ja">${tk}</li>`).join('')}</ul>
+        </div>
+      `).join('')}
+    `;
+  }
+}
+
+export function setA3dViewpoint(vpId) {
+  a3d.camMode = vpId;
+  document.querySelectorAll('[data-vp]').forEach(b => b.classList.toggle('btn-primary', b.dataset.vp === vpId));
+  const vp = A3D_VIEWPOINTS.find(v => v.id === vpId);
+  const descEl = document.getElementById('a3d-vp-desc');
+  if (descEl && vp) descEl.textContent = `[${vp.key}] ${t(vp.ja, vp.vi)} — ${t(vp.descJa, vp.descVi)}`;
+}
+
+function stepPhysics(dt, now) {
+  a3d.aiTime += dt;
+  const hudZone = document.getElementById('a3d-hud-zone');
+  const hudSpd = document.getElementById('a3d-hud-spd');
+  const hudScr = document.getElementById('a3d-hud-score');
+
+  if (a3d.subtab === 'ops3d') {
+    const ho = a3d.handsOn;
+    const fCnt = ho.fods.filter(f => f.cleared).length;
+    if (hudZone) { hudZone.textContent = ho.beaconOn ? '🔴 BEACON ON — WAIT' : '🟢 CLICK 3D FOD / PBB / LOADER'; hudZone.className = `hud-pill ${ho.beaconOn ? 'danger' : 'ok'}`; }
+    if (hudSpd) hudSpd.textContent = `FOD ${fCnt}/3 | PBB ${Math.round(ho.pbbExt * 100)}%`;
+    if (hudScr) hudScr.textContent = `VIOL ${ho.violations}`;
+    return;
+  }
+
+  if (a3d.subtab === 'flight') {
+    const ph = A3D_FLIGHT_PHASES[a3d.flightPhaseIdx];
+    if (a3d.flightPlaying) {
+      a3d.flightProgress += (dt * a3d.flightSpeed) / ph.duration;
+      if (a3d.flightProgress >= 1) {
+        a3d.flightProgress = 0;
+        a3d.flightPhaseIdx = (a3d.flightPhaseIdx + 1) % A3D_FLIGHT_PHASES.length;
+        a3dAudio.playChirp();
+        renderFlightPhasePanel();
+      }
+    }
+    const pose = computeFlightCyclePose(a3d.flightPhaseIdx, a3d.flightProgress);
+    if (hudZone) { hudZone.textContent = `${a3d.flightPhaseIdx + 1}/10 · ${t(ph.tagJa, ph.tagVi)}`; hudZone.className = `hud-pill ${pose.ac.beaconOn ? 'danger' : 'ok'}`; }
+    if (hudSpd) hudSpd.textContent = `ALT ${Math.round(pose.ac.y)}m | ${pose.ac.beaconOn ? 'BEACON ON' : 'BEACON OFF'}`;
+    if (hudScr) hudScr.textContent = `${Math.round(a3d.flightProgress * 100)}%`;
+    const bar = document.getElementById('a3d-flight-prog');
+    if (bar) bar.style.width = `${Math.round(a3d.flightProgress * 100)}%`;
+    return;
+  }
+
+  // GSE Driving Physics
+  const v = a3d.veh;
+  if (a3d.keys.brake) v.speed = Math.abs(v.speed) < 0.35 ? 0 : v.speed - Math.sign(v.speed) * 18 * dt;
+  else if (a3d.keys.up) v.speed = Math.min(11.2, v.speed + 9.0 * dt);
+  else if (a3d.keys.down) v.speed = Math.max(-4.2, v.speed - 9.0 * dt);
+  else v.speed = Math.abs(v.speed) < 0.15 ? 0 : v.speed - Math.sign(v.speed) * 4.5 * dt;
+
+  if (Math.abs(v.speed) > 0.12) {
+    const dir = v.speed >= 0 ? 1 : -1;
+    if (a3d.keys.left) v.heading -= 1.95 * dt * dir;
+    if (a3d.keys.right) v.heading += 1.95 * dt * dir;
+  }
+  const nx = Math.max(-154, Math.min(154, v.x + Math.cos(v.heading) * v.speed * dt));
+  const nz = Math.max(-135, Math.min(96, v.z + Math.sin(v.heading) * v.speed * dt));
+  const hitObs = A3D_OBSTACLES.some(o => nx >= o.x1 - 2 && nx <= o.x2 + 2 && nz >= o.z1 - 2 && nz <= o.z2 + 2);
+  if (hitObs) v.speed = 0; else { v.x = nx; v.z = nz; }
+
+  const kmh = Math.abs(v.speed) * 3.6;
+  const ev = evaluateAirportZone(v.x, v.z, kmh, a3d.spot101BeaconOn, {
+    towingCarts: a3d.ngoVehMode === 'towing',
+    over38m: a3d.ngoVehMode === 'high38',
+    ilsRedOn: a3d.ilsRedOn,
+    blastActive: a3d.blastActive
+  });
+  if ((!ev.allowed || ev.speeding) && now - a3d.lastViolTime > 2500) {
+    a3d.lastViolTime = now;
+    a3d.score = Math.max(0, a3d.score - ev.penalty);
+    a3dAudio.playBeep(400, 0.2);
+    logA3d(ev.allowed ? 'warn' : 'danger', `[違反 -${ev.penalty}pt] ${ev.ja}`, `[Vi phạm -${ev.penalty}đ] ${ev.vi}`, `[Violation -${ev.penalty}pt] ${ev.en || ev.vi}`);
+  }
+  const m = A3D_MISSIONS.find(x => x.id === a3d.missionId);
+  if (m && !a3d.missionDone && m.target) {
+    if (Math.hypot(v.x - m.target.x, v.z - m.target.z) <= m.target.r && kmh < 1.2 && (!m.requireBeaconOff || !a3d.spot101BeaconOn)) {
+      a3d.missionDone = true;
+      if (!appState.airport3dSolved.includes(m.id)) { appState.airport3dSolved.push(m.id); saveState(); }
+      logA3d('ok', `🎉 ミッション ${m.id} 達成 (${a3d.score}/100)`, `🎉 Hoàn thành ${m.id} (${a3d.score}/100)!`, `🎉 Mission ${m.id} Complete (${a3d.score}/100)!`);
+    }
+  }
+  if (hudZone) { hudZone.textContent = t(ev.ja, ev.vi, ev.en); hudZone.className = `hud-pill ${!ev.allowed || ev.speeding ? 'danger' : 'ok'}`; }
+  if (hudSpd) hudSpd.textContent = `${kmh.toFixed(0)} / ${ev.speedLimit} km/h`;
+  if (hudScr) hudScr.textContent = `SCORE ${a3d.score}/100`;
+}
+
+export function stopAirport3dLoop() {
+  if (a3d.rafId) { cancelAnimationFrame(a3d.rafId); a3d.rafId = null; }
+}
+
+export async function startAirport3dLoop() {
+  const glCanvas = document.getElementById('airport3d-gl');
+  const hudCanvas = document.getElementById('airport3d-hud2d');
+  if (!glCanvas || !hudCanvas) return;
+
+  if (!scene3d || scene3d.canvas !== glCanvas) {
+    if (scene3d) scene3d.dispose();
+    try {
+      const { AirportScene3D } = await import('../three3d/AirportScene3D.js');
+      scene3d = new AirportScene3D(glCanvas, hudCanvas, { onInteract: handle3DInteract });
+    } catch (err) {
+      const ctx = hudCanvas.getContext('2d');
+      ctx.fillStyle = '#0B1324'; ctx.fillRect(0, 0, hudCanvas.width, hudCanvas.height);
+      ctx.fillStyle = '#7DD3FC'; ctx.font = '14px monospace';
+      ctx.fillText('Three.js loading error: ' + err.message, 20, 40);
+      return;
+    }
+  }
+
+  if (!a3d.rafId && appState.activeModule === 'airport3d') {
+    a3d.lastFrame = 0;
+    const loop = now => {
+      if (appState.activeModule !== 'airport3d') { a3d.rafId = null; return; }
+      const dt = a3d.lastFrame ? Math.min(0.05, (now - a3d.lastFrame) / 1000) : 0.016;
+      a3d.lastFrame = now;
+      stepPhysics(dt, now);
+      scene3d.renderFrame({ ...a3d, wbConseq: wbState.aircraftId === a3d.fleetAircraftId ? wbState.lastConseq : null }, now);
+      a3d.rafId = requestAnimationFrame(loop);
+    };
+    a3d.rafId = requestAnimationFrame(loop);
+  }
+}
+
+export function initAirport3dModule() {
+  if (!a3d.initialized) {
+    a3d.initialized = true;
+    window.addEventListener('keydown', e => {
+      if (appState.activeModule !== 'airport3d') return;
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
+      if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') a3d.keys.up = true;
+      if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') a3d.keys.down = true;
+      if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') a3d.keys.left = true;
+      if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') a3d.keys.right = true;
+      if (e.key === ' ') a3d.keys.brake = true;
+      const vp = A3D_VIEWPOINTS.find(v => v.key === e.key);
+      if (vp) setA3dViewpoint(vp.id);
+    });
+    window.addEventListener('keyup', e => {
+      if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') a3d.keys.up = false;
+      if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') a3d.keys.down = false;
+      if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') a3d.keys.left = false;
+      if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') a3d.keys.right = false;
+      if (e.key === ' ') a3d.keys.brake = false;
+    });
+  }
+  renderAirport3dUI();
+}
+
+export function renderAirport3dUI() {
+  const mount = document.getElementById('airport3d-mount');
+  if (!mount) return;
+  const isFlight = a3d.subtab === 'flight';
+  const isDrive = a3d.subtab === 'drive';
+  const isOps3d = a3d.subtab === 'ops3d';
+  const m = A3D_MISSIONS.find(x => x.id === a3d.missionId) || A3D_MISSIONS[0];
+  const fac = A3D_FACILITIES.find(f => f.id === a3d.selectedFacility) || A3D_FACILITIES[0];
+  const curVp = A3D_VIEWPOINTS.find(v => v.id === a3d.camMode) || A3D_VIEWPOINTS[0];
+
+  mount.innerHTML = `
+    <div class="subtabs">
+      <button class="subtab ${isFlight ? 'active' : ''}" data-st="flight">${t('1. 離着陸・地上スタッフ連携 (Three.js PBR)', '1. Cất/Hạ cánh & Nhân viên (Three.js PBR)', '1. Flight Cycle & Ground Crew (Three.js PBR)')}</button>
+      <button class="subtab ${isDrive ? 'active' : ''}" data-st="drive">${t(`2. NGOセントレア構内運転実習 (${appState.airport3dSolved.length}/3)`, `2. Thực hành Lái xe NGO Centrair (${appState.airport3dSolved.length}/3)`, `2. NGO Centrair Airside Driving (${appState.airport3dSolved.length}/3)`)}</button>
+      <button class="subtab ${isOps3d ? 'active' : ''}" data-st="ops3d">${t(`3. 3D直接クリック実習・実技試験 (${appState.exam3dBest !== null ? appState.exam3dBest + 'pt' : '100pt'})`, `3. Click 3D FOD/PBB/Loader & Thi 3D (${appState.exam3dBest !== null ? appState.exam3dBest + 'đ' : '100đ'})`, `3. Direct 3D Raycast Ops & Exam (${appState.exam3dBest !== null ? appState.exam3dBest + 'pt' : '100pt'})`)}</button>
+    </div>
+
+    <div class="workspace-grid wide-left">
+      <div>
+        <div class="card" style="padding:14px 16px;">
+          <div class="a3d-deck">
+            <div class="a3d-cluster">
+              <span class="a3d-cluster-lbl">01 · ${t('5空港・気象・時間帯', '5 Sân bay · Thời tiết · Giờ', '5 Airports · Weather · Time')}</span>
+              <div class="a3d-cluster-row">
+                <select id="a3d-airport-sel" style="padding:4px 7px;border:1px solid var(--border-strong);border-radius:4px;font-size:11.5px;font-weight:600;">
+                  ${Object.values(A3D_AIRPORTS).map(ap => `<option value="${ap.id}" ${a3d.airportId === ap.id ? 'selected' : ''}>🛫 ${t(ap.nameJa, ap.nameVi, ap.id + ' (RWY ' + ap.rwy + ')')}</option>`).join('')}
+                </select>
+                <select id="a3d-wx-sel" style="padding:4px 7px;border:1px solid var(--border-strong);border-radius:4px;font-size:11.5px;">
+                  <option value="clear" ${a3d.weather === 'clear' ? 'selected' : ''}>☀ ${t('晴天', 'Trời quang', 'Clear')}</option>
+                  <option value="rain" ${a3d.weather === 'rain' ? 'selected' : ''}>🌧 ${t('雨天（湿潤滑走路）', 'Mưa (Đường băng ướt)', 'Rain (Wet RWY)')}</option>
+                  <option value="fog" ${a3d.weather === 'fog' ? 'selected' : ''}>🌫 ${t('濃霧', 'Sương mù', 'Fog')}</option>
+                  <option value="snow" ${a3d.weather === 'snow' ? 'selected' : ''}>❄ ${t('積雪・防除氷', 'Tuyết & De-icing', 'Snow + De-ice')}</option>
+                </select>
+                <button class="btn btn-sm ${a3d.timeOfDay === 'day' ? 'btn-primary' : ''}" data-tod="day">☀</button>
+                <button class="btn btn-sm ${a3d.timeOfDay === 'sunset' ? 'btn-primary' : ''}" data-tod="sunset">🌅</button>
+                <button class="btn btn-sm ${a3d.timeOfDay === 'night' ? 'btn-primary' : ''}" data-tod="night">🌙</button>
+              </div>
+            </div>
+            <div class="a3d-cluster">
+              <span class="a3d-cluster-lbl">02 · ${t('機材・NGO運転設定', 'Đội bay · Chế độ Lái NGO', 'Fleet · NGO Drive Mode')}</span>
+              <div class="a3d-cluster-row">
+                ${isFlight ? `
+                  <select id="a3d-fleet-sel" style="padding:4px 7px;border:1px solid var(--border-strong);border-radius:4px;font-size:11.5px;font-weight:600;max-width:165px;">
+                    ${Object.values(AIRCRAFT_PROFILES).map(p => `<option value="${p.id}" ${a3d.fleetAircraftId === p.id ? 'selected' : ''}>✈ ${p.id}</option>`).join('')}
+                  </select>
+                  <button class="btn btn-sm btn-primary" id="a3d-flight-play">${a3d.flightPlaying ? '⏸' : '▶'}</button>
+                  <button class="btn btn-sm" id="a3d-flight-prev">⏮</button>
+                  <button class="btn btn-sm" id="a3d-flight-next">⏭</button>
+                  <button class="btn btn-sm" id="a3d-flight-spd">${a3d.flightSpeed}x</button>
+                ` : (isDrive ? `
+                  <select id="a3d-ngo-veh-sel" style="padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;font-size:11px;font-weight:600;">
+                    <option value="standard" ${a3d.ngoVehMode === 'standard' ? 'selected' : ''}>🚗 ${t('通常GSE (30km/h)', 'GSE thường (30km/h)', 'Standard GSE (30km/h)')}</option>
+                    <option value="towing" ${a3d.ngoVehMode === 'towing' ? 'selected' : ''}>🚜 ${t('カート牽引 (15km/h)', 'Kéo 6 moóc (15km/h)', 'Towing 6 Carts (15km/h)')}</option>
+                    <option value="high38" ${a3d.ngoVehMode === 'high38' ? 'selected' : ''}>🚛 ${t('全高3.8m超 (固定橋不可)', 'Xe cao >3.8m (Cấm cầu cố định)', 'High Vehicle >3.8m')}</option>
+                  </select>
+                  <button class="btn btn-sm ${a3d.spot101BeaconOn ? 'btn-danger-outline' : ''}" id="a3d-toggle-beacon">S6:${a3d.spot101BeaconOn ? '🔴' : '⚪'}</button>
+                  <button class="btn btn-sm ${a3d.ilsRedOn ? 'btn-danger-outline' : ''}" id="a3d-toggle-ils">ILS:${a3d.ilsRedOn ? '🔴' : '⚪'}</button>
+                  <button class="btn btn-sm ${a3d.blastActive ? 'btn-danger-outline' : ''}" id="a3d-toggle-blast">#71:${a3d.blastActive ? '🔥' : '⚪'}</button>
+                ` : `<span class="badge badge-ok">RAYCAST CLICK READY</span>`)}
+              </div>
+            </div>
+            <div class="a3d-cluster">
+              <span class="a3d-cluster-lbl">03 · HUD · GFX · VIEW</span>
+              <div class="a3d-cluster-row">
+                <select id="a3d-lbl-sel" style="padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;font-size:11px;">
+                  <option value="smart" ${a3d.labelMode === 'smart' ? 'selected' : ''}>HUD: Smart</option>
+                  <option value="all" ${a3d.labelMode === 'all' ? 'selected' : ''}>HUD: All</option>
+                  <option value="min" ${a3d.labelMode === 'min' ? 'selected' : ''}>HUD: Cinema</option>
+                </select>
+                <select id="a3d-gfx-sel" style="padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;font-size:11px;">
+                  <option value="high" ${a3d.gfxQuality === 'high' ? 'selected' : ''}>PBR Ultra</option>
+                  <option value="med" ${a3d.gfxQuality === 'med' ? 'selected' : ''}>PBR Med</option>
+                  <option value="low" ${a3d.gfxQuality === 'low' ? 'selected' : ''}>Fast</option>
+                </select>
+                <button class="btn btn-sm ${a3d.soundOn ? 'btn-primary' : ''}" id="a3d-toggle-sound">${a3d.soundOn ? '🔊' : '🔇'}</button>
+                <button class="btn btn-sm ${a3d.expanded ? 'btn-primary' : ''}" id="a3d-toggle-expand">⛶</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pov-bar">
+            <span class="pov-label">${t('視点 (1〜0):', 'Góc nhìn (1-0):')}</span>
+            ${A3D_VIEWPOINTS.map(vp => `<button class="btn btn-sm ${a3d.camMode === vp.id ? 'btn-primary' : ''}" data-vp="${vp.id}">${t(vp.ja, vp.vi)}</button>`).join('')}
+          </div>
+
+          <div class="airport3d-stage ${a3d.expanded ? 'expanded' : ''}" id="a3d-stage-box">
+            <canvas id="airport3d-gl"></canvas>
+            <canvas id="airport3d-hud2d"></canvas>
+            <div class="raycast-toast" id="a3d-raycast-toast"></div>
+            <div class="hud-top">
+              <div class="hud-pill ok" id="a3d-hud-zone">THREE.JS PBR READY</div>
+              <div style="display:flex;gap:6px;">
+                <div class="hud-pill" id="a3d-hud-spd">0 km/h</div>
+                <div class="hud-pill" id="a3d-hud-score">0%</div>
+              </div>
+            </div>
+            <div class="hud-banner">
+              <div class="hud-pill" id="a3d-vp-desc" style="font-family:var(--font-sans);font-size:11.5px;max-width:78%;">
+                [${curVp.key}] ${t(curVp.ja, curVp.vi)} — ${t(curVp.descJa, curVp.descVi)}
+              </div>
+              ${isDrive ? `
+                <div class="drive-pad" id="a3d-drive-pad">
+                  <div></div><button class="drive-key" data-k="up">▲</button><div></div>
+                  <button class="drive-key" data-k="left">◀</button><button class="drive-key" data-k="down">▼</button><button class="drive-key" data-k="right">▶</button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+
+          ${isFlight ? `<div class="radio-bar" id="a3d-radio-bar"></div><div class="phase-strip" id="a3d-phase-strip"></div>` : ''}
+        </div>
+      </div>
+
+      <div>
+        ${isFlight ? `
+          <div class="card"><div class="card-title"><span class="ja">${t('地上スタッフ担当役割', 'Vai trò Nhân viên Mặt đất')}</span><span class="badge badge-ok">LIVE</span></div><div id="a3d-flight-roles-panel"></div></div>
+        ` : (isOps3d ? `
+          <div class="card"><div class="card-title"><span class="ja">${t('3D直接クリック ＆ 実技検定', 'Thao tác 3D trực tiếp & Thi 100đ')}</span><span class="badge badge-warn">RAYCAST</span></div><div id="a3d-handson-panel"></div></div>
+        ` : `
+          <div class="card">
+            <div class="card-title"><span class="ja">${t('ミッション & 施設ガイド', 'Nhiệm vụ lái GSE & Vùng cấm')}</span></div>
+            <div class="alert alert-info" style="font-size:12.5px;"><strong>${t(m.titleJa, m.titleVi)}</strong><br/>${t(m.descJa, m.descVi)}</div>
+            <div class="alert alert-warn" style="font-size:12px;"><strong>${bi(fac.ja, fac.vi)}</strong><br/>${t(fac.ruleJa, fac.ruleVi)}</div>
+            <div id="a3d-log-list" style="max-height:200px;overflow-y:auto;"></div>
+          </div>
+        `)}
+      </div>
+    </div>
+  `;
+
+  mount.querySelectorAll('[data-st]').forEach(b => {
+    b.onclick = () => {
+      a3d.subtab = b.dataset.st;
+      if (a3d.subtab === 'ops3d') { a3d.camMode = 'orbit'; a3d.cam = { tx: 0, ty: 3, tz: 12, dist: 46, yaw: -0.55, pitch: 0.42 }; }
+      else if (a3d.subtab === 'drive') a3d.camMode = 'chase';
+      else a3d.camMode = 'flight_follow';
+      renderAirport3dUI();
+    };
+  });
+  mount.querySelectorAll('[data-tod]').forEach(b => {
+    b.onclick = () => { a3d.timeOfDay = b.dataset.tod; mount.querySelectorAll('[data-tod]').forEach(x => x.classList.toggle('btn-primary', x.dataset.tod === a3d.timeOfDay)); };
+  });
+  mount.querySelectorAll('[data-vp]').forEach(b => { b.onclick = () => setA3dViewpoint(b.dataset.vp); });
+
+  document.getElementById('a3d-airport-sel').onchange = e => {
+    a3d.airportId = e.target.value;
+    if (a3d.airportId === 'CTS' && a3d.weather === 'clear') { a3d.weather = 'snow'; document.getElementById('a3d-wx-sel').value = 'snow'; }
+  };
+  document.getElementById('a3d-wx-sel').onchange = e => { a3d.weather = e.target.value; };
+  document.getElementById('a3d-lbl-sel').onchange = e => { a3d.labelMode = e.target.value; };
+  document.getElementById('a3d-gfx-sel').onchange = e => { a3d.gfxQuality = e.target.value; };
+  document.getElementById('a3d-toggle-sound').onclick = () => { a3d.soundOn = !a3d.soundOn; a3dAudio.setEnabled(a3d.soundOn); document.getElementById('a3d-toggle-sound').textContent = a3d.soundOn ? '🔊' : '🔇'; };
+  document.getElementById('a3d-toggle-expand').onclick = () => {
+    a3d.expanded = !a3d.expanded;
+    document.getElementById('a3d-stage-box').classList.toggle('expanded', a3d.expanded);
+  };
+
+  if (isFlight) {
+    document.getElementById('a3d-fleet-sel').onchange = e => { a3d.fleetAircraftId = e.target.value; };
+    document.getElementById('a3d-flight-play').onclick = () => { a3d.flightPlaying = !a3d.flightPlaying; document.getElementById('a3d-flight-play').textContent = a3d.flightPlaying ? '⏸' : '▶'; };
+    document.getElementById('a3d-flight-prev').onclick = () => { a3d.flightPhaseIdx = (a3d.flightPhaseIdx + 9) % 10; a3d.flightProgress = 0; renderFlightPhasePanel(); };
+    document.getElementById('a3d-flight-next').onclick = () => { a3d.flightPhaseIdx = (a3d.flightPhaseIdx + 1) % 10; a3d.flightProgress = 0; renderFlightPhasePanel(); };
+    document.getElementById('a3d-flight-spd').onclick = () => { a3d.flightSpeed = a3d.flightSpeed === 1 ? 2 : (a3d.flightSpeed === 2 ? 0.5 : 1); document.getElementById('a3d-flight-spd').textContent = `${a3d.flightSpeed}x`; };
+    renderFlightPhasePanel();
+  } else if (isOps3d) {
+    renderHandsOnPanel();
+  } else {
+    const tb = document.getElementById('a3d-toggle-beacon');
+    if (tb) tb.onclick = () => { a3d.spot101BeaconOn = !a3d.spot101BeaconOn; tb.textContent = `S6:${a3d.spot101BeaconOn ? '🔴' : '⚪'}`; tb.classList.toggle('btn-danger-outline', a3d.spot101BeaconOn); };
+    const tv = document.getElementById('a3d-ngo-veh-sel');
+    if (tv) tv.onchange = e => { a3d.ngoVehMode = e.target.value; };
+    const ti = document.getElementById('a3d-toggle-ils');
+    if (ti) ti.onclick = () => { a3d.ilsRedOn = !a3d.ilsRedOn; ti.textContent = `ILS:${a3d.ilsRedOn ? '🔴' : '⚪'}`; ti.classList.toggle('btn-danger-outline', a3d.ilsRedOn); };
+    const tbl = document.getElementById('a3d-toggle-blast');
+    if (tbl) tbl.onclick = () => { a3d.blastActive = !a3d.blastActive; tbl.textContent = `#71:${a3d.blastActive ? '🔥' : '⚪'}`; tbl.classList.toggle('btn-danger-outline', a3d.blastActive); };
+    mount.querySelectorAll('#a3d-drive-pad .drive-key').forEach(btn => {
+      const k = btn.dataset.k;
+      const on = e => { e.preventDefault(); a3d.keys[k] = true; btn.classList.add('pressed'); };
+      const off = () => { a3d.keys[k] = false; btn.classList.remove('pressed'); };
+      btn.onmousedown = on; btn.onmouseup = off; btn.onmouseleave = off; btn.ontouchstart = on; btn.ontouchend = off;
+    });
+  }
+
+  // Orbit drag + wheel zoom
+  const canvas = document.getElementById('airport3d-gl');
+  canvas.onmousedown = e => { a3d.dragging = true; a3d.lastMouse = { x: e.clientX, y: e.clientY }; if (a3d.camMode !== 'orbit') setA3dViewpoint('orbit'); };
+  canvas.onmousemove = e => {
+    if (!a3d.dragging) return;
+    const dx = e.clientX - a3d.lastMouse.x, dy = e.clientY - a3d.lastMouse.y;
+    a3d.lastMouse = { x: e.clientX, y: e.clientY };
+    a3d.cam.yaw -= dx * 0.008;
+    a3d.cam.pitch = Math.max(0.10, Math.min(1.42, a3d.cam.pitch + dy * 0.006));
+  };
+  canvas.onmouseup = () => { a3d.dragging = false; };
+  canvas.onmouseleave = () => { a3d.dragging = false; };
+  canvas.onwheel = e => { e.preventDefault(); if (a3d.camMode !== 'orbit') setA3dViewpoint('orbit'); a3d.cam.dist = Math.max(22, Math.min(280, a3d.cam.dist + e.deltaY * 0.14)); };
+
+  startAirport3dLoop();
+}

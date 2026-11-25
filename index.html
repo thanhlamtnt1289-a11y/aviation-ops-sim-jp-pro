@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0F172A" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Aviation Ops Sim JP Pro — Three.js PBR · NGO Centrair · 10-Fleet W&amp;B · PWA</title>
+  <link rel="manifest" href="./public/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./public/icon.svg" />
+  <link rel="apple-touch-icon" href="./public/icon.svg" />
+  <link rel="stylesheet" href="./src/styles/app.css" />
+  <!-- Zero-Node ESM Import Map (cached offline by sw.js; overridden by Vite during npm run build) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+<div class="app-shell">
+  <!-- LEFT SIDEBAR NAVIGATION -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">✈</div>
+      <div>
+        <div class="brand-title">Aviation Ops Sim <span style="color:#38BDF8;">Pro</span></div>
+        <div class="brand-sub" data-i18n="brandSub">Three.js PBR・EFB・特定技能＆NGO運転講習</div>
+      </div>
+    </div>
+
+    <div class="nav-scroll">
+      <div class="nav-group-label" data-i18n="grpHub">COMMAND HUB</div>
+      <button class="nav-btn active" data-module="dashboard">
+        <span class="nav-code">00</span>
+        <span data-i18n="navDashboard">Flight Ops Hub</span>
+        <span class="nav-badge" id="badge-dashboard">0%</span>
+      </button>
+
+      <div class="nav-group-label" data-i18n="grpSim">FLIGHT &amp; 3D SIMULATION</div>
+      <button class="nav-btn" data-module="wb">
+        <span class="nav-code">D</span>
+        <span data-i18n="navWb">Weight &amp; Balance (10)</span>
+        <span class="nav-badge" id="badge-wb">0/14</span>
+      </button>
+      <button class="nav-btn" data-module="airport3d">
+        <span class="nav-code">G</span>
+        <span data-i18n="navAirport3d">3D Airport &amp; NGO Driving</span>
+        <span class="nav-badge" id="badge-airport3d">0/4</span>
+      </button>
+
+      <div class="nav-group-label" data-i18n="grpOps">RAMP, PAX &amp; CARGO OPS</div>
+      <button class="nav-btn" data-module="turnaround">
+        <span class="nav-code">A</span>
+        <span data-i18n="navTurnaround">Turnaround (5 JP)</span>
+        <span class="nav-badge" id="badge-turnaround">—</span>
+      </button>
+      <button class="nav-btn" data-module="pax">
+        <span class="nav-code">B</span>
+        <span data-i18n="navPax">Passenger &amp; PRM</span>
+        <span class="nav-badge" id="badge-pax">0/5</span>
+      </button>
+      <button class="nav-btn" data-module="cargo">
+        <span class="nav-code">C</span>
+        <span data-i18n="navCargo">Cargo, ULD &amp; DGR</span>
+        <span class="nav-badge" id="badge-cargo">0/5</span>
+      </button>
+      <button class="nav-btn" data-module="safety">
+        <span class="nav-code">E</span>
+        <span data-i18n="navSafety">Safety, FOD &amp; SMS</span>
+        <span class="nav-badge" id="badge-safety">0/16</span>
+      </button>
+
+      <div class="nav-group-label" data-i18n="grpExam">EXAM &amp; FIELD DRILLS</div>
+      <button class="nav-btn" data-module="quiz">
+        <span class="nav-code">F</span>
+        <span data-i18n="navQuiz">SSW &amp; NGO Exams</span>
+        <span class="nav-badge" id="badge-quiz">0Q</span>
+      </button>
+      <button class="nav-btn" data-module="ops">
+        <span class="nav-code">H</span>
+        <span data-i18n="navOps">Signals, Light Gun &amp; Dict</span>
+        <span class="nav-badge" id="badge-ops">92</span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#94A3B8;margin-bottom:4px;">
+        <span data-i18n="readinessLbl">READINESS</span>
+        <span style="font-family:var(--font-mono);">PRO PWA</span>
+      </div>
+      <div class="progress-bar-wrap" style="background:rgba(148,163,184,0.2);height:6px;margin-bottom:10px;">
+        <div class="progress-bar-fill" id="overall-bar" style="width:0%"></div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;">
+        <button class="btn btn-sm" id="btn-export-json" data-i18n="btnExport" style="flex:1;background:rgba(15,23,42,0.5);color:#CBD5E1;border-color:rgba(148,163,184,0.25);">Export</button>
+        <button class="btn btn-sm" id="btn-import-json" data-i18n="btnImport" style="flex:1;background:rgba(15,23,42,0.5);color:#CBD5E1;border-color:rgba(148,163,184,0.25);">Import</button>
+        <button class="btn btn-sm" id="btn-reset-progress" style="background:rgba(220,38,38,0.18);color:#FCA5A5;border-color:rgba(248,113,113,0.35);">↺</button>
+        <input type="file" id="input-import-json" accept="application/json" style="display:none;" />
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+        <button class="btn btn-sm mobile-menu-btn" id="btn-mobile-menu">☰</button>
+        <h1 class="topbar-title ja" id="topbar-title">00. Flight Ops Hub Dashboard</h1>
+      </div>
+      <div class="topbar-controls">
+        <button class="cmdk-trigger" id="btn-cmdk" title="Command Palette (Ctrl+K / ⌘K)">
+          <span data-i18n="cmdkTrigger">🔍 Quick Jump / Search…</span>
+          <span class="cmdk-kbd">⌘K</span>
+        </button>
+        <button class="btn btn-sm" id="btn-theme-toggle" title="Toggle Dark/Light Theme">☀ Light</button>
+        <div class="lang-toggle" role="group" aria-label="Language Selector">
+          <button class="lang-btn active" data-lang="ja">日本語</button>
+          <button class="lang-btn" data-lang="vi">Tiếng Việt</button>
+          <button class="lang-btn" data-lang="en">English</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- 00. FLIGHT OPS HUB DASHBOARD -->
+      <section class="module-screen active" id="screen-dashboard">
+        <div id="dashboard-mount"></div>
+      </section>
+
+      <!-- MODULE D: WEIGHT & BALANCE + SPLIT-SCREEN THREE.JS 3D -->
+      <section class="module-screen" id="screen-wb">
+        <div class="card" style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <label style="font-size:12px;font-weight:700;" data-i18n="wbAircraftLbl">Aircraft (10 Fleet):</label>
+              <select id="wb-aircraft" style="min-width:250px;"></select>
+              <button class="btn btn-sm" id="wb-unit-toggle">kg ↔ lb</button>
+              <span class="badge badge-neutral" id="wb-unit-badge">UNIT: kg</span>
+            </div>
+            <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;">
+              <button class="btn btn-sm btn-primary" id="wb-toggle-split3d" data-i18n="wbSplit3dBtn">🖥 Split 3D Live Preview</button>
+              <button class="btn btn-sm" id="wb-open-3d-btn" data-i18n="wbOpen3dBtn">🛫 Full 3D Takeoff Sim</button>
+              <button class="btn btn-sm" id="wb-btn-print" data-i18n="wbPrintBtn">🖨 Print Load Sheet</button>
+              <button class="btn btn-sm" id="wb-btn-tests" data-i18n="wbTestsBtn">🧪 13 Unit Tests</button>
+              <span class="badge badge-ok" id="wb-solved-count">0 / 14</span>
+            </div>
+          </div>
+
+          <div id="wb-fleet-spec" style="margin-bottom:10px;"></div>
+
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border);">
+            <label style="font-size:12px;font-weight:700;" data-i18n="wbScenarioLbl">Scenario (14 Cases):</label>
+            <select id="wb-scenario" style="min-width:260px;flex:1;"></select>
+            <button class="btn btn-sm btn-primary" id="wb-load-scenario" data-i18n="wbLoadScBtn">Load Case</button>
+            <button class="btn btn-sm" id="wb-verify-scenario" data-i18n="wbVerifyScBtn">✓ Verify Pass</button>
+            <button class="btn btn-sm" id="wb-show-solution" data-i18n="wbHintBtn">💡 Hint</button>
+            <button class="btn btn-sm" id="wb-apply-solution" data-i18n="wbAutofixBtn">✨ Auto-Fix</button>
+          </div>
+          <div id="wb-scenario-box" class="alert alert-info" style="margin-top:10px;margin-bottom:0;font-size:12.5px;"></div>
+          <div id="wb-solution-box" class="alert alert-ok" style="display:none;margin-top:8px;margin-bottom:0;font-size:12.5px;"></div>
+        </div>
+
+        <!-- LIVE SPLIT-SCREEN THREE.JS 3D PREVIEW -->
+        <div id="wb-split-3d-wrap" class="wb-split-3d" style="display:none;margin-bottom:14px;">
+          <div class="wb-split-3d-label" data-i18n="wbSplit3dLabel">LIVE THREE.JS PBR · CG / PITCH / RUNWAY SYNC</div>
+          <canvas id="wb-split-3d-canvas" style="width:100%;height:300px;display:block;"></canvas>
+        </div>
+
+        <!-- WEATHER & RUNWAY ENVIRONMENT -->
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-title">
+            <span class="ja" data-i18n="wbWeatherTitle">🌦 Weather &amp; Runway Performance</span>
+            <span id="wb-overall-status" class="badge badge-ok">STATUS</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:10px;">
+            <div class="field">
+              <label data-i18n="wbEnvApLbl">Airport RWY</label>
+              <select id="wb-env-airport">
+                <option value="NGO">NGO Centrair (3500m)</option>
+                <option value="HND">HND Haneda (3000m)</option>
+                <option value="NRT">NRT Narita (4000m)</option>
+                <option value="KIX">KIX Kansai (3500m)</option>
+                <option value="CTS">CTS Shin-Chitose (3000m)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label data-i18n="wbEnvSurfLbl">Runway Surface</label>
+              <select id="wb-env-surface">
+                <option value="DRY">DRY (×1.00)</option>
+                <option value="WET">WET (×1.18)</option>
+                <option value="SNOW">SNOW / ICE (×1.38)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label data-i18n="wbEnvOatLbl">OAT (°C)</label>
+              <input type="number" id="wb-env-oat" value="15" min="-30" max="50" />
+            </div>
+            <div class="field">
+              <label data-i18n="wbEnvWindLbl">Head(+) / Tail(-) Wind (kt)</label>
+              <input type="number" id="wb-env-wind" value="5" min="-20" max="45" />
+            </div>
+          </div>
+          <div id="wb-perf-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;"></div>
+          <div id="wb-runway-bar"></div>
+        </div>
+
+        <div class="workspace-grid">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="card">
+              <div class="card-title"><span class="ja" data-i18n="wbDowTitle">⚖ Operating Weight &amp; Fuel</span></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+                <div class="field"><label><span data-i18n="wbDowLbl">DOW</span> (<span class="wb-u">kg</span>)</label><input type="number" id="wb-dow" /><div id="wb-dow-hint" style="font-size:11px;color:var(--text-muted);"></div></div>
+                <div class="field"><label data-i18n="wbDowArmLbl">DOW Arm (m)</label><input type="number" id="wb-dow-arm" step="0.01" /><div id="wb-doi-hint" style="font-size:11px;color:var(--text-muted);"></div></div>
+                <div class="field"><label><span data-i18n="wbBlockFuelLbl">Block Fuel</span> (<span class="wb-u">kg</span>)</label><input type="number" id="wb-fuel-block" /></div>
+                <div class="field"><label><span data-i18n="wbTaxiFuelLbl">Taxi Fuel</span> (<span class="wb-u">kg</span>)</label><input type="number" id="wb-fuel-taxi" /></div>
+                <div class="field"><label><span data-i18n="wbTripFuelLbl">Trip Fuel</span> (<span class="wb-u">kg</span>)</label><input type="number" id="wb-fuel-trip" /></div>
+                <div class="field"><label><span data-i18n="wbPaxWtLbl">Avg Pax Wt</span> (<span class="wb-u">kg</span>)</label><input type="number" id="wb-pax-wt" value="75" /></div>
+              </div>
+
+              <div class="section-label" data-i18n="wbPaxZonesLbl">Passengers (Zone A/B/C)</div>
+              <div id="wb-pax-inputs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:10px;"></div>
+
+              <div class="section-label" data-i18n="wbHoldsLbl">Cargo Holds (Bulk / Lower Deck)</div>
+              <div id="wb-hold-inputs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;margin-bottom:10px;"></div>
+
+              <div class="section-label" data-i18n="wbUldsLbl">ULD Containers &amp; Pallets</div>
+              <div id="wb-uld-inputs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <span class="ja" data-i18n="wbMiscalcTitle">🚨 Miscalculation &amp; LMC Lab</span>
+                <span id="wb-conseq-badge" class="badge badge-ok">NOMINAL</span>
+              </div>
+              <div id="wb-fault-presets" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                <div class="field">
+                  <label><span data-i18n="wbErrAftLbl">Unreported AFT Cargo:</span> <strong id="wb-err-aft-val">0 kg</strong></label>
+                  <input type="range" id="wb-err-aft" min="0" max="6000" step="100" value="0" />
+                </div>
+                <div class="field">
+                  <label><span data-i18n="wbErrFwdLbl">Unreported FWD Cargo:</span> <strong id="wb-err-fwd-val">0 kg</strong></label>
+                  <input type="range" id="wb-err-fwd" min="0" max="6000" step="100" value="0" />
+                </div>
+              </div>
+              <div id="wb-conseq-svg-wrap" style="margin-bottom:10px;"></div>
+              <div id="wb-conseq-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="card">
+              <div class="card-title">
+                <span class="ja" data-i18n="wbEfbTitle">📊 Live EFB Gauges &amp; CG Envelope</span>
+                <span id="wb-mac-live-tag" class="badge badge-accent" style="font-family:var(--font-mono);">MAC —%</span>
+              </div>
+              <div id="wb-efb-pulse" class="efb-pulse-strip" style="margin-bottom:10px;"></div>
+              <div id="wb-kpi-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;"></div>
+              <div id="wb-svg-wrap" style="margin-bottom:10px;"></div>
+              <div id="wb-alerts" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+              <div id="wb-suggestions"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><span class="ja" data-i18n="wbLoadsheetTitle">📄 Simulated Load Sheet &amp; LIR</span></div>
+              <div id="wb-loadsheet-content"></div>
+            </div>
+
+            <div class="card" id="wb-tests-card" style="display:none;">
+              <div class="card-title"><span class="ja" data-i18n="wbTestsTitle">🧪 W&amp;B Physics Unit Tests</span><span id="wb-test-summary" class="badge badge-ok"></span></div>
+              <div style="overflow-x:auto;">
+                <table class="data-table">
+                  <thead><tr><th>ID</th><th>Test Case</th><th>Result</th><th>Detail</th></tr></thead>
+                  <tbody id="wb-test-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULE G: 3D AIRPORT THREE.JS PBR -->
+      <section class="module-screen" id="screen-airport3d">
+        <div id="airport3d-mount"></div>
+      </section>
+
+      <!-- MODULE A: TURNAROUND -->
+      <section class="module-screen" id="screen-turnaround">
+        <div id="turnaround-mount"></div>
+      </section>
+
+      <!-- MODULE B: PASSENGER SERVICE -->
+      <section class="module-screen" id="screen-pax">
+        <div id="pax-mount"></div>
+      </section>
+
+      <!-- MODULE C: CARGO, ULD & DGR -->
+      <section class="module-screen" id="screen-cargo">
+        <div id="cargo-mount"></div>
+      </section>
+
+      <!-- MODULE E: SAFETY / FOD / SMS -->
+      <section class="module-screen" id="screen-safety">
+        <div id="safety-mount"></div>
+      </section>
+
+      <!-- MODULE F: 特定技能 & NGO AIRSIDE DRIVING EXAMS -->
+      <section class="module-screen" id="screen-quiz">
+        <div id="quiz-mount"></div>
+      </section>
+
+      <!-- MODULE H: MARSHALLING, LIGHT GUN, MCA RADIO & DICTIONARY -->
+      <section class="module-screen" id="screen-ops">
+        <div id="ops-mount"></div>
+      </section>
+
+      <footer data-i18n="footerDisclaimer" style="margin-top:24px;padding:12px 0;border-top:1px solid var(--border);font-size:11.5px;color:var(--text-muted);text-align:center;">
+        ⚠ Training Simulation Only (Not for Real Flight Dispatch or Aircraft Loading) · Aviation Ops Sim JP Pro
+      </footer>
+    </main>
+  </div>
+</div>
+
+<!-- COMMAND PALETTE (Ctrl+K / Cmd+K) -->
+<div class="cmdk-backdrop" id="cmdk-backdrop" role="dialog" aria-modal="true" aria-label="Quick Command Palette">
+  <div class="cmdk-modal">
+    <div class="cmdk-input-wrap">
+      <span>🔍</span>
+      <input type="text" class="cmdk-input" id="cmdk-input" data-i18n-placeholder="cmdkPlaceholder" placeholder="Search aircraft (B77F), airport (NGO/CTS), scenario (S12), or term (ERA/ILS/FOD)…" autocomplete="off" />
+      <span class="cmdk-kbd">ESC</span>
+    </div>
+    <div class="cmdk-list" id="cmdk-list"></div>
+  </div>
+</div>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

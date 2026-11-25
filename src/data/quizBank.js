@@ -1,0 +1,769 @@
+// 90 Bilingual Tokutei Ginou Questions + 24 Visual SVG Generators
+export const QUIZ_TOPICS = {
+    all: { ja: '全分野', vi: 'Tất cả chủ đề' },
+    turnaround: { ja: 'ターンアラウンド・GSE', vi: 'Turnaround & GSE' },
+    pax: { ja: '旅客サービス', vi: 'Dịch vụ Hành khách' },
+    cargo: { ja: '貨物・ULD・危険物', vi: 'Hàng hóa, ULD & DGR' },
+    wb: { ja: '重量重心計算 (W&B)', vi: 'Weight & Balance' },
+    safety: { ja: '法令・安全 (SMS/FOD)', vi: 'Pháp luật & An toàn' }
+  };
+
+export const QUIZ_BANK = [
+    // --- Turnaround & GSE (6) ---
+    { id: 'Q01', topic: 'turnaround',
+      qJa: '航空機がスポットに停止した後、作業員が機体へ接近してよい最も重要な確認事項はどれか？',
+      qVi: 'Sau khi tàu bay dừng tại bãi đỗ, điều kiện an toàn quan trọng nhất trước khi nhân viên tiếp cận là gì?',
+      optsJa: ['エンジン停止および衝突防止灯（赤色ビーコン）の消灯確認', '客室窓のシェードがすべて開いていること', '給油車がスポットへ到着していること', '搭乗口の案内放送が始まったこと'],
+      optsVi: ['Động cơ đã dừng hẳn và đèn chống va chạm (beacon đỏ) đã tắt', 'Toàn bộ tấm che cửa sổ khoang khách đã mở', 'Xe tra dầu đã tới bãi đỗ', 'Loa thông báo tại cổng lên tàu đã phát'],
+      ans: 0,
+      expJa: '赤色衝突防止灯（Anti-collision Beacon）点灯中はエンジン稼働中または始動直前を意味し、接近厳禁です。',
+      expVi: 'Đèn beacon đỏ sáng báo hiệu động cơ đang chạy hoặc sắp khởi động — tuyệt đối cấm tiếp cận.' },
+    { id: 'Q02', topic: 'turnaround',
+      qJa: '駐機直後に最も優先して実施し、航空機の不意の移動を防ぐ基本作業はどれか？',
+      qVi: 'Thao tác cơ bản cần thực hiện ưu tiên hàng đầu ngay sau khi máy bay dừng hẳn để chống trôi bánh là gì?',
+      optsJa: ['機内清掃の開始', '輪止め（チョック）の設置', '飲料水の補給', '貨物室ドアの閉鎖'],
+      optsVi: ['Bắt đầu vệ sinh khoang khách', 'Chèn bánh máy bay (輪止め / Chock On)', 'Cấp nước sạch sinh hoạt', 'Đóng cửa hầm hàng'],
+      ans: 1,
+      expJa: '輪止め設置（チョックオン）は駐機誘導完了後の最優先安全作業であり、他のGSE接近の前提条件です。',
+      expVi: 'Chèn bánh (Chock On) là bước an toàn tiên quyết trước khi kết nối GPU, PBB hay các xe GSE khác.' },
+    { id: 'Q03', topic: 'turnaround',
+      qJa: '日本のグランドハンドリング現場で行われる「指差呼称（しさこしょう）」の主な目的はどれか？',
+      qVi: 'Mục đích chính của thao tác "Chỉ tay hô lớn xác nhận" (指差呼称) tại sân đỗ Nhật Bản là gì?',
+      optsJa: ['作業時間の大幅な短縮', '思い込みや見落としによるヒューマンエラーの防止', '騒音レベルの測定', '乗客へのサービス演出'],
+      optsVi: ['Rút ngắn mạnh thời gian làm việc', 'Ngăn ngừa sai sót do con người (human error) như chủ quan, bỏ sót', 'Đo mức độ tiếng ồn sân đỗ', 'Tạo hình ảnh biểu diễn cho hành khách'],
+      ans: 1,
+      expJa: '対象を指差し声に出して確認することで意識レベルを高め、ドア閉鎖・輪止め撤去・周囲安全の確認漏れを防ぎます。',
+      expVi: 'Chỉ tay kết hợp đọc lớn giúp tăng độ tập trung, giảm mạnh lỗi bỏ sót ở các bước chốt như đóng cửa, rút chock, ngắt GPU.' },
+    { id: 'Q04', topic: 'turnaround',
+      qJa: '給油作業（Fueling）中に空港周辺で落雷警報（ランプ閉鎖）が発令された場合の正しい対応は？',
+      qVi: 'Khi đang tra dầu (給油) mà có cảnh báo sét gần sân bay (Ramp Closure), hành động đúng là gì?',
+      optsJa: ['作業を速めて残り5分で給油を終える', '直ちに給油および屋外ランプ作業を中断し安全な屋内へ退避する', 'ゴム手袋を着用すれば続行してよい', '機長に報告せず燃料バルブだけ半開にする'],
+      optsVi: ['Đẩy nhanh tốc độ để tra nốt trong 5 phút', 'Dừng ngay lập tức tra dầu và mọi thao tác ngoài trời, sơ tán vào trong nhà an toàn', 'Đeo găng tay cao su là tiếp tục làm được', 'Mở hé van rồi không cần báo ai'],
+      ans: 1,
+      expJa: '落雷時は感電および燃料蒸気への引火リスクが極めて高いため、即座に作業を中止し退避します。',
+      expVi: 'Sét đánh tiềm ẩn nguy cơ điện giật và cháy nổ hơi nhiên liệu cực lớn, bắt buộc dừng ngay.' },
+    { id: 'Q05', topic: 'turnaround',
+      qJa: 'ラバトリー作業（汚水処理）と飲料水補給（Potable Water）に関する衛生上の基本ルールは？',
+      qVi: 'Quy tắc vệ sinh cơ bản giữa dịch vụ bồn thải (ラバトリー) và cấp nước sạch (飲料水補給) là gì?',
+      optsJa: ['同じホースを洗浄して使い回す', '交差汚染防止のため機器・人員・作業手順を明確に分離する', '必ず同じ作業員が同時に行う', '飲料水ホースの先端は地面に置いて待機する'],
+      optsVi: ['Dùng chung vòi sau khi xịt rửa sơ', 'Tách biệt rõ thiết bị, thao tác và giữ vệ sinh để ngăn nhiễm bẩn chéo', 'Bắt buộc cùng một người làm đồng thời cả hai', 'Đặt đầu vòi nước sạch trực tiếp xuống mặt sân đỗ'],
+      ans: 1,
+      expJa: '公衆衛生上、汚水系と飲料水系の設備・作業は厳格に分離し、交差汚染を防止します。',
+      expVi: 'Phải tách biệt hoàn toàn trang thiết bị và quy trình để tránh nhiễm khuẩn chéo sang nguồn nước uống của hành khách.' },
+    { id: 'Q06', topic: 'turnaround',
+      qJa: 'プッシュバック開始直前に必ず完了していなければならない事項の組み合わせは？',
+      qVi: 'Tổ hợp điều kiện bắt buộc phải hoàn tất ngay trước khi bắt đầu đẩy lùi (Pushback) là gì?',
+      optsJa: ['GPU接続維持・輪止め設置済', '全ドア閉鎖・GPU切離し・輪止め撤去・周囲安全確認・管制許可', '機内清掃未完了・貨物室ドア半開', '給油ホース接続のまま移動'],
+      optsVi: ['Giữ nguyên GPU và chèn bánh', 'Đóng kín toàn bộ cửa, ngắt GPU, rút chock, kiểm tra xung quanh sạch vật cản & có huấn lệnh', 'Chưa dọn xong cabin và hé cửa hầm hàng', 'Để nguyên ống tra dầu khi lùi'],
+      ans: 1,
+      expJa: 'GPU・輪止め・PBB等の切離しおよびドア完全閉鎖を最終指差呼称で確認してからプッシュバックを行います。',
+      expVi: 'Phải xác nhận đóng kín mọi cửa, tháo toàn bộ kết nối mặt đất (GPU, chock, PBB) và có huấn lệnh trước khi pushback.' },
+
+    // --- Passenger Service (6) ---
+    { id: 'Q07', topic: 'pax',
+      qJa: '預け入れ手荷物の単体重量上限として、労働安全上多くの航空会社が採用している基準は？',
+      qVi: 'Giới hạn trọng lượng tối đa cho 1 kiện hành lý ký gửi đơn lẻ nhằm bảo vệ sức khỏe nhân viên bốc xếp thường là bao nhiêu?',
+      optsJa: ['15 kg', '20 kg', '32 kg', '50 kg'],
+      optsVi: ['15 kg', '20 kg', '32 kg', '50 kg'],
+      ans: 2,
+      expJa: '23kg超でHEAVYタグ貼付、32kg超は地上係員の腰痛防止・安全のため単体受託不可（分割または貨物扱い）が一般的です。',
+      expVi: 'Trên 23 kg cần dán thẻ HEAVY; vượt quá 32 kg/kiện thường không nhận ký gửi để đảm bảo an toàn lao động.' },
+    { id: 'Q08', topic: 'pax',
+      qJa: '非常口座席（Exit Row）に原則として着席できない旅客はどれか？',
+      qVi: 'Đối tượng hành khách nào theo nguyên tắc KHÔNG được xếp ngồi ở hàng ghế thoát hiểm (非常口座席)?',
+      optsJa: ['日本語または英語で乗務員の指示を理解できる成人', '緊急脱出時に他の旅客の援助ができない車椅子利用者や幼児同伴客', '国内線に初めて乗る健康な成人', '窓側を希望するビジネス客'],
+      optsVi: ['Người lớn hiểu tiếng Nhật hoặc tiếng Anh', 'Hành khách cần trợ giúp di chuyển (PRM/xe lăn) hoặc đi cùng trẻ sơ sinh', 'Người lớn khỏe mạnh lần đầu đi nội địa', 'Khách công tác thích ngồi cửa sổ'],
+      ans: 1,
+      expJa: '非常口座席は緊急時に非常口開放・脱出援助を行える旅客に限定されます（国交省通達・各社規程）。',
+      expVi: 'Hàng ghế thoát hiểm chỉ dành cho người có đủ sức khỏe, năng lực hiểu hướng dẫn và hỗ trợ mở cửa thoát hiểm khi khẩn cấp.' },
+    { id: 'Q09', topic: 'pax',
+      qJa: '車椅子支援コード（SSR）のうち、階段昇降も機内歩行もできず、機内用車椅子（アイルチェア）が必要な区分は？',
+      qVi: 'Trong các mã hỗ trợ xe lăn SSR, mã nào chỉ hành khách không tự đi lại được và cần xe lăn lối đi (aisle chair) tận ghế?',
+      optsJa: ['WCHR', 'WCHS', 'WCHC', 'BLND'],
+      optsVi: ['WCHR', 'WCHS', 'WCHC', 'BLND'],
+      ans: 2,
+      expJa: 'WCHR=長距離のみ不可、WCHS=階段不可、WCHC=完全介助（Cabin seatまで介助・機内車椅子必要）。',
+      expVi: 'WCHR = cần hỗ trợ quãng xa; WCHS = không đi cầu thang được; WCHC = cần hỗ trợ hoàn toàn tới tận ghế (Cabin).' },
+    { id: 'Q10', topic: 'pax',
+      qJa: '搭乗口で規格外キャリーバッグを貨物室預け（ゲートチェック）にする際、必ず取り出すべき物品は？',
+      qVi: 'Khi chuyển vali xách tay quá khổ sang ký gửi tại cửa lên tàu (gate-check), bắt buộc phải lấy vật gì ra khỏi vali?',
+      optsJa: ['衣類とタオル', 'モバイルバッテリー・予備リチウムイオン電池', '空の水筒', '紙のガイドブック'],
+      optsVi: ['Quần áo và khăn mặt', 'Sạc dự phòng / pin Lithium-ion rời', 'Bình nước rỗng', 'Sách hướng dẫn du lịch bằng giấy'],
+      ans: 1,
+      expJa: '予備リチウム電池・モバイルバッテリーは熱暴走火災のリスクがあるため貨物室預け入れ厳禁です。',
+      expVi: 'Pin lithium rời / sạc dự phòng bị cấm tuyệt đối trong hầm hàng do nguy cơ cháy nhiệt không thể dập trực tiếp.' },
+    { id: 'Q11', topic: 'pax',
+      qJa: 'チェックイン済み旅客が搭乗しなかった場合（No-Show）、その旅客の預け入れ手荷物はどう扱うか？',
+      qVi: 'Nếu hành khách đã gửi hành lý nhưng không lên máy bay (No-Show), phải xử lý hành lý ký gửi của họ thế nào?',
+      optsJa: ['そのまま目的地へ運ぶ', '航空保安規則（PPBM）に基づき原則として機体から取り降ろす', '翌日の便へ無断で積み替える', '空港で廃棄する'],
+      optsVi: ['Vẫn chở thẳng đến sân bay đích', 'Theo quy tắc an ninh PPBM, bắt buộc tìm và dỡ hành lý đó khỏi máy bay trước khi khởi hành', 'Tự ý chuyển sang chuyến ngày hôm sau', 'Hủy bỏ tại sân bay'],
+      ans: 1,
+      expJa: 'PPBM（Passenger and Baggage Reconciliation）により、本人が搭乗しない無主手荷物の搭載は保安上禁止されています。',
+      expVi: 'Nguyên tắc PPBM cấm vận chuyển hành lý không đi cùng chủ trên chuyến bay để ngăn ngừa nguy cơ an ninh.' },
+    { id: 'Q12', topic: 'pax',
+      qJa: '乗継便（Connection）の成立可否を判断する最低乗継時間を示す略語はどれか？',
+      qVi: 'Từ viết tắt chỉ "Thời gian nối chuyến tối thiểu" để đánh giá khách có kịp chuyến nối tiếp không là gì?',
+      optsJa: ['MAC', 'MCT', 'LIR', 'FOD'],
+      optsVi: ['MAC', 'MCT', 'LIR', 'FOD'],
+      ans: 1,
+      expJa: 'MCT（Minimum Connecting Time）は空港・国内線/国際線ごとに設定された最低乗継時間です。',
+      expVi: 'MCT = Minimum Connecting Time (Thời gian nối chuyến tối thiểu quy định riêng cho từng sân bay và tuyến bay).' },
+
+    // --- Cargo, ULD & DGR (6) ---
+    { id: 'Q13', topic: 'cargo',
+      qJa: '航空貨物（IATA基準）の容積重量（Volume Weight, kg）を求める標準計算式はどれか？',
+      qVi: 'Công thức chuẩn IATA để tính Trọng lượng quy đổi theo thể tích (Volume Weight, kg) cho hàng hóa hàng không là gì?',
+      optsJa: ['縦×横×高さ(cm) ÷ 1,000', '縦×横×高さ(cm) ÷ 6,000', '縦×横×高さ(cm) × 6,000', '(縦＋横＋高さ) ÷ 60'],
+      optsVi: ['Dài × Rộng × Cao (cm) ÷ 1,000', 'Dài × Rộng × Cao (cm) ÷ 6,000', 'Dài × Rộng × Cao (cm) × 6,000', '(Dài + Rộng + Cao) ÷ 60'],
+      ans: 1,
+      expJa: 'IATA標準では 1kg = 6,000 cm³ と換算し、実重量（Gross Weight）と容積重量の大きい方を請求重量（Chargeable Weight）とします。',
+      expVi: 'Chuẩn IATA chia thể tích (cm³) cho 6,000 rồi lấy giá trị lớn hơn giữa Gross Weight và Volume Weight làm Chargeable Weight.' },
+    { id: 'Q14', topic: 'cargo',
+      qJa: 'AWB（航空貨物運送状）のシリアル番号8桁において、末尾1桁のチェックデジット検証方式は？',
+      qVi: 'Chữ số thứ 8 (check digit) trong dãy số Serial 8 chữ số của Air Waybill (AWB) được kiểm tra theo quy tắc nào?',
+      optsJa: ['前7桁を7で割った余り（Mod-7）', '前7桁の合計の下1桁', '前7桁を10で割った余り', 'ランダムな数字'],
+      optsVi: ['Số dư của 7 chữ số đầu khi chia cho 7 (Mod-7)', 'Chữ số cuối của tổng 7 chữ số đầu', 'Số dư khi chia cho 10', 'Số ngẫu nhiên do hãng tự đặt'],
+      ans: 0,
+      expJa: 'IATA AWB番号は「3桁プレフィックス − 8桁シリアル」で構成され、8桁目は前7桁を7で割った余り（Mod-7）と一致します。',
+      expVi: 'Số AWB gồm 3 số Prefix + 8 số Serial, trong đó chữ số thứ 8 bằng (7 chữ số đầu) mod 7.' },
+    { id: 'Q15', topic: 'cargo',
+      qJa: 'ワイドボディ機（B787・B777等）の下部貨物室で最も広く使われるハーフサイズコンテナのULDコードは？',
+      qVi: 'Mã ULD của loại container nửa khoang phổ biến nhất ở hầm dưới máy bay thân rộng (B787/B777) là gì?',
+      optsJa: ['AKE（LD3）', 'PMC（パレット）', 'GPU', 'PBB'],
+      optsVi: ['AKE (LD3)', 'PMC (Pallet)', 'GPU', 'PBB'],
+      ans: 0,
+      expJa: 'AKE（LD3）はワイドボディ機標準コンテナ。なおA320等のナローボディ向け低床コンテナはAKH（LD3-45）です。',
+      expVi: 'AKE (LD3) là container chuẩn thân rộng; AKH (LD3-45) là container thấp cho A320; PMC là pallet phẳng.' },
+    { id: 'Q16', topic: 'cargo',
+      qJa: 'ドライアイス（UN1845 / Class 9）の梱包・輸送において絶対に守るべき条件はどれか？',
+      qVi: 'Điều kiện bắt buộc khi đóng gói và vận chuyển Đá khô (UN1845 / Class 9) bằng đường hàng không là gì?',
+      optsJa: ['CO2ガスが漏れないよう完全密閉容器に入れる', '昇華したCO2ガスを逃がせる換気可能な容器を使い、正味重量を表示する', '危険物ではないので表示不要', '客室オーバーヘッドビンに保管する'],
+      optsVi: ['Đóng kín khí tuyệt đối để không lọt khí CO2 ra ngoài', 'Dùng bao bì cho phép thoát khí CO2, dán nhãn Class 9 & ghi rõ khối lượng tịnh (Net Weight)', 'Không phải hàng nguy hiểm nên không cần nhãn', 'Cất trên hộc hành lý khoang khách'],
+      ans: 1,
+      expJa: '密閉容器にドライアイスを入れると気化膨張で破裂します。通気構造＋Class 9/UN1845/正味重量表示＋NOTOC確認が必要です。',
+      expVi: 'Đóng kín đá khô sẽ gây nổ thùng do khí CO2 thăng hoa. Bắt buộc bao bì thoát khí, dán nhãn đúng chuẩn và báo NOTOC.' },
+    { id: 'Q17', topic: 'cargo',
+      qJa: 'オレンジ色の「CAO（Cargo Aircraft Only）」ラベルが貼られた危険物貨物の正しい扱いは？',
+      qVi: 'Hàng nguy hiểm có dán nhãn cam "CAO (Cargo Aircraft Only)" phải được xử lý như thế nào?',
+      optsJa: ['旅客便の後部貨物室なら搭載可能', '旅客便には一切搭載不可であり、貨物専用機のみで輸送する', 'ラベルを剥がせば旅客便に載せられる', 'バルク室なら搭載可能'],
+      optsVi: ['Được xếp ở hầm sau máy bay chở khách', 'Cấm tuyệt đối lên máy bay chở khách, chỉ vận chuyển bằng tàu bay chở hàng chuyên dụng', 'Bóc nhãn đi là xếp lên chuyến chở khách được', 'Xếp ở hầm Bulk là hợp lệ'],
+      ans: 1,
+      expJa: 'CAOラベル貨物は旅客機搭載禁止です。いかなる理由でも旅客便へ積み込んではなりません。',
+      expVi: 'Nhãn CAO quy định nghiêm ngặt chỉ bay tàu hàng chuyên dụng (Freighter), tuyệt đối cấm lên chuyến bay chở khách.' },
+    { id: 'Q18', topic: 'cargo',
+      qJa: '危険物や生動物などの特殊貨物を搭載した際、機長（PIC）へ搭載位置・種類を通知する公式書類は？',
+      qVi: 'Tài liệu chính thức thông báo cho Cơ trưởng về loại hàng nguy hiểm/đặc biệt và vị trí xếp trên tàu bay gọi là gì?',
+      optsJa: ['NOTOC（Notification to Captain）', 'Boarding Pass', 'Manifestのみ', 'Baggage Tag'],
+      optsVi: ['NOTOC (Notification to Captain)', 'Boarding Pass', 'Chỉ cần Manifest hành khách', 'Baggage Tag'],
+      ans: 0,
+      expJa: 'NOTOCは緊急時の機長判断（消火・対応）に不可欠であり、搭載位置・UN番号・数量等を正確に伝達します。',
+      expVi: 'NOTOC cung cấp thông tin vị trí hầm, mã UN, số lượng hàng nguy hiểm/đặc biệt để cơ trưởng xử lý nếu có tình huống khẩn cấp.' },
+
+    // --- Weight & Balance (6) ---
+    { id: 'Q19', topic: 'wb',
+      qJa: '航空機の重量重心計算における ZFW（無燃料重量）の正しい定義式はどれか？',
+      qVi: 'Công thức đúng của ZFW (Zero Fuel Weight — Trọng lượng không nhiên liệu) là gì?',
+      optsJa: ['ZFW = DOW + 燃料', 'ZFW = DOW + ペイロード（旅客＋手荷物＋貨物）', 'ZFW = TOW + タキシー燃料', 'ZFW = LW − トリップ燃料'],
+      optsVi: ['ZFW = DOW + Nhiên liệu', 'ZFW = DOW + Payload (Hành khách + Hành lý + Hàng hóa)', 'ZFW = TOW + Taxi Fuel', 'ZFW = LW − Trip Fuel'],
+      ans: 1,
+      expJa: 'ZFW = DOW（運航自重）+ Payload（有償搭載量）。主翼の曲げ応力構造制限（MZFW）を確認するための重要値です。',
+      expVi: 'ZFW = DOW + Payload. Giới hạn MZFW bảo vệ kết cấu cánh máy bay khỏi lực uốn quá mức khi không có trọng lượng nhiên liệu đè trong cánh.' },
+    { id: 'Q20', topic: 'wb',
+      qJa: '離陸重量（TOW）と着陸重量（LW）を求める正しい式はどれか？',
+      qVi: 'Công thức tính TOW (Takeoff Weight) và LW (Landing Weight) đúng là gì?',
+      optsJa: ['TOW = ZFW + ブロック燃料 − タキシー燃料 ／ LW = TOW − トリップ燃料', 'TOW = ZFW + トリップ燃料 ／ LW = TOW + タキシー燃料', 'TOW = DOW + タキシー燃料 ／ LW = ZFW − ブロック燃料', 'TOW = MZFW + MLW'],
+      optsVi: ['TOW = ZFW + Block Fuel − Taxi Fuel  |  LW = TOW − Trip Fuel', 'TOW = ZFW + Trip Fuel  |  LW = TOW + Taxi Fuel', 'TOW = DOW + Taxi Fuel  |  LW = ZFW − Block Fuel', 'TOW = MZFW + MLW'],
+      ans: 0,
+      expJa: '離陸時はランプ燃料（Block）から地上走行分（Taxi）を引いた燃料が残り、着陸時はそこから飛行消費分（Trip）を引きます。',
+      expVi: 'TOW trừ đi nhiên liệu lăn (Taxi Fuel); LW trừ tiếp nhiên liệu tiêu thụ suốt hành trình bay (Trip Fuel).' },
+    { id: 'Q21', topic: 'wb',
+      qJa: 'CG位置（%MAC）の正しい計算式はどれか？（LEMAC＝平均空力翼弦前縁、MAC＝翼弦長）',
+      qVi: 'Công thức tính vị trí trọng tâm theo %MAC là gì?',
+      optsJa: ['%MAC = (CG_arm + LEMAC) × MAC', '%MAC = (CG_arm − LEMAC) / MAC × 100', '%MAC = LEMAC / CG_arm × 100', '%MAC = ΣMoment × MAC'],
+      optsVi: ['%MAC = (CG_arm + LEMAC) × MAC', '%MAC = (CG_arm − LEMAC) / MAC × 100', '%MAC = LEMAC / CG_arm × 100', '%MAC = ΣMoment × MAC'],
+      ans: 1,
+      expJa: 'まず CG_arm = ΣMoment / ΣWeight を求め、%MAC = (CG_arm − LEMAC) / MAC × 100 で算出します。',
+      expVi: 'Trước tiên tính CG_arm = ΣMoment / ΣWeight, sau đó quy đổi %MAC = (CG_arm − LEMAC) / MAC × 100.' },
+    { id: 'Q22', topic: 'wb',
+      qJa: '重心が後方限界（Aft CG Limit）を超過した場合に生じる代表的な危険はどれか？',
+      qVi: 'Nguy cơ điển hình khi trọng tâm máy bay vượt quá giới hạn sau (Aft CG Limit) là gì?',
+      optsJa: ['縦安定性の低下・失速回復困難・地上での尻もち（テールティッピング）', '燃料消費量がゼロになる', '主翼の揚力が無限に増える', '前輪の荷重だけが異常増加する'],
+      optsVi: ['Giảm ổn định dọc, khó hồi phục thất tốc (stall) và nguy cơ chúi đuôi (tail-tipping) trên mặt đất', 'Tiêu hao nhiên liệu bằng 0', 'Lực nâng cánh tăng vô hạn', 'Chỉ tăng tải bánh mũi'],
+      ans: 0,
+      expJa: '後方重心過多は飛行中の操縦安定性を著しく損ない、また地上でも搭載順序ミスにより尻もち事故を起こします。',
+      expVi: 'CG quá sau làm mất ổn định dọc khi bay, rất nguy hiểm khi thất tốc, và dễ gây lật đuôi (tail-tipping) khi bốc xếp sai thứ tự.' },
+    { id: 'Q23', topic: 'wb',
+      qJa: 'ZFWがMZFWを超過している場合、超過を解消できる正しい対策はどれか？',
+      qVi: 'Khi ZFW đang vượt quá MZFW, biện pháp nào sau đây thực sự giải quyết được lỗi vượt MZFW?',
+      optsJa: ['搭載燃料（Block Fuel）を減らす', '旅客・手荷物・貨物などのペイロードを削減（オフロード）する', 'タキシー燃料を増やす', 'バルク室の貨物を前部貨物室へ移すだけにする'],
+      optsVi: ['Giảm nhiên liệu (Block Fuel)', 'Giảm tải thương mại Payload (offload hàng hóa / hành lý / hành khách)', 'Tăng Taxi Fuel', 'Chỉ chuyển hàng từ hầm Bulk lên hầm trước'],
+      ans: 1,
+      expJa: 'ZFWには燃料が含まれないため、燃料削減や貨物室間の移載だけではZFW自体は減りません。ペイロード削減が必要です。',
+      expVi: 'ZFW không bao gồm nhiên liệu và tổng trọng lượng không đổi khi chỉ chuyển hàng giữa các hầm, nên bắt buộc phải giảm Payload.' },
+    { id: 'Q24', topic: 'wb',
+      qJa: 'Load Sheet確定後に発生した少数の乗客変更や遅着荷物の増減を記録・修正する手続きを何と呼ぶか？',
+      qVi: 'Thủ tục ghi nhận thay đổi nhỏ về hành khách/hành lý giờ chót sau khi đã phát hành Load Sheet gọi là gì?',
+      optsJa: ['LMC（Last Minute Change）', 'MCT（Minimum Connecting Time）', 'ETD（Estimated Time of Departure）', 'FOD（Foreign Object Debris）'],
+      optsVi: ['LMC (Last Minute Change)', 'MCT (Minimum Connecting Time)', 'ETD (Estimated Time of Departure)', 'FOD (Foreign Object Debris)'],
+      ans: 0,
+      expJa: 'LMCは規定範囲内の直前増減をLoad Sheetに追記し機長へ報告する手続きです。規定値を超える場合はLoad Sheet再作成が必要です。',
+      expVi: 'LMC cho phép cập nhật thay đổi giờ chót trong ngưỡng quy định lên Load Sheet và báo cơ trưởng; vượt ngưỡng phải lập lại Load Sheet.' },
+
+    // --- Compliance & Safety (6) ---
+    { id: 'Q25', topic: 'safety',
+      qJa: '空港ランプ上の「FOD（Foreign Object Debris）」が航空機にもたらす最大のリスクはどれか？',
+      qVi: 'Rủi ro lớn nhất mà vật thể lạ FOD trên sân đỗ gây ra cho tàu bay là gì?',
+      optsJa: ['チェックイン時間の延長', 'エンジン吸込によるブレード破損やタイヤのパンク・機体損傷', 'Wi-Fi通信速度の低下', '機内食の遅延'],
+      optsVi: ['Kéo dài thời gian làm thủ tục check-in', 'Bị hút vào động cơ gây hư hại cánh quạt, nổ lốp hoặc hỏng kết cấu tàu bay', 'Giảm tốc độ Wi-Fi', 'Trễ suất ăn trên máy bay'],
+      ans: 1,
+      expJa: '小さなボルト1本やプラスチック片でもジェットエンジンに吸い込まれると深刻な損傷・運航停止につながります。',
+      expVi: 'Chỉ một con ốc nhỏ hay mảnh nhựa bị hút vào động cơ phản lực cũng có thể gây hư hỏng nghiêm trọng hoặc nổ lốp khi chạy đà.' },
+    { id: 'Q26', topic: 'safety',
+      qJa: '空港の制限区域（ランプ・エプロン）内でGSE車両を運転する際の最優先ルールは？',
+      qVi: 'Nguyên tắc ưu tiên cao nhất khi điều khiển xe GSE trong khu vực sân đỗ (apron) là gì?',
+      optsJa: ['急いでいる給油車が最優先', 'すべての状況において航空機（タキシー・牽引中含む）が最優先', '大きい車両が小さい車両に優先する', '制限速度は一般道路と同じ60km/h'],
+      optsVi: ['Xe tra dầu đang vội được ưu tiên nhất', 'Trong mọi tình huống, tàu bay (đang lăn hoặc đang kéo dắt) luôn được ưu tiên tuyệt đối', 'Xe lớn luôn ưu tiên hơn xe nhỏ', 'Tốc độ giới hạn giống đường phố 60 km/h'],
+      ans: 1,
+      expJa: 'ランプ内は「航空機最優先（Aircraft always has right of way）」が鉄則です。',
+      expVi: 'Trên sân đỗ, tàu bay luôn có quyền ưu tiên tuyệt đối (Yield to Aircraft).' },
+    { id: 'Q27', topic: 'safety',
+      qJa: 'ベルトローダー等のGSE車両を航空機へ接近・後退させる際に必須の安全手順はどれか？',
+      qVi: 'Quy trình an toàn bắt buộc khi lùi hoặc điều khiển xe GSE áp sát vào thân tàu bay là gì?',
+      optsJa: ['窓を閉めてバックモニターだけで一気に接近する', '機体手前で一時停止しブレーキ確認＋ガイドマン（誘導員）の合図に従い徐行接近する', '機体に軽く接触させてから停止する', 'エンジンを吹かしながら素早く付ける'],
+      optsVi: ['Đóng kín cửa sổ và chỉ nhìn camera lùi áp sát thật nhanh', 'Dừng kiểm tra phanh trước vạch an toàn, tiến cực chậm theo tín hiệu người xi-nhan (guideman)', 'Chạm nhẹ vào thân máy bay rồi mới phanh', 'Rồ ga áp sát cho nhanh'],
+      ans: 1,
+      expJa: '機体接触防止のため「手前でのブレーキ点検停止（Brake Check）」とガイドマン誘導・バンパー確認が不可欠です。',
+      expVi: 'Bắt buộc phanh thử trước vùng tiếp cận (Brake Check) và tuân theo tín hiệu người xi-nhan để tuyệt đối tránh va quẹt thân tàu bay.' },
+    { id: 'Q28', topic: 'safety',
+      qJa: 'SMS（安全管理システム）における「公正な文化（Just Culture）」の説明として正しいものは？',
+      qVi: 'Mô tả đúng về "Văn hóa Công bằng" (Just Culture) trong Hệ thống Quản lý An toàn (SMS) là gì?',
+      optsJa: ['どんな故意の違反でも一切責任を問わない', '誠実なミスやヒヤリハットの報告を処罰せず学習に活かし、故意・重大な過失とは明確に区別する', 'ミスをした作業員を全員公表して罰する', '安全報告書の提出を禁止する'],
+      optsVi: ['Không truy cứu trách nhiệm kể cả hành vi cố ý phá hoại', 'Khuyến khích báo cáo trung thực sai sót vô ý/suýt xảy ra tai nạn để học hỏi phòng ngừa, tách bạch rõ với hành vi cố ý vi phạm', 'Công khai phạt nặng tất cả ai báo lỗi', 'Cấm gửi báo cáo suýt xảy ra tai nạn'],
+      ans: 1,
+      expJa: 'Just Cultureは現場からの正直なハザード・ヒヤリハット報告を促し、組織全体の事故予防力を高めるSMSの核です。',
+      expVi: 'Just Culture tạo niềm tin để nhân viên mạnh dạn báo cáo mối nguy và suýt xảy ra tai nạn, giúp hệ thống phòng ngừa trước khi tai nạn thật xảy ra.' },
+    { id: 'Q29', topic: 'safety',
+      qJa: '日本の民間航空の安全規制・運航監督を担う中央省庁および部局はどれか？',
+      qVi: 'Cơ quan trung ương chịu trách nhiệm quản lý và giám sát an toàn hàng không dân dụng tại Nhật Bản là cơ quan nào?',
+      optsJa: ['国土交通省 航空局（MLIT / JCAB）', '農林水産省', '財務省 税関局のみ', '環境省'],
+      optsVi: ['Cục Hàng không — Bộ Đất đai, Hạ tầng, Giao thông và Du lịch Nhật Bản (MLIT / JCAB)', 'Bộ Nông Lâm Ngư nghiệp', 'Chỉ riêng Tổng cục Hải quan', 'Bộ Môi trường'],
+      ans: 0,
+      expJa: '日本の航空法に基づく監督・許認可・安全基準策定は国土交通省航空局（JCAB）が所管します。',
+      expVi: 'Cục Hàng không Nhật Bản (JCAB) trực thuộc Bộ MLIT chịu trách nhiệm thực thi Luật Hàng không (航空法).' },
+    { id: 'Q30', topic: 'safety',
+      qJa: '作業中に航空機の外板に軽微な傷をつけた可能性がある場合、最初に取るべき行動は？',
+      qVi: 'Trong lúc thao tác nếu nghi ngờ thiết bị đã làm xước nhẹ vỏ máy bay, hành động đầu tiên phải làm là gì?',
+      optsJa: ['塗装が剥がれただけなのでそのまま出発させる', '直ちに作業を停止し、スーパーバイザーおよび整備部門（Maintenance）へ事実を報告する', '勤務終了後にメモを残す', '自分で塗料を塗って直す'],
+      optsVi: ['Chỉ xước sơn nhẹ nên cứ cho máy bay khởi hành', 'Dừng ngay công việc và báo cáo trung thực ngay lập tức cho Supervisor & bộ phận Bảo dưỡng (整備士)', 'Để hết ca mới viết giấy nhắn lại', 'Tự lấy sơn chấm lại cho đỡ lộ'],
+      ans: 1,
+      expJa: '複合材機体（B787等）は外見上わずかな傷でも内部剥離が起きている可能性があり、即時報告と整備点検が絶対原則です。',
+      expVi: 'Đặc biệt trên thân vỏ composite (như B787), vết va nhỏ bên ngoài có thể gây tách lớp kết cấu bên trong — bắt buộc dừng và báo Maintenance ngay!' },
+
+    // ===== Q31–Q46: CÂU HỎI HÌNH ẢNH SVG TRỰC QUAN (MARSHALLING & BIỂN BÁO SÂN BAY) =====
+    { id: 'Q31', topic: 'turnaround', visual: 'marshal_straight',
+      qJa: '【図版問題】マーシャラーが両腕を頭上で前後に振り、機体を手前へ招く合図の意味は？',
+      qVi: '[Câu hỏi hình ảnh] Nhân viên Marshalling đưa hai gậy phát sáng vẫy đều về phía mình có ý nghĩa gì?',
+      optsJa: ['直進せよ（Move Ahead / Straight Ahead）', '緊急停止（Emergency Stop）', '左折せよ（Turn Left）', 'エンジン停止（Cut Engines）'],
+      optsVi: ['Tiến thẳng về phía trước (Move Ahead)', 'Dừng khẩn cấp (Emergency Stop)', 'Rẽ trái (Turn Left)', 'Tắt động cơ (Cut Engines)'],
+      ans: 0, expJa: '両腕を曲げて手前へ招き続ける動作は「直進（Straight Ahead）」の国際標準合図です。', expVi: 'Đưa hai tay cầm gậy vẫy đều về phía trước ngực/mặt là tín hiệu chuẩn ICAO ra lệnh tàu bay tiến thẳng.' },
+    { id: 'Q32', topic: 'turnaround', visual: 'marshal_stop',
+      qJa: '【図版問題】マーシャラーが両腕を頭上でゆっくり交差させる合図の意味は？',
+      qVi: '[Câu hỏi hình ảnh] Marshaller từ từ đưa hai tay giao chéo nhau thành chữ X trên đỉnh đầu nghĩa là gì?',
+      optsJa: ['通常停止（Normal Stop）', '輪止め装着完了（Chocks Inserted）', 'エンジン始動（Start Engine）', '速度を上げよ'],
+      optsVi: ['Dừng bình thường tại vạch đỗ (Normal Stop)', 'Đã đặt chèn bánh (Chocks Inserted)', 'Khởi động động cơ', 'Tăng tốc lăn vào'],
+      ans: 0, expJa: '頭上で両ワンドを交差させる動作は「通常停止（Normal Stop）」を示します（急激に交差させると緊急停止）。', expVi: 'Đưa hai gậy giao chéo từ từ thành chữ X trên đầu là lệnh Dừng thường (Normal Stop).' },
+    { id: 'Q33', topic: 'turnaround', visual: 'marshal_estop',
+      qJa: '【図版問題】マーシャラーが両腕を頭上で急激かつ強く交差させ、保持する合図の意味は？',
+      qVi: '[Câu hỏi hình ảnh] Marshaller vung mạnh và khóa chặt hai gậy chéo trên đầu kèm cảnh báo đỏ nghĩa là gì?',
+      optsJa: ['緊急停止（Emergency Stop）', '減速せよ（Slow Down）', '右折せよ（Turn Right）', 'ブレーキ解除（Release Brakes）'],
+      optsVi: ['DỪNG KHẨN CẤP NGAY LẬP TỨC (Emergency Stop)', 'Giảm tốc độ (Slow Down)', 'Rẽ phải (Turn Right)', 'Nhả phanh đỗ (Release Brakes)'],
+      ans: 0, expJa: '衝突・人員侵入などの緊急時は両腕を頭上で鋭く交差（X字）させて即時停止を指示します。', expVi: 'Chéo mạnh và dứt khoát hai tay trên đầu là lệnh Dừng khẩn cấp (Emergency Stop) khi có nguy cơ va chạm.' },
+    { id: 'Q34', topic: 'turnaround', visual: 'marshal_left',
+      qJa: '【図版問題】マーシャラーが右腕を水平に伸ばし、左腕で招き続ける動作の意味は？（パイロット視点）',
+      qVi: '[Câu hỏi hình ảnh] Marshaller duỗi ngang tay phải giữ nguyên, tay trái vẫy liên tục — theo góc nhìn phi công là lệnh gì?',
+      optsJa: ['機首を左へ旋回（Turn Left from Pilot\'s view）', '機首を右へ旋回（Turn Right）', 'エンジン停止', '後退せよ'],
+      optsVi: ['Rẽ trái (Turn Left theo hướng phi công)', 'Rẽ phải (Turn Right)', 'Tắt động cơ', 'Lùi lại'],
+      ans: 0, expJa: 'パイロットから見て左側の主翼側へ旋回させる際、マーシャラーは右腕を水平に固定し左腕で招きます。', expVi: 'Cánh tay duỗi thẳng làm tâm xoay bên cánh trái phi công, tay kia vẫy tiến là lệnh Rẽ trái (Turn Left).' },
+    { id: 'Q35', topic: 'turnaround', visual: 'marshal_right',
+      qJa: '【図版問題】マーシャラーが左腕を水平に固定し、右腕で手前へ招く動作の意味は？',
+      qVi: '[Câu hỏi hình ảnh] Marshaller duỗi ngang tay trái giữ cố định, tay phải vẫy liên tục là lệnh gì?',
+      optsJa: ['機首を右へ旋回（Turn Right from Pilot\'s view）', '直進せよ', 'ブレーキをかけよ', '輪止め撤去'],
+      optsVi: ['Rẽ phải (Turn Right theo hướng phi công)', 'Tiến thẳng', 'Kéo phanh đỗ', 'Tháo chèn bánh'],
+      ans: 0, expJa: 'マーシャラーの左腕を固定し右腕を振ることで、パイロット視点での右旋回（Turn Right）を指示します。', expVi: 'Duỗi ngang tay trái làm trục, vẫy tay phải là lệnh Rẽ phải (Turn Right theo góc nhìn buồng lái).' },
+    { id: 'Q36', topic: 'turnaround', visual: 'marshal_slow',
+      qJa: '【図版問題】両腕を下向きに伸ばし、手のひらを下にして上下にゆっくり動かす合図の意味は？',
+      qVi: '[Câu hỏi hình ảnh] Marshaller hạ hai tay xuống thấp và vẫy nhẹ lên xuống liên tục nghĩa là gì?',
+      optsJa: ['減速せよ（Slow Down）', '緊急停止', 'エンジン始動', 'すべてクリア（All Clear）'],
+      optsVi: ['Giảm tốc độ lăn (Slow Down)', 'Dừng khẩn cấp', 'Khởi động động cơ', 'An toàn hoàn tất'],
+      ans: 0, expJa: '停止線が近づいた際や進入速度が速い時は、両腕を下げて上下に振り「減速（Slow Down）」を伝えます。', expVi: 'Vẫy nhẹ hai tay hướng xuống đất là tín hiệu yêu cầu phi công Giảm tốc độ (Slow Down) khi sắp tới vạch dừng.' },
+    { id: 'Q37', topic: 'turnaround', visual: 'marshal_chocks',
+      qJa: '【図版問題】マーシャラーが両腕を下げて内向きに素早く合わせる（親指内側）合図の意味は？',
+      qVi: '[Câu hỏi hình ảnh] Marshaller hạ hai gậy xuống dưới và khép nhanh vào nhau hướng vào trong nghĩa là gì?',
+      optsJa: ['輪止め装着完了（Chocks Inserted）', '輪止め撤去完了（Chocks Removed）', 'ドア閉鎖完了', '火災発生'],
+      optsVi: ['Đã chèn bánh xe xong (Chocks Inserted)', 'Đã tháo chèn bánh xe (Chocks Removed)', 'Đã đóng cửa xong', 'Báo cháy động cơ'],
+      ans: 0, expJa: '下向きに両腕を内側へ合わせる動作が「輪止め装着（Chocks Inserted）」、外側へ開く動作が「輪止め撤去（Chocks Removed）」です。', expVi: 'Khép hai tay từ ngoài vào trong ở phía dưới = Chocks Inserted; mở từ trong ra ngoài = Chocks Removed.' },
+    { id: 'Q38', topic: 'turnaround', visual: 'marshal_cut',
+      qJa: '【図版問題】片手を首の前で水平に横切る動作（スロートカット動作）の合図の意味は？',
+      qVi: '[Câu hỏi hình ảnh] Marshaller đưa một tay kéo ngang qua trước cổ (động tác cắt ngang) nghĩa là gì?',
+      optsJa: ['エンジン停止（Cut Engines）', 'PBB接続完了', 'プッシュバック開始', '給油開始'],
+      optsVi: ['Tắt động cơ (Cut Engines)', 'Đã nối xong ống lồng PBB', 'Bắt đầu đẩy lùi', 'Bắt đầu tra nhiên liệu'],
+      ans: 0, expJa: '首の前で水平に切るジェスチャーは「エンジン停止（Cut Engines）」の標準合図です。', expVi: 'Động tác kéo ngang qua cổ là tín hiệu chuẩn quốc tế yêu cầu phi công Tắt động cơ (Cut Engines).' },
+    { id: 'Q39', topic: 'safety', visual: 'sign_holdshort',
+      qJa: '【図版問題】滑走路手前の誘導路上に描かれた「実線2本＋破線2本（黄色）」の標識の意味は？',
+      qVi: '[Câu hỏi hình ảnh] Vạch sơn vàng gồm 2 vạch liền + 2 vạch đứt ngang đường lăn trước đường băng có ý nghĩa gì?',
+      optsJa: ['滑走路一時停止位置標識（Runway Holding Position）— 管制許可なく実線側から越えてはならない', 'GSE車両の高速走行レーン', '駐機スポット停止線', '横断歩道'],
+      optsVi: ['Vạch dừng chờ trước đường băng (Runway Holding Position) — CẤM vượt từ phía vạch liền khi chưa có lệnh ATC', 'Làn chạy nhanh của xe GSE', 'Vạch dừng đỗ tàu bay', 'Lối đi bộ'],
+      ans: 0, expJa: '実線側から進入する場合、管制塔の明確な許可なしに越えることは滑走路誤進入（Runway Incursion）となり厳禁です。', expVi: 'Vạch Hold Short ngăn xâm nhập đường băng: cấm tuyệt đối vượt qua từ phía 2 vạch liền nếu chưa có huấn lệnh Đài không lưu.' },
+    { id: 'Q40', topic: 'safety', visual: 'sign_rwy_mand',
+      qJa: '【図版問題】赤地に白文字で「36-18」と書かれた飛行場標識の区分はどれか？',
+      qVi: '[Câu hỏi hình ảnh] Biển báo nền ĐỎ chữ TRẮNG ghi "36-18" tại sân bay thuộc loại biển báo nào?',
+      optsJa: ['必須指示標識（Mandatory Instruction Sign）— 滑走路進入境界を示す', '現在位置標識（Location Sign）', '方向案内標識（Direction Sign）', '駐車場案内'],
+      optsVi: ['Biển báo Bắt buộc (Mandatory Instruction Sign) — ranh giới cấm xâm nhập đường băng 36-18', 'Biển báo vị trí hiện tại', 'Biển chỉ hướng nhà ga', 'Biển bãi đỗ xe'],
+      ans: 0, expJa: '赤地に白文字は「必須指示標識（滑走路進入禁止境界・NO ENTRY等）」で、無許可通過は重大違反です。', expVi: 'Nền đỏ chữ trắng là biển Bắt buộc (Mandatory Sign) cảnh báo ranh giới đường băng/khu vực cấm.' },
+    { id: 'Q41', topic: 'safety', visual: 'sign_twy_loc',
+      qJa: '【図版問題】黒地に黄色文字・黄色枠で「A」と書かれた標識の意味は？',
+      qVi: '[Câu hỏi hình ảnh] Biển báo nền ĐEN chữ VÀNG viền vàng ghi chữ "A" có ý nghĩa gì?',
+      optsJa: ['現在走行中の誘導路名を示す位置標識（Taxiway Location Sign: 誘導路A）', '滑走路進入許可', '緊急避難口', 'GSE駐車可能エリア'],
+      optsVi: ['Biển báo vị trí hiện tại: Đang ở trên Đường lăn A (Taxiway Location Sign)', 'Cho phép vào đường băng', 'Lối thoát hiểm', 'Bãi đỗ xe GSE'],
+      ans: 0, expJa: '「黒地に黄色文字＝現在位置（Black square, you\'re there）」と覚えます。誘導路A上にいることを示します。', expVi: 'Quy tắc nhớ chuẩn ICAO: Nền đen chữ vàng = Biển vị trí bạn đang đứng ("Black square, you\'re there" — Đường lăn A).' },
+    { id: 'Q42', topic: 'safety', visual: 'sign_era_red',
+      qJa: '【図版問題】駐機スポットを囲む赤色の実線（ERA境界線）に対するGSE車両の正しい対応は？',
+      qVi: '[Câu hỏi hình ảnh] Khi lái xe GSE tiến tới vạch đỏ ERA bao quanh vị trí đỗ tàu bay, hành động đúng là gì?',
+      optsJa: ['赤線外で必ず一時停止し、ビーコン消灯・ブレーキ確認後に最徐行で進入する', '制限速度30km/hのまま一気に進入する', '赤線内に待機駐車しておく', '赤線を無視して翼下を横断する'],
+      optsVi: ['Dừng hẳn ngoài vạch đỏ, xác nhận đèn Beacon OFF & thử phanh (Brake Check) rồi mới tiến cực chậm vào', 'Giữ nguyên 30 km/h lao thẳng vào', 'Đỗ xe chờ sẵn bên trong vạch đỏ', 'Cắt ngang qua dưới cánh'],
+      ans: 0, expJa: 'ERA（Equipment Restraint Area）内は機体到着前・出発前に完全に空け、進入時は必ず一時停止・ブレーキ点検を行います。', expVi: 'Vùng ERA phải luôn trống sạch trước khi máy bay vào/ra; xe GSE muốn vào bắt buộc dừng thử phanh bên ngoài và chờ Beacon OFF.' },
+    { id: 'Q43', topic: 'safety', visual: 'sign_hydrant',
+      qJa: '【図版問題】エプロン路面上の黄・赤マーキング「HYDRANT FUEL PIT」の上における厳禁事項は？',
+      qVi: '[Câu hỏi hình ảnh] Nắp hố tiếp nhiên liệu ngầm "HYDRANT FUEL PIT" sơn vàng/đỏ trên sân đỗ có quy định cấm gì?',
+      optsJa: ['ピット上への車両駐停車・重量物載置・火気使用を厳禁（緊急遮断弁アクセス確保）', '雨天時の給油禁止', '給油車の接近禁止', '昼間の点検禁止'],
+      optsVi: ['Cấm đỗ xe đè lên, cấm đặt vật nặng hoặc dùng lửa gần hố (phải giữ trống lối đóng van ngắt khẩn cấp)', 'Cấm tra dầu khi trời mưa', 'Cấm xe tra dầu tới gần', 'Cấm kiểm tra ban ngày'],
+      ans: 0, expJa: 'ハイドラントピットと緊急遮断ボタン（EFSO）周辺は常に車両・機材を置かず即座に遮断できるよう確保します。', expVi: 'Không bao giờ đỗ xe/để hàng đè lên nắp hố Hydrant hoặc che khuất nút ngắt nhiên liệu khẩn cấp (EFSO).' },
+    { id: 'Q44', topic: 'safety', visual: 'sign_papi_ok',
+      qJa: '【図版問題】滑走路脇の進入角指示灯（PAPI）が「白2灯・赤2灯」を示している状態の意味は？',
+      qVi: '[Câu hỏi hình ảnh] Hệ thống đèn PAPI cạnh đường băng hiển thị "2 Trắng – 2 Đỏ" cho biết tàu bay đang ở trạng thái nào?',
+      optsJa: ['適正な進入角（On Glide Path / 正常な降下パス）', '高度が高すぎる（Too High）', '高度が低すぎる（Too Low）', '滑走路閉鎖中'],
+      optsVi: ['Đúng đường trượt hạ cánh chuẩn (On Glide Path)', 'Đang quá cao (4 trắng)', 'Đang quá thấp (4 đỏ)', 'Đường băng đang đóng'],
+      ans: 0, expJa: 'PAPIは白2・赤2が適正（約3°）。白が多いと高すぎ、赤が多いと低すぎを意味します。', expVi: 'PAPI chuẩn: 2 trắng 2 đỏ = đúng góc trượt ~3° (4 trắng = quá cao, 4 đỏ = quá thấp).' },
+    { id: 'Q45', topic: 'safety', visual: 'sign_noentry',
+      qJa: '【図版問題】赤丸に白い横棒の標識（NO ENTRY）が設置されている場所での正しい行動は？',
+      qVi: '[Câu hỏi hình ảnh] Gặp biển báo tròn đỏ gạch ngang trắng (NO ENTRY) tại khu vực sân đỗ/đường lăn, tài xế GSE phải làm gì?',
+      optsJa: ['進入厳禁 — 絶対に入らず指定された構内通路へ迂回する', '航空機がいなければ通過してよい', 'ハザードを点灯すれば進入可能', '夜間のみ通行可能'],
+      optsVi: ['CẤM ĐI VÀO tuyệt đối — phải đi vòng theo đúng tuyến đường nội bộ quy định', 'Không thấy máy bay thì đi qua được', 'Bật đèn ưu tiên là vào được', 'Ban đêm được phép đi'],
+      ans: 0, expJa: 'NO ENTRY標識は一方通行逆走や滑走路・誘導路への誤進入を防ぐ絶対禁止標識です。', expVi: 'Biển NO ENTRY cấm tuyệt đối đi vào nhằm ngăn đi ngược chiều hoặc xâm nhập đường lăn/đường băng.' },
+    { id: 'Q46', topic: 'safety', visual: 'sign_apron_road',
+      qJa: '【図版問題】白い破線と白実線で区画された「構内車両通路（Service Road）」走行時の原則は？',
+      qVi: '[Câu hỏi hình ảnh] Khi lái xe trên tuyến đường nội bộ (Service Road) kẻ vạch trắng trong sân bay, nguyên tắc đúng là gì?',
+      optsJa: ['白線内を厳守し、制限速度（通常30km/h以下）と一時停止線・航空機最優先を守る', '近道のため駐機スポット内を斜めに横切る', '制限速度なしで走行してよい', '誘導路と自由に行き来できる'],
+      optsVi: ['Đi đúng trong làn vạch trắng, tuân thủ tốc độ (≤30 km/h), dừng tại vạch STOP và luôn nhường tàu bay', 'Đi tắt chéo qua bãi đỗ máy bay cho nhanh', 'Không giới hạn tốc độ', 'Tự do sang đường lăn'],
+      ans: 0, expJa: '構内車両は原則として白線のサービスロードを走行し、スポット内や翼下のショートカットは厳禁です。', expVi: 'Xe GSE bắt buộc đi đúng làn Service Road, cấm đi tắt qua spot hoặc dưới cánh tàu bay.' },
+
+    // ===== Q47–Q54: CÂU HỎI HÌNH ẢNH NHÃN NGUY HIỂM IATA DGR =====
+    { id: 'Q47', topic: 'cargo', visual: 'dgr_c1',
+      qJa: '【図版問題】オレンジ色の菱形に数字「1」が記載された危険物ラベルの分類は？',
+      qVi: '[Câu hỏi hình ảnh] Nhãn hình thoi màu CAM có số "1" theo IATA DGR biểu thị nhóm hàng nguy hiểm nào?',
+      optsJa: ['Class 1：火薬類（Explosives）', 'Class 3：引火性液体', 'Class 7：放射性物質', 'Class 8：腐食性物質'],
+      optsVi: ['Class 1: Chất nổ (Explosives)', 'Class 3: Chất lỏng dễ cháy', 'Class 7: Chất phóng xạ', 'Class 8: Chất ăn mòn'],
+      ans: 0, expJa: 'オレンジ菱形のClass 1は火薬類（花火・弾薬等）で、多くは旅客機搭載禁止です。', expVi: 'Class 1 (màu cam) là Chất nổ (Explosives), phần lớn bị cấm tuyệt đối trên máy bay chở khách.' },
+    { id: 'Q48', topic: 'cargo', visual: 'dgr_c3',
+      qJa: '【図版問題】赤色菱形・炎マーク・数字「3」のラベルが示す危険物分類は？',
+      qVi: '[Câu hỏi hình ảnh] Nhãn hình thoi ĐỎ có ngọn lửa và số "3" biểu thị nhóm hàng nguy hiểm nào?',
+      optsJa: ['Class 3：引火性液体（Flammable Liquids — アルコール・塗料・香水等）', 'Class 2.2：非引火性ガス', 'Class 5.1：酸化性物質', 'Class 9：その他の有害性物質'],
+      optsVi: ['Class 3: Chất lỏng dễ cháy (Flammable Liquids — cồn, sơn, nước hoa...)', 'Class 2.2: Khí không cháy', 'Class 5.1: Chất oxy hóa', 'Class 9: Hàng nguy hiểm khác'],
+      ans: 0, expJa: '赤菱形＋炎＋数字3は引火性液体（Class 3）です。液漏れ・梱包損傷があれば即受託拒否します。', expVi: 'Hình thoi đỏ + ngọn lửa + số 3 là Chất lỏng dễ cháy (Class 3).' },
+    { id: 'Q49', topic: 'cargo', visual: 'dgr_c4',
+      qJa: '【図版問題】赤白の縦縞模様に炎マーク・数字「4」のラベルの意味は？',
+      qVi: '[Câu hỏi hình ảnh] Nhãn hình thoi sọc dọc ĐỎ–TRẮNG có ngọn lửa và số "4" biểu thị nhóm nào?',
+      optsJa: ['Class 4.1：可燃性固体（Flammable Solids — マッチ・金属粉等）', 'Class 6.1：毒物', 'Class 8：腐食性物質', 'Class 2.1：引火性ガス'],
+      optsVi: ['Class 4.1: Chất rắn dễ cháy (Flammable Solids)', 'Class 6.1: Chất độc', 'Class 8: Chất ăn mòn', 'Class 2.1: Khí dễ cháy'],
+      ans: 0, expJa: '赤白縦縞はClass 4.1（可燃性固体）を示します。摩擦や熱で容易に発火するため取扱注意です。', expVi: 'Sọc dọc đỏ-trắng + số 4 là Chất rắn dễ cháy (Class 4.1 Flammable Solids).' },
+    { id: 'Q50', topic: 'cargo', visual: 'dgr_c5',
+      qJa: '【図版問題】黄色菱形に「円の上に炎」マーク・数字「5.1」のラベルの意味は？',
+      qVi: '[Câu hỏi hình ảnh] Nhãn hình thoi VÀNG có biểu tượng "ngọn lửa trên vòng tròn O" và số "5.1" là nhóm nào?',
+      optsJa: ['Class 5.1：酸化性物質（Oxidizing Substances — 酸素供給により燃焼を激化）', 'Class 7：放射性物質', 'Class 1：火薬類', 'Class 9：ドライアイス'],
+      optsVi: ['Class 5.1: Chất oxy hóa (Oxidizing Substances — cung cấp oxy làm cháy dữ dội)', 'Class 7: Chất phóng xạ', 'Class 1: Chất nổ', 'Class 9: Đá khô'],
+      ans: 0, expJa: '黄色菱形＋円上の炎（O＝Oxygen）はClass 5.1酸化性物質。可燃物や引火性液体との隔離（Segregation）が必要です。', expVi: 'Vòng tròn chữ O (Oxygen) có ngọn lửa trên nền vàng = Class 5.1 Chất oxy hóa, cần cách ly (Segregation) với chất dễ cháy.' },
+    { id: 'Q51', topic: 'cargo', visual: 'dgr_c6',
+      qJa: '【図版問題】白地菱形にドクロマーク・数字「6」のラベルが示す分類は？',
+      qVi: '[Câu hỏi hình ảnh] Nhãn hình thoi TRẮNG có biểu tượng đầu lâu xương chéo và số "6" biểu thị nhóm nào?',
+      optsJa: ['Class 6.1：毒物（Toxic Substances — 食品・生動物との隔離が必要）', 'Class 8：腐食性物質', 'Class 2.3：非引火性ガス', 'Class 3：引火性液体'],
+      optsVi: ['Class 6.1: Chất độc (Toxic Substances — phải tách riêng khỏi thực phẩm & động vật sống)', 'Class 8: Chất ăn mòn', 'Class 2.3: Khí không cháy', 'Class 3: Chất lỏng dễ cháy'],
+      ans: 0, expJa: 'Class 6.1毒物は食料品や生動物（AVI）と同じコンテナ・隣接位置へ混載しない隔離ルールがあります。', expVi: 'Class 6.1 (Chất độc) bắt buộc tách biệt khỏi thực phẩm (Foodstuff) và động vật sống (AVI).' },
+    { id: 'Q52', topic: 'cargo', visual: 'dgr_c8',
+      qJa: '【図版問題】上半分が白（試験管から金属・手へ滴下）、下半分が黒・数字「8」のラベルの意味は？',
+      qVi: '[Câu hỏi hình ảnh] Nhãn hình thoi nửa trên TRẮNG (ống nghiệm nhỏ giọt ăn mòn tay & kim loại), nửa dưới ĐEN số "8" là nhóm nào?',
+      optsJa: ['Class 8：腐食性物質（Corrosives — 機体アルミ構造を腐食させる重大リスク）', 'Class 9：磁性物質', 'Class 5.2：有機過酸化物', 'Class 2.1：引火性ガス'],
+      optsVi: ['Class 8: Chất ăn mòn (Corrosives — nguy cơ ăn mòn vỏ nhôm kết cấu tàu bay cực cao)', 'Class 9: Vật liệu từ tính', 'Class 5.2: Peroxit hữu cơ', 'Class 2.1: Khí dễ cháy'],
+      ans: 0, expJa: 'Class 8腐食性物質（酸・アルカリ等）は漏洩すると航空機のアルミ合金や配線を激しく腐食させるため極めて危険です。', expVi: 'Class 8 (Chất ăn mòn) nếu rò rỉ sẽ phá hủy khung nhôm và hệ thống dây điện tàu bay cực nhanh.' },
+    { id: 'Q53', topic: 'cargo', visual: 'dgr_c9_li',
+      qJa: '【図版問題】赤斜線枠に電池マーク・UN3480/3481が記載されたラベル（リチウム電池マーク）で旅客便搭載禁止なのは？',
+      qVi: '[Câu hỏi hình ảnh] Với nhãn Lithium Battery Mark (UN3480 / UN3481), mã UN nào bị CẤM chở dạng hàng hóa trên máy bay chở khách?',
+      optsJa: ['UN3480（リチウムイオン電池単体貨物）は旅客機搭載禁止・CAO貨物機専用', 'UN3481（機器組込）はすべて全面禁止', 'どちらも制限なく旅客便搭載可能', '電池はすべてClass 1に分類される'],
+      optsVi: ['UN3480 (Pin Lithium-ion rời dạng hàng hóa) CẤM trên máy bay chở khách — chỉ được bay tàu chở hàng CAO', 'UN3481 (pin trong thiết bị) bị cấm hoàn toàn', 'Cả hai đều xếp tự do lên máy bay chở khách', 'Tất cả pin thuộc Class 1'],
+      ans: 0, expJa: 'UN3480（単体リチウムイオン電池）の貨物輸送は原則旅客機禁止（CAOラベル必須・充電率SoC 30%以下等）です。', expVi: 'UN3480 (pin Lithium-ion rời) bị cấm chở hàng trên chuyến bay hành khách, phải đi tàu chở hàng CAO (mức sạc SoC ≤30%).' },
+    { id: 'Q54', topic: 'cargo', visual: 'dgr_cao',
+      qJa: '【図版問題】オレンジ色長方形「CARGO AIRCRAFT ONLY」ラベルの意味として正しいものは？',
+      qVi: '[Câu hỏi hình ảnh] Nhãn chữ nhật màu CAM ghi "CARGO AIRCRAFT ONLY" có ý nghĩa bắt buộc gì?',
+      optsJa: ['旅客便への搭載厳禁（貨物専用機のみ搭載可）', '旅客便のバルク室のみ搭載可', '優先貨物（Priority Cargo）の表示', '冷蔵保管必須の表示'],
+      optsVi: ['Cấm tuyệt đối xếp lên máy bay chở khách — CHỈ được xếp lên tàu bay chuyên chở hàng (Freighter)', 'Chỉ xếp vào hầm Bulk máy bay chở khách', 'Hàng ưu tiên tốc hành', 'Hàng cần bảo quản lạnh'],
+      ans: 0, expJa: 'CAOラベル貼付貨物は、いかなる理由があっても旅客機へ搭載できません。', expVi: 'Nhãn CAO (Cargo Aircraft Only) cấm tuyệt đối đưa lên mọi chuyến bay có hành khách.' },
+
+    // ===== Q55–Q90: 36 CÂU HỎI SÁT ĐỀ THI 特定技能 HÀNG KHÔNG & NGHIỆP VỤ THỰC CHIẾN =====
+    { id: 'Q55', topic: 'wb',
+      qJa: 'A321neoやB777-300ERのような胴体延長機で、離陸時に最も注意すべき重心逸脱リスクは？',
+      qVi: 'Trên các dòng thân kéo dài như A321neo hoặc B777-300ER, rủi ro nguy hiểm nhất khi CG lệch sau lúc cất cánh là gì?',
+      optsJa: ['テールストライク（離陸機首上げ時に尾部が滑走路へ接触）', '主翼が凍る', '燃料タンクが空になる', 'PBBが外れなくなる'],
+      optsVi: ['Quệt đuôi xuống đường băng khi kéo mũi cất cánh (Tail-Strike)', 'Đóng băng cánh', 'Hết nhiên liệu đột ngột', 'Kẹt ống lồng PBB'],
+      ans: 0, expJa: '胴体延長機は離陸時の尾部接地限界角が9.7°〜9.8°と小さく、後方CGや過大トリムで容易にテールストライクを起こします。', expVi: 'Tàu bay thân dài có góc chạm đuôi rất nhỏ (~9.7°–9.8°); CG quá sau khiến mũi ngóc nhanh gây Tail-Strike.' },
+    { id: 'Q56', topic: 'wb',
+      qJa: 'B777F貨物専用機で「後部から先に積み込む」または「前部から先に降ろす」と起こりやすい重大事故は？',
+      qVi: 'Trên máy bay chở hàng B777F, nếu "xếp từ đuôi trước" hoặc "dỡ từ mũi trước" sẽ dễ xảy ra tai nạn gì?',
+      optsJa: ['駐機中テールティッピング（尻もち事故：主脚を支点に機首が浮き尾部が地面へ激突）', 'タイヤの空気圧上昇', '機内照明の消灯', '無線機の故障'],
+      optsVi: ['Sập đuôi ngay trên sân đỗ (Ground Tail-Tipping: càng mũi nhấc bổng, đuôi đập xuống bê tông)', 'Tăng áp suất lốp', 'Tắt đèn cabin', 'Hỏng bộ đàm'],
+      ans: 0, expJa: '原則は「前部から積み、後部から降ろす（Load Forward First, Unload Aft First）」。貨物機はテールスタンドを必ず使用します。', expVi: 'Nguyên tắc vàng: Xếp từ hầm trước ra sau, dỡ từ hầm sau lên trước (Load Fwd First, Unload Aft First) và chống Tail Stand.' },
+    { id: 'Q57', topic: 'wb',
+      qJa: '外気温（OAT）が35℃以上の高温や、追い風（Tailwind）・積雪路面（Snow）の条件が離陸性能に与える影響は？',
+      qVi: 'Điều kiện nhiệt độ ngoài trời cao (OAT >35°C), gió xuôi (Tailwind) hoặc đường băng tuyết ảnh hưởng thế nào đến cất cánh?',
+      optsJa: ['空気密度低下・制動力低下により必要滑走路長が延び、性能制限MTOWが低下する', '必要滑走路長が短くなりより多く積める', 'V速度やMTOWに一切影響しない', 'ZFWが自動的に減少する'],
+      optsVi: ['Giảm mật độ không khí & độ bám phanh → tăng cự ly đường băng cần thiết và giảm MTOW giới hạn hiệu năng', 'Rút ngắn đà chạy cất cánh và chở được nhiều hơn', 'Không ảnh hưởng gì đến V-Speed hay MTOW', 'Tự động làm giảm ZFW'],
+      ans: 0, expJa: '高温（低密度空気）・追い風・濡れ/積雪路面はいずれも離陸距離を伸ばし、構造MTOWより低い性能制限MTOWが適用されます。', expVi: 'Trời nóng (không khí loãng), gió xuôi và mặt băng ướt/tuyết đều kéo dài cự ly chạy đà và hạ thấp Performance-Limited MTOW.' },
+    { id: 'Q58', topic: 'wb',
+      qJa: '離陸時の速度「V1」「VR」「V2」のうち、「離陸決心速度（これを超えたら原則離陸中止せず離陸を継続）」はどれか？',
+      qVi: 'Trong các tốc độ cất cánh V1, VR, V2, tốc độ nào là "Tốc độ quyết định cất cánh" (vượt qua là tiếp tục cất cánh)?',
+      optsJa: ['V1（離陸決心速度 / Takeoff Decision Speed）', 'VR（ローテーション速度）', 'V2（離陸安全速度）', 'VREF（進入基準速度）'],
+      optsVi: ['V1 (Takeoff Decision Speed — Tốc độ quyết định)', 'VR (Tốc độ nâng mũi)', 'V2 (Tốc độ leo an toàn)', 'VREF (Tốc độ tiếp cận hạ cánh)'],
+      ans: 0, expJa: 'V1は離陸中止（RTO）して滑走路内に停止できる上限速度。V1超過後はエンジン故障でも離陸継続します。', expVi: 'V1 là giới hạn cuối để hủy cất cánh dừng an toàn trong đường băng; quá V1 phải tiếp tục cất cánh.' },
+    { id: 'Q59', topic: 'wb',
+      qJa: 'ロードシート作成後に貨物1,500kgを後部貨物室へ追加搭載したが、ロードコントローラーへ未報告のまま出発した場合の危険は？',
+      qVi: 'Sau khi xong Load Sheet, chất thêm 1,500 kg vào hầm sau nhưng QUÊN báo Load Control (lỗi LMC) sẽ gây nguy hiểm gì?',
+      optsJa: ['操縦席に誤ったCG・水平安定板トリム（THS）とV速度が設定され、離陸時の急ピッチアップ・失速やテールストライクを招く', '燃料消費が少し減るだけで安全', '着陸後に精算すれば問題ない', '自動操縦がすべて補正するので不要'],
+      optsVi: ['Phi công cài SAI góc Trim đuôi ngang (THS) và tốc độ V1/VR → nguy cơ ngóc đầu mất kiểm soát, Tail-Strike hoặc thất tốc', 'Chỉ tiết kiệm xăng nhẹ, không sao', 'Hạ cánh xong khai bù là được', 'Autopilot tự bù hết không cần báo'],
+      ans: 0, expJa: '未報告LMCはトリム誤設定の主因であり、世界の重大航空事故でも繰り返し原因となっている厳禁行為です。', expVi: 'Quên báo LMC là nguyên nhân trực tiếp gây cài sai Stabilizer Trim và tai nạn cất cánh nghiêm trọng.' },
+    { id: 'Q60', topic: 'wb',
+      qJa: 'Boeing 737-800（バルク専用機）とAirbus A320（コンテナ対応機）の貨物室GSEの正しい組み合わせは？',
+      qVi: 'Sự kết hợp GSE hầm hàng đúng chuẩn giữa Boeing 737-800 (hầm rời) và Airbus A320 (hầm container AKH + Bulk) là gì?',
+      optsJa: ['B737-800は全室ベルトローダー、A320は前・後部コンテナ室にローデッキ・ハイリフトローダー＋バルク室にベルトローダー', 'どちらもメインデッキ・ハイリフトローダー（5.2m）を使用', 'B737-800にローデッキ・ハイリフトローダーを2台使用', 'どちらもPBBから貨物を運ぶ'],
+      optsVi: ['B737-800 dùng toàn bộ Belt Loader; A320 dùng Low-Deck High-Lift Loader cho hầm container AKH + Belt Loader cho hầm Bulk', 'Cả hai dùng Main-Deck Loader 5.2m', 'B737-800 dùng 2 xe Low-Deck High-Loader', 'Đưa hàng qua ống lồng PBB'],
+      ans: 0, expJa: 'B737系はバルク（バラ積み）構造のためベルトローダー専用。A320のAKHコンテナ室にはローデッキローダーを使います。', expVi: 'B737 xếp rời dùng Belt Loader; A320 dùng Low-Deck High-Lift Loader cho container AKH và Belt Loader cho hầm Bulk.' },
+    { id: 'Q61', topic: 'wb',
+      qJa: 'ZFW（無燃料重量）がMZFWを超過した際、燃料を減らすことでMZFW超過を解消できるか？',
+      qVi: 'Khi ZFW vượt quá MZFW, việc hút bớt nhiên liệu có giải quyết được lỗi vượt MZFW không?',
+      optsJa: ['解消できない（ZFW＝DOW＋ペイロードであり燃料を含まないため、必ず貨物・手荷物・旅客を減らす）', '燃料を半分にすれば解消できる', 'タキシー燃料を増やせば解消できる', 'トリップ燃料だけ減らせばよい'],
+      optsVi: ['KHÔNG thể (vì ZFW = DOW + Payload, không gồm nhiên liệu — bắt buộc phải giảm hàng hóa/hành lý/hành khách)', 'Giảm một nửa nhiên liệu là hết vượt', 'Tăng Taxi fuel là hết', 'Giảm Trip fuel là hết'],
+      ans: 0, expJa: 'MZFWは主翼付け根の曲げ強度を守るための上限であり、燃料を含まない重量制限です。', expVi: 'MZFW bảo vệ kết cấu uốn gốc cánh khi không có tải nhiên liệu cánh — chỉ giảm Payload mới hạ được ZFW.' },
+    { id: 'Q62', topic: 'wb',
+      qJa: '水平安定板トリム（Stabilizer Trim / THS）を離陸前に設定する主な目的は？',
+      qVi: 'Mục đích chính của việc cài đặt góc Trim cánh đuôi ngang (THS / Stabilizer Trim) theo %MAC trước khi cất cánh là gì?',
+      optsJa: ['現在のCG位置に応じて機首上げ（ローテーション）時の操舵力を適正化し、安定した離陸上昇を行うため', '客室の空調温度を保つため', 'ブレーキの効きを強めるため', '無線通信の感度を上げるため'],
+      optsVi: ['Cân bằng lực cần lái khi nâng mũi (Rotation) đúng theo vị trí %MAC hiện tại, đảm bảo cất cánh ổn định', 'Giữ nhiệt độ điều hòa cabin', 'Tăng lực phanh bánh xe', 'Tăng sóng bộ đàm'],
+      ans: 0, expJa: 'CGが前寄りなら機首上げ側（Nose Up）、後寄りなら機首下げ側（Nose Down）へ正しくTHSを設定します。', expVi: 'CG càng trước cần Trim Nose-Up nhiều hơn; CG càng sau cần giảm Nose-Up (hoặc Nose-Down) để không bị ngóc đầu đột ngột.' },
+    { id: 'Q63', topic: 'turnaround',
+      qJa: '新千歳空港（CTS）などの冬季積雪時に実施する「デアイシング（除氷：Type I）」と「アンチアイシング（防氷：Type IV）」の役割の違いは？',
+      qVi: 'Tại sân bay mùa đông như Shin-Chitose (CTS), sự khác nhau giữa De-icing (Type I) và Anti-icing (Type IV) là gì?',
+      optsJa: ['Type I（加熱液）で翼上の雪氷を除去し、Type IV（高粘度液）で離陸までの再着氷を防ぐ（ホールドオーバータイム管理）', 'Type Iは滑走路掃除用、Type IVは客室清掃用', 'どちらも同じ水道水である', '防氷液はエンジン内部へ直接噴射する'],
+      optsVi: ['Type I (dung dịch nóng) tẩy sạch tuyết/băng bám trên cánh; Type IV (dung dịch đặc) phủ màng ngăn đóng băng lại đến khi cất cánh (tính Holdover Time)', 'Type I rửa đường băng, Type IV lau cabin', 'Đều là nước thường', 'Phun trực tiếp vào lõi động cơ'],
+      ans: 0, expJa: 'クリーンエアクラフトコンセプトに基づき、翼・尾翼の雪氷除去後にType IVで保護し、HOT（防氷有効時間）内に離陸します。', expVi: 'Nguyên tắc Clean Aircraft: tẩy băng bằng Type I nóng rồi phủ màng bảo vệ Type IV và phải cất cánh trong thời hạn Holdover Time (HOT).' },
+    { id: 'Q64', topic: 'turnaround',
+      qJa: '航空機への給油中に旅客が搭乗・降機・機内待機している場合（乗客搭乗中給油）に必須の安全措置は？',
+      qVi: 'Khi tra nhiên liệu song song lúc hành khách đang ở trên tàu bay (Refueling with Passengers Onboard), biện pháp an toàn bắt buộc là gì?',
+      optsJa: ['客室乗務員の非常口配置、シートベルト非着用案内、PBB/タラップ接続維持・脱出経路確保、消防連絡体制の維持', '全ドアを完全閉鎖して誰も出られないようにする', 'シートベルトを全員きつく締めさせる', '給油車の下で整備作業を同時実施する'],
+      optsVi: ['Tiếp viên trực cửa thoát hiểm, nhắc khách KHÔNG thắt dây an toàn, giữ PBB/cầu thang gắn sẵn, thông thoáng lối thoát & sẵn sàng chữa cháy', 'Đóng khóa kín mọi cửa', 'Bắt hành khách thắt chặt dây an toàn', 'Làm việc hàn/điện ngay dưới vòi dầu'],
+      ans: 0, expJa: '火災発生時に即座に脱出できるよう、シートベルトは外させ、非常口・タラップ/PBB下の障害物を完全に排除します。', expVi: 'Khách phải MỞ dây an toàn để sơ tán ngay trong vài giây nếu có sự cố cháy, luôn giữ thông thoáng cửa thoát hiểm và cầu thang/PBB.' },
+    { id: 'Q65', topic: 'turnaround',
+      qJa: 'プッシュバック開始前にヘッドセットマンが前脚へ挿入し、切離し後に抜き取って操縦席へ提示する赤いリボン付きピンは？',
+      qVi: 'Chốt có dây cờ đỏ mà Headset Man cắm vào càng mũi trước khi Pushback và phải rút ra giơ lên cho phi công thấy sau khi tháo thanh kéo gọi là gì?',
+      optsJa: ['ステアリング・バイパスピン（Steering Bypass Pin）', '輪止めピン（Chock Pin）', '消火栓ピン（Hydrant Pin）', '貨物ロックピン（Cargo Lock Pin）'],
+      optsVi: ['Chốt ngắt lái mũi (Steering Bypass Pin)', 'Chốt chèn bánh', 'Chốt cứu hỏa', 'Chốt khóa ULD'],
+      ans: 0, expJa: 'バイパスピンを挿すことで前脚油圧ステアリングを解放し牽引可能にします。抜き忘れるとタキシー時に操向不能となるため「抜去提示」が必須です。', expVi: 'Bypass Pin ngắt thủy lực lái càng mũi để xe kéo xoay được; quên rút sẽ khiến phi công không lái được bánh mũi nên bắt buộc rút ra giơ cờ xác nhận.' },
+    { id: 'Q66', topic: 'turnaround',
+      qJa: '日本の空港における「指差呼称（しさこしょう / Pointing and Calling）」の効果として最も適切なものは？',
+      qVi: 'Tác dụng lớn nhất của động tác "Chỉ tay hô xác nhận" (指差呼称 / Shisa Kosho) trong ground handling Nhật Bản là gì?',
+      optsJa: ['目視・指差し・発声を組み合わせることで確認意識を高め、ヒューマンエラーを大幅に低減する', '作業時間を半分に短縮するだけ', '周囲に大声で威圧するため', '書類記入を省略するため'],
+      optsVi: ['Kết hợp mắt nhìn + tay chỉ + miệng hô giúp nâng cao tập trung, giảm mạnh sai sót do con người (Human Error)', 'Chỉ để rút ngắn một nửa thời gian', 'Để gây chú ý', 'Để bỏ qua checklist giấy'],
+      ans: 0, expJa: '輪止めよし！ビーコン消灯よし！ロックよし！と声と指で確認することで見落とし・思い込みミスを劇的に防ぎます。', expVi: 'Hô vang "Wadome yoshi! Beacon off yoshi!" kích hoạt đa giác quan, giảm tới >80% lỗi chủ quan/bỏ sót.' },
+    { id: 'Q67', topic: 'turnaround',
+      qJa: '中部国際空港（NGO）や羽田などの標準スポットで、PBB（搭乗橋）が機体へ接続される側（舷）は？',
+      qVi: 'Tại các sân bay Nhật Bản (NGO, HND, NRT...), ống lồng hành khách (PBB) tiếp cận vào bên hông nào của máy bay?',
+      optsJa: ['左舷（ポートサイド / Port Side）のL1・L2ドアへ側面から直角に接続', '右舷（スターボードサイド）の貨物室側から接続', '機首正面のレドームへ直接接続', '尾部APU排気口から接続'],
+      optsVi: ['Bên mạn TRÁI (Port Side) tiếp cận vuông góc vào cửa hành khách L1 / L2', 'Bên mạn PHẢI chung với xe nâng hàng', 'Đâm thẳng từ chóp mũi Radome', 'Nối từ đuôi máy bay'],
+      ans: 0, expJa: '航空機は原則「左舷（Port）＝旅客乗降（PBB）」「右舷（Starboard）＝貨物・手荷物・GPU・給油・ケータリング」に動線を分離します。', expVi: 'Quy chuẩn phân luồng an toàn: Mạn Trái (Port) cho khách & PBB; Mạn Phải (Starboard) cho GSE hàng hóa, GPU, tra dầu, suất ăn.' },
+    { id: 'Q68', topic: 'turnaround',
+      qJa: '雷（落雷警報 / Lightning Alert）が空港周辺で発令された場合、ヘッドセットマンを含むランプ作業員の正しい行動は？',
+      qVi: 'Khi có cảnh báo sét (Lightning Alert / 落雷警報) quanh sân bay, nhân viên mặt đất và Headset Man phải làm gì?',
+      optsJa: ['直ちに屋外ランプ作業および有線ヘッドセット接続を中止し、建物内または密閉車両内へ退避する', '金属製ヘッドセットを付けたまま機体下で待機する', '給油だけ急いで継続する', '傘を差して誘導を続ける'],
+      optsVi: ['Lập tức dừng thao tác ngoài trời & ngắt dây Headset kết nối thân máy bay, vào nhà ga hoặc cabin kín trú ẩn', 'Vẫn đeo tai nghe cắm dây vào máy bay đứng chờ', 'Cố tra dầu cho nhanh xong', 'Cầm ô kim loại tiếp tục xi-nhan'],
+      ans: 0, expJa: '機体への落雷電流が有線ヘッドセットや給油ホースを通じて作業員へ感電する極めて高い危険があるため即時退避します。', expVi: 'Sét đánh vào thân máy bay truyền điện trực tiếp qua dây Headset & ống dầu → phải ngắt kết nối và trú ẩn ngay.' },
+    { id: 'Q69', topic: 'turnaround',
+      qJa: '機体到着後、最初に輪止め（チョーク）を装着し、さらにGPU（地上電源車）を接続するタイミングとして正しいのは？',
+      qVi: 'Thời điểm đúng để đặt chèn bánh (Chocks) và cắm cáp điện GPU sau khi máy bay dừng hẳn tại vạch đỗ là khi nào?',
+      optsJa: ['機体完全停止 → エンジン停止・衝突防止灯（赤ビーコン）消灯確認 → 輪止め装着 → コーン配置 → GPU接続', '機体がまだ動いている間に飛び込んで輪止めを入れる', '赤ビーコン点灯中にGPUを接続する', 'PBB撤去後に輪止めを入れる'],
+      optsVi: ['Tàu bay dừng hẳn → Tắt động cơ & Đèn Beacon đỏ OFF → Đặt chèn bánh → Đặt cọc tiêu → Cắm GPU', 'Lao vào đặt chèn khi bánh đang lăn', 'Cắm GPU khi đèn Beacon còn sáng', 'Tháo PBB xong mới đặt chèn'],
+      ans: 0, expJa: '赤色ビーコン消灯とエンジン回転低下を確認してから機体へ接近するのがランプ安全の鉄則です。', expVi: 'Chỉ tiếp cận thân tàu bay sau khi máy bay dừng hẳn và đèn chống va chạm đỏ (Beacon) đã tắt.' },
+    { id: 'Q70', topic: 'turnaround',
+      qJa: '航空機のドア開放時（PBB装着後）に客室乗務員と地上スタッフ間で確認する「DISARMED（マニュアルモード）」とは？',
+      qVi: 'Trạng thái "DISARMED" (Manual Mode) xác nhận trước khi mở cửa máy bay sau khi gắn PBB có ý nghĩa gì?',
+      optsJa: ['緊急脱出用スライド（シューター）が自動展開しないよう解除された安全状態', '機内エアコンがオフの状態', 'エンジンが全開の状態', '貨物室の施錠が完了した状態'],
+      optsVi: ['Đã ngắt chế độ tự bung cầu trượt thoát hiểm (Escape Slide) để mở cửa an toàn', 'Đã tắt điều hòa cabin', 'Động cơ đang chạy hết công suất', 'Đã khóa hầm hàng'],
+      ans: 0, expJa: 'ARMEDのままドアを開けると脱出スライドが勢いよく展開し、PBB破損・作業員重傷・大幅遅延の大事故になります。', expVi: 'Mở cửa khi còn ARMED sẽ làm nổ bung cầu trượt thoát hiểm gây thương tích nặng, hỏng PBB và hủy/trễ chuyến nghiêm trọng.' },
+    { id: 'Q71', topic: 'turnaround',
+      qJa: 'プッシュバック終了後、トラクターが離脱し、機長へ出発合図（お見送り）を送る際の安全位置は？',
+      qVi: 'Sau khi đẩy lùi xong và tháo xe kéo, Headset Man đứng ở vị trí nào để giơ Bypass Pin & vẫy chào (お見送り) cho cơ trưởng thấy?',
+      optsJa: ['機長（左側座席）から明確に視認でき、エンジン吸込・タキシー進路から十分離れた左前方の安全位置', '機首タイヤの真下', '右エンジンの真後ろ', '胴体の真下'],
+      optsVi: ['Phía trước bên trái (vùng tầm nhìn rõ của Cơ trưởng), cách xa vùng hút động cơ và lối lăn tàu bay', 'Ngay dưới bánh mũi', 'Ngay sau luồng phản lực động cơ phải', 'Ngay dưới bụng máy bay'],
+      ans: 0, expJa: '機長席は左側の為、左側前方で安全な距離を保ちバイパスピンを提示→敬礼・お見送りを行います。', expVi: 'Cơ trưởng ngồi bên trái nên đứng chếch trước-trái đủ khoảng cách an toàn, giơ rõ cờ đỏ Bypass Pin rồi chào tiễn bay.' },
+    { id: 'Q72', topic: 'turnaround',
+      qJa: '飲料水補給車（ウォーター車）と汚水処理車（ラバトリー車）のホースや作業員について厳守すべき衛生規則は？',
+      qVi: 'Quy tắc vệ sinh bắt buộc giữa xe cấp nước sạch (Potable Water) và xe hút chất thải vệ sinh (Lavatory) là gì?',
+      optsJa: ['車両・ホース・作業手袋を完全に分離し、同一作業員による連続混同作業を防止する（交差汚染防止）', '同じホースを水洗いして共用する', '同じ作業員が手袋を替えずに両方行う', '飲料水タンクへ防氷液を混ぜる'],
+      optsVi: ['Tách biệt tuyệt đối xe, vòi ống và găng tay; không để cùng một nhân viên làm lẫn lộn (chống nhiễm khuẩn chéo)', 'Dùng chung 1 vòi rửa sơ qua', 'Đeo nguyên găng tay hút vệ sinh sang cấp nước uống', 'Pha dung dịch phá băng vào nước uống'],
+      ans: 0, expJa: '交差汚染（Cross-Contamination）は乗客の集団食中毒につながるため、機材・人員の厳格な分離が義務付けられています。', expVi: 'Phải tách biệt hoàn toàn thiết bị & nhân sự để tuyệt đối không xảy ra nhiễm khuẩn chéo vào nguồn nước uống trên máy bay.' },
+    { id: 'Q73', topic: 'pax',
+      qJa: '国際線で「乗客はチェックイン済みだが搭乗口に現れず未搭乗（No-show）」となった場合、預け入れ手荷物への正しい処置は？',
+      qVi: 'Trên chuyến quốc tế, hành khách đã check-in ký gửi hành lý nhưng không ra cửa khởi hành (No-show) — quy tắc PPBM yêu cầu gì?',
+      optsJa: ['PPBM（旅客手荷物照合）原則に基づき、出発前に必ず当該旅客の手荷物を貨物室から取卸す（オフロード）', 'そのまま目的地まで運んで保管する', '手荷物タグだけ剥がして搭載する', '次の便の客に預ける'],
+      optsVi: ['Theo quy tắc PPBM (Positive Passenger Bag Match), bắt buộc tìm và dỡ (offload) hành lý của khách đó khỏi hầm trước khi bay', 'Cứ chở tới sân bay đến rồi tính', 'Xé thẻ hành lý đi và bay tiếp', 'Gửi cho khách khác cầm hộ'],
+      ans: 0, expJa: '航空保安上の最重要原則（PPBM）により、搭乗していない旅客の預け手荷物をそのまま輸送することは原則禁止です。', expVi: 'Quy tắc an ninh hàng không PPBM nghiêm cấm chở hành lý ký gửi mà chủ nhân không có mặt trên cùng chuyến bay.' },
+    { id: 'Q74', topic: 'pax',
+      qJa: 'モバイルバッテリー（予備のリチウムイオン電池 100Wh以下）の航空輸送ルールとして正しいものは？',
+      qVi: 'Quy định vận chuyển sạc dự phòng (pin Lithium-ion rời ≤100Wh) đối với hành khách là gì?',
+      optsJa: ['預け入れ手荷物（貨物室）は厳禁。短絡防止処置をして必ず機内持込手荷物として携行する', '必ずスーツケースに入れて預け入れる', '個数無制限で預け入れ可能', '機内持込も預け入れもすべて全面禁止'],
+      optsVi: ['Cấm tuyệt đối ký gửi trong hầm hàng; phải bảo vệ chống đoản mạch và mang theo trong hành lý xách tay lên cabin', 'Bắt buộc nhét vào vali ký gửi', 'Ký gửi không giới hạn số lượng', 'Cấm cả xách tay lẫn ký gửi'],
+      ans: 0, expJa: '予備リチウム電池は発火時に客室乗務員が即時消火できるよう、預け入れ厳禁・機内持込のみと定められています。', expVi: 'Pin dự phòng phải mang lên cabin để tiếp viên phát hiện và dập lửa kịp thời nếu quá nhiệt; cấm ký gửi hầm hàng.' },
+    { id: 'Q75', topic: 'pax',
+      qJa: '車椅子支援コード「WCHR」「WCHS」「WCHC」のうち、機内座席まで完全に介助・機内用車椅子が必要な旅客コードは？',
+      qVi: 'Trong 3 mã SSR hỗ trợ xe lăn WCHR, WCHS, WCHC, mã nào chỉ hành khách cần hỗ trợ hoàn toàn và cần xe lăn chuyên dụng trong cabin?',
+      optsJa: ['WCHC（Cabin Seat — 完全介助・機内歩行不可）', 'WCHR（Ramp — 長距離歩行のみ困難）', 'WCHS（Steps — 階段のみ不可）', 'UMNR（一人旅の小児）'],
+      optsVi: ['WCHC (Wheelchair Cabin Seat — hỗ trợ hoàn toàn tới tận ghế)', 'WCHR (chỉ cần đẩy đoạn đường xa)', 'WCHS (không tự đi cầu thang được)', 'UMNR (trẻ em đi một mình)'],
+      ans: 0, expJa: 'R=Ramp（距離）、S=Steps（階段）、C=Cabin（座席まで完全介助）と覚えます。', expVi: 'Mẹo nhớ: R=Ramp (đường xa), S=Steps (cầu thang), C=Cabin (tận ghế ngồi — cần xe lăn lối đi hẹp Aisle Chair).' },
+    { id: 'Q76', topic: 'pax',
+      qJa: '非常口座席（Exit Row）にアサイン（指定）できない旅客の組み合わせとして正しいものは？',
+      qVi: 'Nhóm hành khách nào KHÔNG được phép xếp ngồi tại Hàng ghế Cửa thoát hiểm (Exit Row / 非常口座席)?',
+      optsJa: ['15歳未満の小児、幼児同伴客、移動・視覚・聴覚等の援助が必要なPRM旅客、緊急脱出援助に同意できない旅客', '英語と日本語の両方を話せる成人', '手荷物を預けていない成人', 'ビジネス出張の単独旅客'],
+      optsVi: ['Trẻ dưới 15 tuổi, khách đi cùng em bé sơ sinh, khách cần trợ giúp PRM, hoặc khách không đồng ý hỗ trợ khi khẩn cấp', 'Người lớn biết tiếng Nhật và tiếng Anh', 'Người lớn không ký gửi hành lý', 'Khách đi công tác một mình'],
+      ans: 0, expJa: '非常口座席は緊急脱出時にドア開放や他旅客の誘導を援助できる健常かつ条件を満たす旅客のみ指定可能です。', expVi: 'Ghế Exit Row chỉ dành cho hành khách đủ thể lực, hiểu hướng dẫn và đồng ý hỗ trợ mở cửa thoát hiểm khi khẩn cấp.' },
+    { id: 'Q77', topic: 'pax',
+      qJa: 'チェックイン時に預け入れ手荷物1個が「36kg」だった場合の正しい対応は？（労働安全基準32kg上限）',
+      qVi: 'Tại quầy check-in, 1 kiện hành lý ký gửi nặng 36 kg (vượt ngưỡng an toàn lao động 32 kg/kiện), nhân viên xử lý thế nào?',
+      optsJa: ['1個32kg上限を超えるため、2個へ分割（リパック）してもらうか航空貨物（Cargo）扱いとする', 'そのまま「HEAVY」タグを貼って1個で預かる', '手数料1,000円だけもらってそのまま運ぶ', '客室の頭上棚へ持ち込ませる'],
+      optsVi: ['Vượt mức tối đa 32 kg/kiện → yêu cầu khách chia thành 2 kiện (repack) hoặc chuyển gửi theo đường Hàng hóa (Cargo)', 'Dán thẻ HEAVY rồi vẫn nhận nguyên kiện 36 kg', 'Thu thêm 1,000 yên rồi cho qua', 'Cho khách xách tay lên khoang cabin'],
+      ans: 0, expJa: '多くの航空会社・国際基準で単体32kg（70lb）超の手荷物は作業員の腰痛・負傷防止のため受託不可（分割または貨物扱い）です。', expVi: 'Giới hạn 32 kg/kiện bảo vệ sức khỏe nhân viên bốc xếp — bắt buộc chia kiện hoặc làm thủ tục Cargo.' },
+    { id: 'Q78', topic: 'pax',
+      qJa: '乗継便（Connection）の予約確認で用いられる「MCT」の正式名称と意味は？',
+      qVi: 'Thuật ngữ "MCT" trong nghiệp vụ hành khách nối chuyến (乗継) viết tắt của từ gì và có nghĩa là gì?',
+      optsJa: ['Minimum Connecting Time（最低乗継時間：乗継が成立するために必要な最短標準時間）', 'Maximum Cargo Tonnage（最大貨物重量）', 'Manual Check-in Terminal', 'Main Cabin Temperature'],
+      optsVi: ['Minimum Connecting Time (Thời gian nối chuyến tối thiểu để kịp chuyển cả hành khách và hành lý)', 'Tổng trọng lượng hàng tối đa', 'Quầy check-in thủ công', 'Nhiệt độ khoang chính'],
+      ans: 0, expJa: '乗継時間がMCTを下回る場合は乗継不可となり、便振替・代替手配を検討する必要があります。', expVi: 'Nếu thời gian giữa hai chuyến ngắn hơn MCT thì hành khách/hành lý không kịp nối chuyến, phải xử lý đổi chuyến.' },
+    { id: 'Q79', topic: 'pax',
+      qJa: '満席オーバーブッキング（Overbooking）発生時に航空会社が最初に実施する標準手順は？',
+      qVi: 'Khi xảy ra bán quá chỗ (Overbooking) trên chuyến bay, bước tiêu chuẩn đầu tiên hãng hàng không thực hiện là gì?',
+      optsJa: ['協力金・振替便等を提示し、自発的な便変更協力者（フレックストラベラー／ボランティア）を募る', '最後にチェックインした客を説明なく強制降機させる', '立ち乗りで搭乗させる', '客室乗務員のジャンプシートに一般客を座らせる'],
+      optsVi: ['Thông báo tìm hành khách tình nguyện đổi chuyến (Volunteer / Flex Traveler) kèm đền bù & vé chuyến thay thế', 'Đuổi thẳng khách check-in cuối mà không giải thích', 'Cho khách đứng trên lối đi', 'Xếp khách thường ngồi ghế Jumpseat tiếp viên'],
+      ans: 0, expJa: 'まずは自発的協力者（Voluntary Denied Boarding）を募り、協力金・食事券・ホテル・振替便を手配するのが国際標準です。', expVi: 'Luôn ưu tiên kêu gọi khách tình nguyện đổi chuyến (Volunteer) với chế độ bồi thường trước khi áp dụng biện pháp bắt buộc.' },
+    { id: 'Q80', topic: 'cargo',
+      qJa: '航空貨物運送状（AWB）番号「131-1234567X」の8桁目チェックデジット（Mod-7）として正しい数字は？（1234567 ÷ 7 の余り）',
+      qVi: 'Chữ số kiểm tra Mod-7 (chữ số thứ 8) của số AWB "131-1234567X" là số mấy? (Lấy 1234567 chia cho 7 lấy số dư)',
+      optsJa: ['5（1234567 = 7 × 176366 + 5）', '0', '3', '6'],
+      optsVi: ['5 (vì 1,234,567 = 7 × 176,366 + 5)', '0', '3', '6'],
+      ans: 0, expJa: 'AWBシリアル8桁目は前7桁を7で割った余り（0〜6）で検証します。入力ミス防止の基本ルールです。', expVi: 'Quy tắc IATA Mod-7: chữ số thứ 8 bằng số dư của 7 chữ số đầu chia cho 7 (từ 0 đến 6).' },
+    { id: 'Q81', topic: 'cargo',
+      qJa: '航空貨物の容積重量（Volume Weight）を求めるIATA標準計算式（cm単位）はどれか？',
+      qVi: 'Công thức chuẩn IATA tính Trọng lượng thể tích quy đổi (Volume Weight, đơn vị cm) cho hàng không là gì?',
+      optsJa: ['縦(cm) × 横(cm) × 高さ(cm) ÷ 6,000', '縦 × 横 × 高さ ÷ 1,000', '縦 ＋ 横 ＋ 高さ ÷ 600', '実重量 × 2'],
+      optsVi: ['Dài (cm) × Rộng (cm) × Cao (cm) ÷ 6,000', 'Dài × Rộng × Cao ÷ 1,000', '(Dài + Rộng + Cao) ÷ 600', 'Trọng lượng thực × 2'],
+      ans: 0, expJa: 'IATA標準は 6,000 cm³/kg。実重量（Gross Weight）と容積重量の大きい方が請求重量（Chargeable Weight）になります。', expVi: 'Chuẩn IATA chia 6,000 cm³/kg; trọng lượng tính cước (Chargeable Weight) lấy giá trị lớn hơn giữa Gross và Volume Weight.' },
+    { id: 'Q82', topic: 'cargo',
+      qJa: '危険物や生動物・ドライアイスなどの特別貨物を搭載した際、機長（Captain）へ提出する公式通知書は？',
+      qVi: 'Chứng từ chính thức gửi cho Cơ trưởng (Captain) thông báo vị trí xếp hàng nguy hiểm, đá khô, động vật sống là gì?',
+      optsJa: ['NOTOC（Notification to Captain / 特別搭載物通知書）', 'Boarding Pass（搭乗券）', 'D/O（荷渡指図書）', 'Pax Manifest（旅客名簿）'],
+      optsVi: ['NOTOC (Notification to Captain — Thông báo hàng đặc biệt cho Cơ trưởng)', 'Thẻ lên tàu bay (Boarding Pass)', 'Lệnh giao hàng (D/O)', 'Danh sách hành khách'],
+      ans: 0, expJa: 'NOTOCには危険物のUN番号・クラス・数量・搭載位置（Hold/ULD位置）を明記し、機長が署名受領します。', expVi: 'NOTOC ghi rõ mã UN, phân loại DGR, khối lượng và vị trí hầm/ULD để cơ trưởng xử lý chính xác nếu có sự cố trên không.' },
+    { id: 'Q83', topic: 'cargo',
+      qJa: 'ULD（コンテナ・パレット）を航空機へ搭載する前にランプ作業員が確認すべき最重要点検項目は？',
+      qVi: 'Hạng mục kiểm tra quan trọng nhất trước khi nâng ULD (Container/Pallet) vào hầm máy bay là gì?',
+      optsJa: ['ベースの曲がり・破損なし、扉・ネット完全固縛、コンター（輪郭）逸脱なし、タグとLIR位置の一致、床ロック施錠', 'コンテナの色が新品かどうかだけ', '荷主の名前だけ確認する', '重量計量を省略して目測で積む'],
+      optsVi: ['Đáy không cong vênh/rách, cửa & lưới chằng kín, không lồi quá biên dạng (contour), đúng vị trí LIR & gạt khóa sàn chắc chắn', 'Chỉ xem vỏ container có mới không', 'Chỉ đọc tên chủ hàng', 'Ước lượng cân nặng bằng mắt'],
+      ans: 0, expJa: 'ベースが曲がったULDは貨物室ローラーに引っ掛かり破損・ロック不能となるため「サービスアビリティ点検」が必須です。', expVi: 'ULD bị cong đáy hoặc rách lưới sẽ kẹt con lăn sàn máy bay và không khóa được chốt — bắt buộc kiểm tra tình trạng kỹ thuật trước khi xếp.' },
+    { id: 'Q84', topic: 'cargo',
+      qJa: '日本の輸出入航空貨物の通関手続きで使用される電子情報処理システムはどれか？',
+      qVi: 'Hệ thống thông quan điện tử dùng cho thủ tục xuất nhập khẩu hàng hóa hàng không tại Nhật Bản là hệ thống nào?',
+      optsJa: ['NACCS（輸出入・港湾関連情報処理システム）', 'PAPI', 'TCAS', 'ATIS'],
+      optsVi: ['NACCS (Hệ thống xử lý thông tin xuất nhập khẩu & cảng/sân bay Nhật Bản)', 'PAPI', 'TCAS', 'ATIS'],
+      ans: 0, expJa: '日本の税関申告・保税搬入・輸出入許可管理はNACCS（ナックス）を通じて電子的に処理されます。', expVi: 'NACCS là hệ thống hải quan điện tử quốc gia của Nhật Bản dùng quản lý kho ngoại quan và tờ khai xuất/nhập khẩu.' },
+    { id: 'Q85', topic: 'cargo',
+      qJa: '特殊取扱コード（SHC）のうち「AVI」「PER」「VAL」「HEA」の意味の組み合わせとして正しいものは？',
+      qVi: 'Tổ hợp giải nghĩa đúng của các mã xử lý đặc biệt (SHC) "AVI", "PER", "VAL", "HEA" là gì?',
+      optsJa: ['AVI＝生動物、PER＝生鮮品、VAL＝貴重品、HEA＝重量物（150kg超/個）', 'AVI＝航空燃料、PER＝旅客、VAL＝荷物、HEA＝暖房', 'AVI＝危険物、PER＝郵便、VAL＝野菜、HEA＝医薬品', 'すべて一般貨物の別名'],
+      optsVi: ['AVI = Động vật sống, PER = Hàng tươi sống dễ hỏng, VAL = Hàng giá trị cao, HEA = Hàng siêu nặng (>150kg/kiện)', 'AVI = Xăng máy bay, PER = Hành khách, VAL = Hành lý, HEA = Sưởi', 'AVI = Hàng nguy hiểm, PER = Bưu phẩm, VAL = Rau, HEA = Thuốc', 'Đều là tên gọi khác của hàng thường'],
+      ans: 0, expJa: 'SHC（Special Handling Code）は3文字コードで貨物室の温度管理・警備・隔離・搭載優先順位を決定します。', expVi: 'Mã 3 chữ SHC giúp nhân viên kho và sân đỗ áp dụng đúng quy trình bảo quản lạnh, an ninh, thông gió hoặc chia tải.' },
+    { id: 'Q86', topic: 'safety',
+      qJa: 'ランプ内を走行中に「航空機がタキシー（自走）または牽引（Towing）で前方を横切ろうとしている」時の行動は？',
+      qVi: 'Khi đang lái xe GSE trên đường nội bộ thấy máy bay đang tự lăn (taxi) hoặc đang được kéo (towing) cắt ngang phía trước, phải làm gì?',
+      optsJa: ['十分な安全距離を取って手前で完全停止し、航空機と牽引車列が完全に通過するまで待機する', 'クラクションを鳴らして先に通過する', '翼の下を素早くくぐり抜ける', 'スピードを上げて機首の前を横切る'],
+      optsVi: ['Dừng hẳn từ khoảng cách an toàn, nhường cho toàn bộ tàu bay và đoàn xe kéo đi qua hẳn rồi mới đi tiếp', 'Bấm còi xin đi trước', 'Lách nhanh qua dưới cánh', 'Tăng ga cắt ngang trước mũi'],
+      ans: 0, expJa: '航空機は急停止できず視界にも死角が多いため、地上車両は必ず十分な距離で停止・譲歩します。', expVi: 'Tàu bay có điểm mù lớn và không thể phanh gấp — xe GSE tuyệt đối dừng nhường từ xa.' },
+    { id: 'Q87', topic: 'safety',
+      qJa: 'ジェットエンジン運転中（赤色ビーコン点灯中）の「インテーク（吸込）危険区域」と「ジェットブラスト（後方噴流）」の特徴は？',
+      qVi: 'Đặc điểm của Vùng hút (Intake Danger Zone) phía trước và Luồng phản lực (Jet Blast) phía sau động cơ đang nổ là gì?',
+      optsJa: ['前方数m〜十数mは人や器材を吸い込む危険、後方数十m〜百m超は車両やコンテナを吹き飛ばす超高温・強風危険', 'どちらも1m離れれば完全に安全', '後方だけ危険で前方は安全', 'アイドリング中なら危険はない'],
+      optsVi: ['Phía trước vài mét–chục mét có lực hút cuốn người/vật thể; phía sau hàng chục đến hơn trăm mét có luồng khí nóng cực mạnh thổi lật xe/container', 'Cách 1 mét là an toàn hoàn toàn', 'Chỉ phía sau nguy hiểm, phía trước an toàn', 'Chạy không tải (Idle) thì không nguy hiểm'],
+      ans: 0, expJa: 'アイドリング状態でも大型機の吸込力・後方ブラストは極めて危険で、赤色ビーコン点灯中は絶対接近禁止です。', expVi: 'Ngay cả ở chế độ nổ không tải (Idle), lực hút trước và luồng thổi sau động cơ vẫn cực kỳ nguy hiểm.' },
+    { id: 'Q88', topic: 'safety',
+      qJa: '日本の航空法に基づく「航空事故」と「重大インシデント（事故につながる恐れのある事態）」の調査を行う国の専門機関は？',
+      qVi: 'Cơ quan chuyên trách của Nhật Bản điều tra "Tai nạn hàng không" và "Sự cố nghiêm trọng" (重大インシデント) là cơ quan nào?',
+      optsJa: ['運輸安全委員会（JTSB：Japan Transport Safety Board）', '日本郵政', '気象庁のみ', '総務省'],
+      optsVi: ['Ủy ban An toàn Giao thông Vận tải Nhật Bản (JTSB / 運輸安全委員会)', 'Bưu điện Nhật Bản', 'Chỉ riêng Cơ quan Khí tượng', 'Bộ Nội vụ'],
+      ans: 0, expJa: 'JTSBは事故・重大インシデントの原因究明と再発防止勧告を独立して行います（責任追及ではなく安全向上が目的）。', expVi: 'JTSB (Ủy ban An toàn Giao thông Nhật Bản) điều tra độc lập để tìm nguyên nhân gốc và khuyến cáo phòng ngừa tái diễn.' },
+    { id: 'Q89', topic: 'safety',
+      qJa: '地上支援車両（GSE）から離れる際（降車時）に必須の「逸走防止措置」はどれか？',
+      qVi: 'Biện pháp bắt buộc chống trôi xe (逸走防止) khi tài xế rời khỏi ghế lái xe GSE trên sân đỗ là gì?',
+      optsJa: ['シフトをP/Nに入れ、パーキングブレーキを確実に掛け、エンジン停止（必要時は輪止め装着）を行う', 'エンジンを掛けたままドアだけ閉める', '平地ならブレーキ不要', 'ハンドルだけ切っておく'],
+      optsVi: ['Về số P/N, kéo chặt phanh tay (Parking Brake), tắt máy và đặt chèn bánh nếu quy định/dốc', 'Để nguyên máy nổ rồi đóng cửa đi', 'Mặt sân phẳng thì không cần kéo phanh tay', 'Chỉ cần đánh lái sang một bên'],
+      ans: 0, expJa: '無人車両の逸走による航空機接触は典型的な重大ランプ事故です。降車時のパーキングブレーキ・輪止め確認を徹底します。', expVi: 'Xe tự trôi đâm vào máy bay là tai nạn sân đỗ cực kỳ nghiêm trọng — rời xe luôn phải kéo phanh tay và về số đúng.' },
+    { id: 'Q90', topic: 'safety',
+      qJa: '特定技能（航空：空港グランドハンドリング）の現場で、作業手順が不明確・異常を感じた際の最も正しい判断は？',
+      qVi: 'Tại hiện trường mặt đất (特定技能 Hàng không), khi gặp tình huống không chắc chắn quy trình hoặc thấy dấu hiệu bất thường, cách xử lý đúng nhất là gì?',
+      optsJa: ['自己判断で進めず「止まる・呼ぶ・待つ（Stop, Call, Wait）」を徹底し、直ちに責任者・スーパーバイザーへ確認する', '遅延を防ぐため推測でそのまま作業を完了させる', '同僚にも言わずに隠す', '次の便のスタッフへ丸投げする'],
+      optsVi: ['KHÔNG tự ý làm theo cảm tính — thực hiện nghiêm nguyên tắc "Dừng lại · Gọi báo · Chờ chỉ thị" (止まる・呼ぶ・待つ) với Supervisor', 'Đoán đại làm cho nhanh kẻo trễ chuyến', 'Giấu nhẹm không báo ai', 'Đẩy sang ca sau tự xử lý'],
+      ans: 0, expJa: '航空業界の合言葉は「Safety First（安全最優先）」と「迷ったら止まる・呼ぶ・待つ」。定時性より安全が常に上位です。', expVi: 'Trong hàng không, An toàn luôn đứng trên Đúng giờ (Safety First) — hễ nghi ngờ là "Dừng · Gọi · Chờ" (Tomaru, Yobu, Matsu).' }
+  ];
+
+  // Vẽ hình minh họa SVG trực quan cho Câu hỏi Hình ảnh (Marshalling, Biển báo sân bay, Nhãn DGR) — dùng chung cho Module F & H!
+  export function renderQuizVisualSvg(key) {
+    if (!key) return '';
+    // 1. Nhãn DGR
+    if (key.startsWith('dgr_')) {
+      const dm = (bg, fg, num, l1, l2, extra = '') => `
+        <svg viewBox="0 0 220 116" width="220" height="116" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="216" height="112" rx="8" fill="#0F172A" stroke="#334155"/>
+          <polygon points="110,12 156,58 110,104 64,58" fill="${bg}" stroke="#111" stroke-width="2.5"/>
+          ${extra}
+          <text x="110" y="54" text-anchor="middle" font-size="10" font-weight="800" fill="${fg}">${l1}</text>
+          <text x="110" y="66" text-anchor="middle" font-size="9" font-weight="700" fill="${fg}">${l2}</text>
+          <text x="110" y="89" text-anchor="middle" font-size="15" font-weight="900" fill="${fg}">${num}</text>
+        </svg>`;
+      if (key === 'dgr_c1') return dm('#F97316', '#111', '1', 'EXPLOSIVE', '火薬類');
+      if (key === 'dgr_c3') return dm('#DC2626', '#FFF', '3', 'FLAMMABLE', 'LIQUID 🔥');
+      if (key === 'dgr_c4') return dm('#FFF', '#111', '4', 'FLAMMABLE', 'SOLID 🔥',
+        '<line x1="88" y1="34" x2="88" y2="82" stroke="#DC2626" stroke-width="6"/><line x1="103" y1="19" x2="103" y2="97" stroke="#DC2626" stroke-width="6"/><line x1="117" y1="19" x2="117" y2="97" stroke="#DC2626" stroke-width="6"/><line x1="132" y1="34" x2="132" y2="82" stroke="#DC2626" stroke-width="6"/><rect x="76" y="42" width="68" height="28" fill="#FFF" fill-opacity="0.88"/>');
+      if (key === 'dgr_c5') return dm('#FACC15', '#111', '5.1', 'OXIDIZER', '🔥 over O', '<circle cx="110" cy="36" r="7" fill="none" stroke="#111" stroke-width="2"/>');
+      if (key === 'dgr_c6') return dm('#FFF', '#111', '6', 'TOXIC ☠', 'POISON');
+      if (key === 'dgr_c8') return `
+        <svg viewBox="0 0 220 116" width="220" height="116" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="216" height="112" rx="8" fill="#0F172A" stroke="#334155"/>
+          <polygon points="110,12 156,58 110,104 64,58" fill="#FFF" stroke="#111" stroke-width="2.5"/>
+          <polygon points="156,58 110,104 64,58" fill="#111"/>
+          <text x="110" y="44" text-anchor="middle" font-size="10" font-weight="800" fill="#111">🧪 → 🖐/⬛</text>
+          <text x="110" y="72" text-anchor="middle" font-size="9.5" font-weight="800" fill="#FFF">CORROSIVE</text>
+          <text x="110" y="92" text-anchor="middle" font-size="15" font-weight="900" fill="#FFF">8</text>
+        </svg>`;
+      if (key === 'dgr_c9_li') return `
+        <svg viewBox="0 0 220 116" width="220" height="116" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="216" height="112" rx="8" fill="#0F172A" stroke="#334155"/>
+          <rect x="44" y="16" width="132" height="84" fill="#FFF" stroke="#DC2626" stroke-width="5" stroke-dasharray="10 5"/>
+          <text x="110" y="46" text-anchor="middle" font-size="12" font-weight="900" fill="#111">🔋 LITHIUM</text>
+          <text x="110" y="66" text-anchor="middle" font-size="13" font-weight="900" fill="#DC2626">UN3480 / UN3481</text>
+          <text x="110" y="84" text-anchor="middle" font-size="9" font-weight="700" fill="#475569">BATTERY MARK</text>
+        </svg>`;
+      if (key === 'dgr_cao') return `
+        <svg viewBox="0 0 220 116" width="220" height="116" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="216" height="112" rx="8" fill="#0F172A" stroke="#334155"/>
+          <rect x="34" y="18" width="152" height="80" rx="5" fill="#F97316" stroke="#111" stroke-width="2.5"/>
+          <text x="110" y="45" text-anchor="middle" font-size="13" font-weight="900" fill="#111">CARGO AIRCRAFT</text>
+          <text x="110" y="66" text-anchor="middle" font-size="16" font-weight="900" fill="#111">ONLY</text>
+          <text x="110" y="86" text-anchor="middle" font-size="9.5" font-weight="800" fill="#111">FORBIDDEN ON PASSENGER AC</text>
+        </svg>`;
+    }
+
+    // 2. Biển báo & Vạch kẻ sân bay
+    if (key.startsWith('sign_')) {
+      if (key === 'sign_holdshort') return `
+        <svg viewBox="0 0 240 110" width="240" height="110" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="236" height="106" rx="8" fill="#334155" stroke="#475569"/>
+          <line x1="18" y1="44" x2="222" y2="44" stroke="#FACC15" stroke-width="5"/>
+          <line x1="18" y1="53" x2="222" y2="53" stroke="#FACC15" stroke-width="5"/>
+          <line x1="18" y1="63" x2="222" y2="63" stroke="#FACC15" stroke-width="5" stroke-dasharray="16 10"/>
+          <line x1="18" y1="72" x2="222" y2="72" stroke="#FACC15" stroke-width="5" stroke-dasharray="16 10"/>
+          <text x="120" y="26" text-anchor="middle" font-size="10" font-weight="700" fill="#CBD5E1" font-family="monospace">← TAXIWAY (SOLID SIDE) | RUNWAY (DASHED SIDE) →</text>
+          <text x="120" y="96" text-anchor="middle" font-size="10" font-weight="800" fill="#FDE047" font-family="monospace">HOLD SHORT MARKING</text>
+        </svg>`;
+      if (key === 'sign_rwy_mand') return `
+        <svg viewBox="0 0 240 100" width="240" height="100" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="236" height="96" rx="8" fill="#0F172A" stroke="#334155"/>
+          <rect x="34" y="22" width="172" height="56" rx="4" fill="#DC2626" stroke="#FFF" stroke-width="3"/>
+          <text x="120" y="59" text-anchor="middle" font-size="28" font-weight="900" fill="#FFF" font-family="monospace">36-18</text>
+        </svg>`;
+      if (key === 'sign_twy_loc') return `
+        <svg viewBox="0 0 240 100" width="240" height="100" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="236" height="96" rx="8" fill="#1E293B" stroke="#334155"/>
+          <rect x="78" y="18" width="84" height="64" rx="4" fill="#0B0F19" stroke="#FACC15" stroke-width="4"/>
+          <text x="120" y="62" text-anchor="middle" font-size="34" font-weight="900" fill="#FACC15" font-family="monospace">A</text>
+        </svg>`;
+      if (key === 'sign_era_red') return `
+        <svg viewBox="0 0 240 106" width="240" height="106" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="236" height="102" rx="8" fill="#CBD5E1" stroke="#64748B"/>
+          <rect x="28" y="16" width="184" height="74" fill="rgba(220,38,38,0.12)" stroke="#DC2626" stroke-width="4"/>
+          <line x1="120" y1="16" x2="120" y2="88" stroke="#EAB308" stroke-width="3"/>
+          <text x="120" y="56" text-anchor="middle" font-size="13" font-weight="900" fill="#B91C1C" font-family="monospace">ERA RED BOUNDARY</text>
+          <text x="120" y="74" text-anchor="middle" font-size="10" font-weight="700" fill="#1E293B" font-family="monospace">SPOT 7 (STOP &amp; BRAKE CHECK)</text>
+        </svg>`;
+      if (key === 'sign_hydrant') return `
+        <svg viewBox="0 0 240 106" width="240" height="106" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="236" height="102" rx="8" fill="#94A3B8" stroke="#475569"/>
+          <rect x="52" y="18" width="136" height="70" fill="#FACC15" stroke="#DC2626" stroke-width="4"/>
+          <circle cx="120" cy="53" r="18" fill="#334155" stroke="#DC2626" stroke-width="3"/>
+          <text x="120" y="57" text-anchor="middle" font-size="9" font-weight="900" fill="#FDE047" font-family="monospace">JET A-1</text>
+          <text x="120" y="83" text-anchor="middle" font-size="8.5" font-weight="900" fill="#991B1B" font-family="monospace">HYDRANT FUEL PIT</text>
+        </svg>`;
+      if (key === 'sign_papi_ok') return `
+        <svg viewBox="0 0 240 96" width="240" height="96" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="236" height="92" rx="8" fill="#0B1322" stroke="#334155"/>
+          <circle cx="54" cy="44" r="14" fill="#FFFFFF" stroke="#94A3B8" stroke-width="2"/>
+          <circle cx="98" cy="44" r="14" fill="#FFFFFF" stroke="#94A3B8" stroke-width="2"/>
+          <circle cx="142" cy="44" r="14" fill="#EF4444" stroke="#FCA5A5" stroke-width="2"/>
+          <circle cx="186" cy="44" r="14" fill="#EF4444" stroke="#FCA5A5" stroke-width="2"/>
+          <text x="120" y="80" text-anchor="middle" font-size="10.5" font-weight="700" fill="#7DD3FC" font-family="monospace">PAPI: 2 WHITE · 2 RED</text>
+        </svg>`;
+      if (key === 'sign_noentry') return `
+        <svg viewBox="0 0 240 100" width="240" height="100" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="236" height="96" rx="8" fill="#0F172A" stroke="#334155"/>
+          <circle cx="120" cy="50" r="34" fill="#DC2626" stroke="#FFF" stroke-width="3"/>
+          <rect x="96" y="43" width="48" height="14" rx="2" fill="#FFF"/>
+        </svg>`;
+      if (key === 'sign_apron_road') return `
+        <svg viewBox="0 0 240 104" width="240" height="104" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="236" height="100" rx="8" fill="#475569" stroke="#64748B"/>
+          <line x1="12" y1="22" x2="228" y2="22" stroke="#FFF" stroke-width="4"/>
+          <line x1="12" y1="52" x2="228" y2="52" stroke="#FFF" stroke-width="2.5" stroke-dasharray="14 10"/>
+          <line x1="12" y1="82" x2="228" y2="82" stroke="#FFF" stroke-width="4"/>
+          <text x="120" y="43" text-anchor="middle" font-size="11" font-weight="800" fill="#F8FAFC" font-family="monospace">SERVICE ROAD (MAX 30 km/h)</text>
+          <text x="120" y="72" text-anchor="middle" font-size="9.5" font-weight="700" fill="#BAE6FD" font-family="monospace">YIELD TO AIRCRAFT</text>
+        </svg>`;
+    }
+
+    // 3. Tín hiệu tay Marshalling (ICAO Standard Marshaller Silhouette + Orange Illuminated Wands)
+    if (key.startsWith('marshal_')) {
+      const arms = {
+        marshal_straight: `<path d="M 96 58 L 76 42 L 84 22" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M 124 58 L 144 42 L 136 22" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><line x1="84" y1="22" x2="90" y2="8" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/><line x1="136" y1="22" x2="130" y2="8" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/><path d="M 74 18 Q 84 10 94 18" stroke="#FDE047" stroke-width="2" fill="none" stroke-dasharray="3 2"/><path d="M 126 18 Q 136 10 146 18" stroke="#FDE047" stroke-width="2" fill="none" stroke-dasharray="3 2"/>`,
+        marshal_stop: `<path d="M 96 58 L 90 36 L 122 16" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M 124 58 L 130 36 L 98 16" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><line x1="112" y1="22" x2="130" y2="10" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/><line x1="108" y1="22" x2="90" y2="10" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/>`,
+        marshal_estop: `<rect x="8" y="8" width="204" height="104" rx="6" fill="rgba(225,29,72,0.18)" stroke="#F43F5E" stroke-width="2"/><path d="M 96 58 L 88 34 L 126 14" stroke="#FDA4AF" stroke-width="6.5" fill="none" stroke-linecap="round"/><path d="M 124 58 L 132 34 L 94 14" stroke="#FDA4AF" stroke-width="6.5" fill="none" stroke-linecap="round"/><line x1="110" y1="22" x2="134" y2="8" stroke="#F43F5E" stroke-width="6" stroke-linecap="round"/><line x1="110" y1="22" x2="86" y2="8" stroke="#F43F5E" stroke-width="6" stroke-linecap="round"/><text x="110" y="114" text-anchor="middle" font-size="9" font-weight="900" fill="#FDA4AF" font-family="monospace">RAPID CROSS &amp; HOLD!</text>`,
+        marshal_left: `<path d="M 96 58 L 56 58" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><line x1="56" y1="58" x2="38" y2="58" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/><path d="M 124 58 L 146 42 L 138 22" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><line x1="138" y1="22" x2="132" y2="8" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/><path d="M 128 18 Q 140 10 150 20" stroke="#FDE047" stroke-width="2" fill="none" stroke-dasharray="3 2"/>`,
+        marshal_right: `<path d="M 124 58 L 164 58" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><line x1="164" y1="58" x2="182" y2="58" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/><path d="M 96 58 L 74 42 L 82 22" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><line x1="82" y1="22" x2="88" y2="8" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/><path d="M 70 20 Q 80 10 92 18" stroke="#FDE047" stroke-width="2" fill="none" stroke-dasharray="3 2"/>`,
+        marshal_slow: `<path d="M 96 58 L 66 78" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M 124 58 L 154 78" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><line x1="66" y1="78" x2="52" y2="88" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/><line x1="154" y1="78" x2="168" y2="88" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/><text x="44" y="76" font-size="11" fill="#FDE047">↕</text><text x="168" y="76" font-size="11" fill="#FDE047">↕</text>`,
+        marshal_chocks: `<path d="M 96 58 L 80 86 L 98 92" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M 124 58 L 140 86 L 122 92" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><line x1="94" y1="91" x2="105" y2="94" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/><line x1="126" y1="91" x2="115" y2="94" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/><text x="110" y="110" text-anchor="middle" font-size="9.5" font-weight="800" fill="#FDE047" font-family="monospace">→ SWING INWARD ←</text>`,
+        marshal_cut: `<path d="M 96 58 L 90 88" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M 124 58 L 138 52 L 96 48" stroke="#38BDF8" stroke-width="6" fill="none" stroke-linecap="round"/><line x1="104" y1="48" x2="80" y2="48" stroke="#FB923C" stroke-width="5" stroke-linecap="round"/><text x="110" y="110" text-anchor="middle" font-size="9.5" font-weight="800" fill="#FDE047" font-family="monospace">← ACROSS THROAT →</text>`
+      };
+      return `
+        <svg viewBox="0 0 220 120" width="220" height="120" style="display:block;margin:0 auto;">
+          <rect x="2" y="2" width="216" height="116" rx="8" fill="#0B1324" stroke="#334155"/>
+          <!-- Marshaller Head + Helmet + Hi-Vis Vest + Legs -->
+          <circle cx="110" cy="36" r="10" fill="#FDE68A" stroke="#FFF" stroke-width="1.5"/>
+          <path d="M 100 34 Q 110 22 120 34 Z" fill="#F8FAFC"/>
+          <rect x="96" y="50" width="28" height="32" rx="5" fill="#A3E635" stroke="#ECFCCB" stroke-width="1.4"/>
+          <line x1="96" y1="64" x2="124" y2="64" stroke="#F8FAFC" stroke-width="3"/>
+          <line x1="103" y1="82" x2="101" y2="106" stroke="#1E293B" stroke-width="7" stroke-linecap="round"/>
+          <line x1="117" y1="82" x2="119" y2="106" stroke="#1E293B" stroke-width="7" stroke-linecap="round"/>
+          ${arms[key] || ''}
+        </svg>
+      `;
+    }
+    return '';
+  }

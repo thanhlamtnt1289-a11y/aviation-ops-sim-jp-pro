@@ -1,0 +1,18 @@
+{
+  "name": "Aviation Ops Sim JP Pro",
+  "short_name": "AviationOpsJP",
+  "description": "航空グランドハンドリング・特定技能試験対策・3D空港シミュレーター（訓練専用）",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#060D1A",
+  "theme_color": "#0EA5E9",
+  "icons": [
+    {
+      "src": "./public/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
