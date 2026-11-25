@@ -645,8 +645,8 @@ export function createProceduralAirliner3D(acId = 'B789', liveryId = null) {
       // Center X/Z at (0,0) and lift lowest point to spec.groundLiftM so landing gear meets tarmac cleanly!
       pivot.position.set(-c2.x, spec.groundLiftM - box2.min.y, -c2.z);
 
-      // Enhance PBR materials + subtle livery clearcoat sheen & shadows
-      const liveryTint = livery.id === 'PEACH' ? 0xfff0f7 : (livery.id === 'JETSTAR' ? 0xeef2f7 : 0xffffff);
+      // Brighten GLB airframe materials so real sculpted fuselage & wings look crisp pearl-white in daylight
+      const liveryTint = livery.id === 'PEACH' ? 0xffeef7 : (livery.id === 'JETSTAR' ? 0xf1f5f9 : 0xffffff);
       model.traverse(obj => {
         if (obj.isMesh) {
           obj.castShadow = true;
@@ -654,8 +654,10 @@ export function createProceduralAirliner3D(acId = 'B789', liveryId = null) {
           if (obj.material) {
             obj.material = obj.material.clone();
             obj.material.color.setHex(liveryTint);
-            obj.material.roughness = Math.min(0.32, obj.material.roughness ?? 0.28);
-            obj.material.metalness = Math.max(0.15, obj.material.metalness ?? 0.18);
+            obj.material.emissive = new THREE.Color(0x283242);
+            obj.material.emissiveIntensity = 0.35;
+            obj.material.roughness = 0.34;
+            obj.material.metalness = 0.08;
           }
         }
       });
