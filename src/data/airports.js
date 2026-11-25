@@ -1234,13 +1234,14 @@ export const A3D_VIEWPOINTS = [
     { id: 'loadmaster', key: '6', ja: '📦 貨物室・LIR', vi: '📦 Loadmaster', descJa: '右舷貨物室横からの視点：ベルトローダー・給油車・翼下クリアランスを至近距離で確認', descVi: 'Đứng sát cửa hầm hàng phải Spot 102 quan sát băng chuyền hành lý, xe tra dầu và khoảng trống dưới cánh' },
     { id: 'terminal', key: '7', ja: '🪟 展望デッキ', vi: '🪟 Sảnh quan sát', descJa: '旅客ターミナル展望デッキ＆PBBゲートからのパノラマ視点（背後に富士山を望む）', descVi: 'Góc nhìn từ đài quan sát nhà ga & ống lồng PBB hướng ra sân đỗ, đường băng và núi Phú Sĩ' },
     { id: 'gse_cab', key: '8', ja: '🚜 GSE運転席', vi: '🚜 Khoang lái GSE', descJa: '地上支援車両（GSE）の運転席一人称視点：構内通路の白線・ERA赤線をドライバー目線で確認', descVi: 'Góc nhìn thứ nhất trong cabin tài xế xe GSE — cực thực tế khi lái xe ở Tab 2' },
+    { id: 'backing', key: 'B', ja: '🅿 牽引バック視点', vi: '🅿 Lùi chuồng đầu kéo', descJa: 'トレーラー牽引バック車庫入れ専用カメラ：TT頭・ヒッチ折れ角・荷台後端と枠線を一望', descVi: 'Góc nhìn chuyên dụng lùi rơ-moóc vào chuồng như xe đầu kéo: quan sát rõ đầu xe TT, góc gập moóc và đuôi moóc vào vạch' },
     { id: 'orbit', key: '9', ja: '🔄 3D自由回転', vi: '🔄 Xoay 3D tự do', descJa: 'マウスドラッグで360度回転・ホイールでズームできる自由観察カメラ', descVi: 'Kéo chuột xoay tự do 360° & cuộn zoom mọi ngóc ngách sân bay' },
     { id: 'top', key: '0', ja: '🗺 俯瞰マップ', vi: '🗺 Bản đồ từ trên', descJa: '空港全体と進入禁止区域の配置を真上から確認できる戦術マップ視点', descVi: 'Nhìn thẳng từ trên cao xuống toàn bộ bố cục sân bay & vùng cấm lái' }
   ];
 
   // Hàm thuần tính vị trí & hướng nhìn Camera cho từng vị trí công tác
 
-export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, orbitCam, phaseIdx) {
+export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, orbitCam, phaseIdx, extra = null) {
     const ac = flightPose ? flightPose.ac : { x: 0, y: 0, z: 10, heading: Math.PI / 2, pitch: 0 };
     const ch = Math.cos(ac.heading), sh = Math.sin(ac.heading);
     const cp = Math.cos(ac.pitch || 0), sp = Math.sin(ac.pitch || 0);
@@ -1291,7 +1292,26 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
         povKind: 'gse_cab'
       };
     }
+    if (camMode === 'backing') {
+      // Dedicated semi-truck / TT trailer reverse bay-parking camera framing TT cab, hitch angle, trailer tail & dock bay!
+      const tr = (extra && extra.trailerPose) ? extra.trailerPose : veh;
+      const bay = (extra && extra.backingBay) ? extra.backingBay : null;
+      const focusX = bay ? (tr.x * 0.62 + bay.cx * 0.38) : (veh.x * 0.45 + tr.x * 0.55);
+      const focusZ = bay ? (tr.z * 0.62 + bay.cz * 0.38) : (veh.z * 0.45 + tr.z * 0.55);
+      return {
+        pos: [focusX - 18.5, 14.5, focusZ + 17.5],
+        target: [focusX + 1.5, 1.4, focusZ],
+        fov: 50,
+        povKind: 'backing'
+      };
+    }
     if (camMode === 'top') {
+      if (!isFlightMode && extra && extra.backingBay) {
+        const bay = extra.backingBay;
+        const midX = (veh.x + bay.cx) * 0.5;
+        const midZ = (veh.z + bay.cz) * 0.5;
+        return { pos: [midX, 38, midZ + 2.5], target: [midX, 0, midZ], fov: 48, povKind: 'top' };
+      }
       return { pos: [0, 228, 18], target: [0, 0, -6], fov: 52, povKind: 'top' };
     }
     if (camMode === 'orbit') {

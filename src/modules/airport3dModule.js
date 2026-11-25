@@ -48,9 +48,13 @@ export const a3d = {
   showZones: true,
   syncWbFailure: true,
   spot101BeaconOn: true,
-  ngoVehMode: 'standard', // 'standard' (TT 30km/h) | 'towing' (TT + 6 carts 15km/h) | 'high38' (>3.8m)
-  ngoDriveScenario: 'SC1', // 'SC1' (Pushback Hold) | 'SC2' (Service Lane 100m) | 'SC3' (Run-Up 24h & #71 Blast) | 'SC4' (>3.8m + Fire/ILS)
+  ngoVehMode: 'standard', // 'standard' (TT 30km/h) | 'towing' (TT + 6 carts 15km/h) | 'high38' (>3.8m) | 'backing' (Semi-Trailer Reverse Bay)
+  ngoDriveScenario: 'SC1', // 'SC1' | 'SC2' | 'SC3' | 'SC4' | 'SC5' (Reverse Trailer Bay Parking)
   ngoScenarioTime: 0,
+  backingBay: { cx: 104, cz: 36, len: 11.4, w: 5.0 },
+  backingStatus: { hitchDeg: 0, latErr: 0, angErr: 0, depthPct: 0, jackknife: false, parked: false, hintJa: '', hintVi: '', hintEn: '' },
+  prevHitch: null,
+  trailerHeadings: [0, 0, 0, 0, 0, 0],
   marshallerDemoSignal: null, // null = auto phase | 'm_straight' | 'm_left' | 'm_right' | 'm_slow' | 'm_stop' | 'm_emerg_stop' | 'm_chocks' | 'm_allclear'
   ilsRedOn: true,
   blastActive: false,
@@ -337,6 +341,32 @@ export function setA3dViewpoint(vpId) {
   if (descEl && vp) descEl.textContent = `[${vp.key}] ${t(vp.ja, vp.vi)} — ${t(vp.descJa, vp.descVi)}`;
 }
 
+function wrapAngle(a) {
+  while (a > Math.PI) a -= Math.PI * 2;
+  while (a < -Math.PI) a += Math.PI * 2;
+  return a;
+}
+
+function resetBackingScenario() {
+  // Position Open-Cab TT facing West (-X) with slight lateral offset so trailer tail points East (+X) toward BAY 01 (104, 36)!
+  a3d.ngoDriveScenario = 'SC5';
+  a3d.ngoVehMode = 'backing';
+  a3d.ngoScenarioTime = 0;
+  a3d.veh.x = 83.5;
+  a3d.veh.z = 31.6;
+  a3d.veh.heading = Math.PI - 0.14;
+  a3d.veh.speed = 0;
+  a3d.veh.steerAngle = 0;
+  a3d.prevHitch = null;
+  a3d.trailerHeadings = [Math.PI - 0.14, Math.PI, Math.PI, Math.PI, Math.PI, Math.PI];
+  a3d.backingStatus = { hitchDeg: 0, latErr: -4.4, angErr: 8, depthPct: 0, jackknife: false, parked: false, hintJa: '', hintVi: '', hintEn: '' };
+  a3d.camMode = 'backing';
+  const hx = a3d.veh.x - Math.cos(a3d.veh.heading) * 1.95;
+  const hz = a3d.veh.z - Math.sin(a3d.veh.heading) * 1.95;
+  const th = a3d.trailerHeadings[0];
+  a3d.cartPoses = [{ x: hx - Math.cos(th) * 3.2, z: hz - Math.sin(th) * 3.2, heading: th }];
+}
+
 function stepPhysics(dt, now) {
   a3d.aiTime += dt;
   const hudZone = document.getElementById('a3d-hud-zone');
@@ -488,26 +518,154 @@ function stepPhysics(dt, now) {
   } else {
     v.x = nx;
     v.z = nz;
-    // Record TT path trail for 6 articulated towed baggage carts!
-    if (!a3d.vehTrail.length || Math.hypot(v.x - a3d.vehTrail[0].x, v.z - a3d.vehTrail[0].z) > 0.65) {
-      a3d.vehTrail.unshift({ x: v.x, z: v.z, heading: v.heading });
-      if (a3d.vehTrail.length > 90) a3d.vehTrail.pop();
+    // TRUE Articulated Rigid-Hitch Tractor-Trailer Kinematics (Realistic Forward & Reverse Counter-Steering!)
+    const isBacking = a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing';
+    const numUnits = isBacking ? 1 : 6;
+    const wheelBase = isBacking ? 6.1 : 3.15;
+    const hitchArm = isBacking ? 1.95 : 1.9;
+    const curHx0 = v.x - Math.cos(v.heading) * hitchArm;
+    const curHz0 = v.z - Math.sin(v.heading) * hitchArm;
+
+    if (!a3d.prevHitch || Math.hypot(curHx0 - a3d.prevHitch.x, curHz0 - a3d.prevHitch.z) > 6.0) {
+      a3d.prevHitch = { x: curHx0, z: curHz0 };
+      if (!a3d.trailerHeadings || a3d.trailerHeadings.length < 6) {
+        a3d.trailerHeadings = [v.heading, v.heading, v.heading, v.heading, v.heading, v.heading];
+      }
     }
+
     const cartPoses = [];
-    for (let ci = 0; ci < 6; ci++) {
-      const targetDist = 3.8 + ci * 3.15;
-      let acc = 0, pose = null;
-      for (let ti = 1; ti < a3d.vehTrail.length; ti++) {
-        const p0 = a3d.vehTrail[ti - 1], p1 = a3d.vehTrail[ti];
-        acc += Math.hypot(p1.x - p0.x, p1.z - p0.z);
-        if (acc >= targetDist) { pose = p1; break; }
+    let parentHdg = v.heading;
+    let hitchX = curHx0;
+    let hitchZ = curHz0;
+    let prevHx = a3d.prevHitch.x;
+    let prevHz = a3d.prevHitch.z;
+
+    for (let ci = 0; ci < numUnits; ci++) {
+      let phi = a3d.trailerHeadings[ci] ?? parentHdg;
+      const dHx = hitchX - prevHx;
+      const dHz = hitchZ - prevHz;
+      if (Math.hypot(dHx, dHz) > 0.0005) {
+        // Exact non-holonomic rigid hitch angular displacement (naturally self-aligns forward & jackknifes in reverse!)
+        const lateralDisp = -Math.sin(phi) * dHx + Math.cos(phi) * dHz;
+        phi = wrapAngle(phi + lateralDisp / wheelBase);
       }
-      if (!pose) {
-        pose = { x: v.x - Math.cos(v.heading) * targetDist, z: v.z - Math.sin(v.heading) * targetDist, heading: v.heading };
+      // Physical hitch bumper limit (±78°) so trailer never clips into TT cab
+      let diff = wrapAngle(phi - parentHdg);
+      if (Math.abs(diff) > 1.36) {
+        diff = Math.sign(diff) * 1.36;
+        phi = wrapAngle(parentHdg + diff);
       }
-      cartPoses.push(pose);
+      a3d.trailerHeadings[ci] = phi;
+
+      const cx = hitchX - Math.cos(phi) * (wheelBase * 0.52);
+      const cz = hitchZ - Math.sin(phi) * (wheelBase * 0.52);
+      cartPoses.push({ x: cx, z: cz, heading: phi });
+
+      // Next trailer's hitch is at the rear of this cart
+      const nextPrevHx = prevHx - Math.cos(phi) * wheelBase;
+      const nextPrevHz = prevHz - Math.sin(phi) * wheelBase;
+      hitchX = hitchX - Math.cos(phi) * wheelBase;
+      hitchZ = hitchZ - Math.sin(phi) * wheelBase;
+      prevHx = nextPrevHx;
+      prevHz = nextPrevHz;
+      parentHdg = phi;
     }
+    a3d.prevHitch = { x: curHx0, z: curHz0 };
     a3d.cartPoses = cartPoses;
+
+    // SC5 Live Reverse Bay-Parking Telemetry, Counter-Steer Assistant & Cone Collision Grading
+    if (isBacking && cartPoses[0]) {
+      const tr = cartPoses[0];
+      const bay = a3d.backingBay;
+      const hitchDeg = Math.round(Math.abs(wrapAngle(tr.heading - v.heading)) * 180 / Math.PI);
+      const jackknife = hitchDeg >= 62;
+      const latErr = Number((tr.z - bay.cz).toFixed(2));
+      const angErr = Math.round(Math.abs(wrapAngle(tr.heading - Math.PI)) * 180 / Math.PI);
+      // Bay X spans [98.3, 109.7]; trailer center enters cleanly around x = 102.5..105.8
+      const depthPct = Math.max(0, Math.min(100, Math.round(((tr.x - 95.0) / 8.8) * 100)));
+      const tailX = tr.x - Math.cos(tr.heading) * 3.1;
+      const tailZ = tr.z - Math.sin(tr.heading) * 3.1;
+
+      // Check rear dock wall bumper (+X >= 121.7) & side bay cones (|z - 22| > 2.1 when trailer inside bay X)
+      const hitBackWall = tailX >= bay.cx + bay.len * 0.5 - 0.15;
+      const hitSideCones = (tailX > bay.cx - bay.len * 0.5 + 0.4) && (Math.abs(tailZ - bay.cz) > bay.w * 0.5 - 0.55);
+      if ((hitBackWall || hitSideCones) && Math.abs(v.speed) > 0.3 && now - a3d.lastViolTime > 1500) {
+        a3d.lastViolTime = now;
+        v.speed = -v.speed * 0.35;
+        a3d.impactFlash = 0.65;
+        a3d.camShake = 0.55;
+        a3d.score = Math.max(0, a3d.score - 10);
+        a3dAudio.playCrash(0.65);
+        logA3d(
+          'danger',
+          hitBackWall ? '💥 ドック後壁接触 (-10pt): 少し前進して位置を調整してください！' : '💥 枠線コーン接触 (-10pt): 前進してトレーラー角度を修正！',
+          hitBackWall ? '💥 Chạm tường cuối chuồng (-10đ): Nhích tiến lên 1 chút để chỉnh lại!' : '💥 Quẹt cọc tiêu viền chuồng (-10đ): Tiến lên trả lái rồi lùi lại cho thẳng!',
+          hitBackWall ? '💥 Dock Rear Bumper Hit (-10pt): Pull forward slightly!' : '💥 Bay Cone Clipped (-10pt): Pull forward to realign trailer!'
+        );
+      }
+
+      const alignedInBay = depthPct >= 78 && Math.abs(latErr) <= 0.85 && angErr <= 11 && hitchDeg <= 18;
+      const wasParked = a3d.backingStatus && a3d.backingStatus.parked;
+      const parked = alignedInBay && Math.abs(v.speed) < 0.35;
+      if (parked && !wasParked) {
+        a3dAudio.playChirp();
+        if (!appState.airport3dSolved.includes('SC5_BAY')) {
+          appState.airport3dSolved.push('SC5_BAY');
+          saveState();
+        }
+        logA3d(
+          'ok',
+          `🎉 牽引バック車庫入れ合格（PASS）！スコア ${a3d.score}/100（横ズレ ${Math.abs(latErr)}m・角度誤差 ${angErr}°）`,
+          `🎉 ĐỖ CHUỒNG RƠ-MOÓC THÀNH CÔNG (PASS)! Điểm ${a3d.score}/100 (Lệch ngang ${Math.abs(latErr)}m · Lệch góc ${angErr}°)`,
+          `🎉 TRAILER BAY PARKING PASS! Score ${a3d.score}/100 (Lat ${Math.abs(latErr)}m · Angle ${angErr}°)`
+        );
+      }
+
+      // Live real-time counter-steer coaching hint!
+      let hintJa, hintVi, hintEn;
+      if (parked) {
+        hintJa = '✅ 完璧！枠内中央にまっすぐ停車完了！';
+        hintVi = '✅ XUẤT SẮC! Rơ-moóc đã nằm gọn & thẳng tắp trong chuồng!';
+        hintEn = '✅ PERFECT! Trailer cleanly aligned & stopped inside bay!';
+      } else if (jackknife) {
+        hintJa = '⚠️ ジャックナイフ危険！一度前進(▲)して頭と荷台を真っ直ぐに戻せ！';
+        hintVi = '⚠️ NGUY CƠ GẬP MOÓC (JACKKNIFE)! Bấm TIẾN (▲) kéo thẳng đầu xe và moóc ra ngay!';
+        hintEn = '⚠️ JACKKNIFE RISK! Pull FORWARD (▲) to straighten tractor & trailer!';
+      } else if (alignedInBay) {
+        hintJa = '🟢 枠内進入OK！ブレーキ（Space）で停止すると合格判定！';
+        hintVi = '🟢 Đã lọt chuẩn vào chuồng! Phanh dừng hẳn (Space) để chốt đạt chuẩn PASS!';
+        hintEn = '🟢 Inside Bay! Brake to a full stop (Space) to complete PASS!';
+      } else if (latErr < -0.65) {
+        hintJa = '↙ バック(▼)＋右ハンドル(▶)で荷台後端を南側（枠中央）へ振る → その後左(◀)で追従！';
+        hintVi = '↪ Lùi (▼) + đánh lái PHẢI (▶) để bẻ đuôi moóc dịch sang TRÁI vào tâm chuồng → rồi trả TRÁI (◀) bám thẳng!';
+        hintEn = '↪ Reverse (▼) + Steer RIGHT (▶) to swing trailer tail toward bay center, then chase LEFT (◀)!';
+      } else if (latErr > 0.65) {
+        hintJa = '↖ バック(▼)＋左ハンドル(◀)で荷台後端を北側（枠中央）へ振る → その後右(▶)で追従！';
+        hintVi = '↩ Lùi (▼) + đánh lái TRÁI (◀) để bẻ đuôi moóc dịch sang PHẢI vào tâm chuồng → rồi trả PHẢI (▶) bám thẳng!';
+        hintEn = '↩ Reverse (▼) + Steer LEFT (◀) to swing trailer tail toward bay center, then chase RIGHT (▶)!';
+      } else {
+        hintJa = '🎯 枠中心線に一致！小刻みに微調整しながらゆっくり後退(▼)してBAY 01奥へ！';
+        hintVi = '🎯 Đuôi moóc đã thẳng tâm chuồng! Giữ tay lái êm, lùi chậm (▼) vào vạch BAY 01!';
+        hintEn = '🎯 Aligned with Bay Center! Ease gently in REVERSE (▼) into BAY 01!';
+      }
+
+      a3d.backingStatus = { hitchDeg, latErr, angErr, depthPct, jackknife, parked, hintJa, hintVi, hintEn };
+      const bkEl = document.getElementById('a3d-backing-live');
+      if (bkEl) {
+        const badgeCls = parked ? 'badge-ok' : (jackknife ? 'badge-danger' : 'badge-accent');
+        bkEl.innerHTML = `
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+            <span class="badge ${jackknife ? 'badge-danger' : (hitchDeg > 40 ? 'badge-warn' : 'badge-ok')}">${t('折れ角', 'Góc gập moóc', 'Hitch')}: ${hitchDeg}°</span>
+            <span class="badge badge-neutral">${t('横ズレ', 'Lệch ngang', 'Lat')}: ${latErr >= 0 ? '+' : ''}${latErr}m</span>
+            <span class="badge badge-neutral">${t('角度差', 'Lệch góc', 'Angle')}: ${angErr}°</span>
+            <span class="badge ${badgeCls}">${t('進入', 'Vào chuồng', 'Depth')}: ${depthPct}%</span>
+          </div>
+          <div class="alert ${parked ? 'alert-ok' : (jackknife ? 'alert-danger' : 'alert-info')}" style="margin:0;padding:7px 9px;font-size:12px;">
+            ${t(hintJa, hintVi, hintEn)}
+          </div>
+        `;
+      }
+    }
   }
 
   const kmh = Math.abs(v.speed) * 3.6;
@@ -746,6 +904,7 @@ export function renderAirport3dUI() {
                   <select id="a3d-ngo-veh-sel" style="padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;font-size:11px;font-weight:600;">
                     <option value="standard" ${a3d.ngoVehMode === 'standard' ? 'selected' : ''}>🚗 ${t('通常GSE (30km/h)', 'GSE thường (30km/h)', 'Standard GSE (30km/h)')}</option>
                     <option value="towing" ${a3d.ngoVehMode === 'towing' ? 'selected' : ''}>🚜 ${t('カート牽引 (15km/h)', 'Kéo 6 moóc (15km/h)', 'Towing 6 Carts (15km/h)')}</option>
+                    <option value="backing" ${a3d.ngoVehMode === 'backing' ? 'selected' : ''}>🅿 ${t('牽引バック車庫入れ (長尺ドーリー)', 'Lùi rơ-moóc vào chuồng (Đầu kéo)', 'Semi-Trailer Reverse Bay')}</option>
                     <option value="high38" ${a3d.ngoVehMode === 'high38' ? 'selected' : ''}>🚛 ${t('全高3.8m超 (固定橋不可)', 'Xe cao >3.8m (Cấm cầu cố định)', 'High Vehicle >3.8m')}</option>
                   </select>
                   <button class="btn btn-sm ${a3d.spot101BeaconOn ? 'btn-danger-outline' : ''}" id="a3d-toggle-beacon">S6:${a3d.spot101BeaconOn ? '🔴' : '⚪'}</button>
@@ -835,15 +994,36 @@ export function renderAirport3dUI() {
           <div class="card"><div class="card-title"><span class="ja">${t('3D直接クリック ＆ 実技検定', 'Thao tác 3D trực tiếp & Thi 100đ', 'Direct 3D Ops & 100pt Exam')}</span><span class="badge badge-warn">RAYCAST</span></div><div id="a3d-handson-panel"></div></div>
         ` : `
           <div class="card">
-            <div class="card-title"><span class="ja">🚜 ${t('NGOセントレア 実戦運転シナリオ (TT mui trần)', '4 Tình huống Lái xe TT Mui Trần Thực tế NGO', '4 Live NGO Centrair TT Driving Scenarios')}</span></div>
+            <div class="card-title"><span class="ja">🚜 ${t('NGOセントレア 実戦運転 ＆ 牽引バック実習 (TT mui trần)', '5 Bài Tập Lái Xe TT Mui Trần & Lùi Rơ-Moóc Vào Chuồng', '5 Live NGO TT Driving & Semi-Trailer Reverse Scenarios')}</span></div>
             <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
               ${[
+                ['SC5', t('🅿 SC5: トレーラー牽引バック車庫入れ実習（大型牽引・逆ハンドル練習）', '🅿 SC5: Luyện kéo rơ-moóc lùi vô chuồng BAY 01 (Như lái xe đầu kéo — đánh lái ngược)', '🅿 SC5: Semi-Trailer Reverse Bay Parking Drill (Articulated Counter-Steer)')],
                 ['SC1', t('SC1: 航空機プッシュバック・自走アウト待機（地上監視員の停止合図）', 'SC1: Máy bay sắp đẩy lùi / tự chạy ra — Dừng chờ hiệu lệnh Giám sát viên', 'SC1: Aircraft Pushback / Self-Taxi-Out — Hold for Ground Spotter')],
                 ['SC2', t('SC2: サービスレーン横断・通過後100mブラスト待機', 'SC2: Băng qua Service Lane — Đợi tàu bay đi xa ≥100m tránh Jet Blast', 'SC2: Service Lane Crossing — Wait ≥100m Behind Passing Aircraft')],
                 ['SC3', t('SC3: 24時間エンジン試運転（チョーク有＋赤灯）＆ #71ブラスト警戒', 'SC3: Thử nổ động cơ 24h (còn chèn bánh + đèn đỏ) & Cảnh báo #71', 'SC3: 24h Engine Run-Up (Chocks In + Red Beacon) & #71 Blast Caution')],
                 ['SC4', t('SC4: 全高3.8m超迂回・消防所赤回転灯・場周道路ILS赤灯', 'SC4: Xe cao >3.8m vòng mũi Center Pier, Trạm cứu hỏa & Đèn đỏ ILS', 'SC4: High Vehicle >3.8m Detour, Fire Station & Perimeter ILS Red Lamp')]
               ].map(([scid, lbl]) => `<button class="btn btn-sm ${a3d.ngoDriveScenario === scid ? 'btn-primary' : ''}" data-ngosc="${scid}" style="justify-content:flex-start;text-align:left;height:auto;padding:7px 10px;">${lbl}</button>`).join('')}
             </div>
+            ${a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing' ? `
+              <div style="padding:10px;border-radius:8px;border:1.5px solid var(--accent);background:var(--surface-2);margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                  <strong style="font-size:12.5px;">🅿 ${t('牽引バック車庫入れモニター (BAY 01)', 'Đồng hồ Lùi Chuồng Xe Đầu Kéo (BAY 01)', 'Trailer Backing Telemetry (BAY 01)')}</strong>
+                  <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                    <button class="btn btn-sm ${a3d.camMode === 'backing' ? 'btn-primary' : ''}" id="a3d-bk-cam-3q">🎥 ${t('斜め後方', 'Góc lùi', 'Backing')}</button>
+                    <button class="btn btn-sm ${a3d.camMode === 'top' ? 'btn-primary' : ''}" id="a3d-bk-cam-top">🦅 ${t('真上', 'Từ trên', 'Top')}</button>
+                    <button class="btn btn-sm ${a3d.camMode === 'gse_cab' ? 'btn-primary' : ''}" id="a3d-bk-cam-cab">🪞 ${t('運転席', 'Cabin', 'Cab')}</button>
+                    <button class="btn btn-sm" id="a3d-bk-reset">↺ ${t('やり直し', 'Đặt lại', 'Reset')}</button>
+                  </div>
+                </div>
+                <div id="a3d-backing-live">
+                  <div class="alert alert-info" style="margin:0;padding:7px 9px;font-size:12px;">
+                    ${t('▼（S）で後退しながら◀/▶（A/D）で逆ハンドル操作：左に切ると荷台後端は右へ、右に切ると左へ曲がります！',
+                        'Nhấn ▼ (S) để LÙI kết hợp ◀/▶ (A/D) đánh lái ngược: đánh TRÁI (◀) đuôi moóc bẻ sang PHẢI, đánh PHẢI (▶) đuôi moóc bẻ sang TRÁI — phanh dừng gọn trong BAY 01!',
+                        'Hold ▼ (S) to REVERSE with ◀/▶ (A/D) counter-steering: steer LEFT to kick trailer tail RIGHT, steer RIGHT to kick tail LEFT — stop straight inside BAY 01!')}
+                  </div>
+                </div>
+              </div>
+            ` : ''}
             <div class="alert alert-warn" style="font-size:12px;margin-bottom:8px;">
               <strong>${t('実車衝突＆COC通報訓練', 'Va chạm vật lý & Quy trình báo COC', 'Collision Physics & COC Protocol')}:</strong>
               ${t('障害物へ接触すると衝撃・反動・衝突音が発生し、現場保存＆COC（0569-38-1500 / 内線3000）通報指示が出ます。',
@@ -912,25 +1092,50 @@ export function renderAirport3dUI() {
     const tb = document.getElementById('a3d-toggle-beacon');
     if (tb) tb.onclick = () => { a3d.spot101BeaconOn = !a3d.spot101BeaconOn; tb.textContent = `S6:${a3d.spot101BeaconOn ? '🔴' : '⚪'}`; tb.classList.toggle('btn-danger-outline', a3d.spot101BeaconOn); };
     const tv = document.getElementById('a3d-ngo-veh-sel');
-    if (tv) tv.onchange = e => { a3d.ngoVehMode = e.target.value; };
+    if (tv) {
+      tv.onchange = e => {
+        a3d.ngoVehMode = e.target.value;
+        if (a3d.ngoVehMode === 'backing') {
+          resetBackingScenario();
+          renderAirport3dUI();
+        }
+      };
+    }
     const ti = document.getElementById('a3d-toggle-ils');
     if (ti) ti.onclick = () => { a3d.ilsRedOn = !a3d.ilsRedOn; ti.textContent = `ILS:${a3d.ilsRedOn ? '🔴' : '⚪'}`; ti.classList.toggle('btn-danger-outline', a3d.ilsRedOn); };
     const tbl = document.getElementById('a3d-toggle-blast');
     if (tbl) tbl.onclick = () => { a3d.blastActive = !a3d.blastActive; tbl.textContent = `#71:${a3d.blastActive ? '🔥' : '⚪'}`; tbl.classList.toggle('btn-danger-outline', a3d.blastActive); };
     mount.querySelectorAll('[data-ngosc]').forEach(b => {
       b.onclick = () => {
-        a3d.ngoDriveScenario = b.dataset.ngosc;
+        const sc = b.dataset.ngosc;
+        if (sc === 'SC5') {
+          resetBackingScenario();
+          renderAirport3dUI();
+          return;
+        }
+        a3d.ngoDriveScenario = sc;
+        if (a3d.ngoVehMode === 'backing') a3d.ngoVehMode = 'standard';
         a3d.ngoScenarioTime = 0;
+        a3d.prevHitch = null;
         a3d.vehTrail = [];
         a3d.veh.speed = 0;
         if (a3d.ngoDriveScenario === 'SC1') { a3d.veh.x = -38; a3d.veh.z = -38; a3d.veh.heading = 0; }
         else if (a3d.ngoDriveScenario === 'SC2') { a3d.veh.x = -31; a3d.veh.z = -32; a3d.veh.heading = -Math.PI / 2; }
         else if (a3d.ngoDriveScenario === 'SC3') { a3d.veh.x = -85; a3d.veh.z = -38; a3d.veh.heading = 0; a3d.blastActive = true; }
         else { a3d.veh.x = -12; a3d.veh.z = 50; a3d.veh.heading = 0; a3d.ngoVehMode = 'high38'; a3d.ilsRedOn = true; }
+        a3d.trailerHeadings = [a3d.veh.heading, a3d.veh.heading, a3d.veh.heading, a3d.veh.heading, a3d.veh.heading, a3d.veh.heading];
         a3d.camMode = 'chase';
         renderAirport3dUI();
       };
     });
+    const bk3q = document.getElementById('a3d-bk-cam-3q');
+    if (bk3q) bk3q.onclick = () => { setA3dViewpoint('backing'); renderAirport3dUI(); };
+    const bkTop = document.getElementById('a3d-bk-cam-top');
+    if (bkTop) bkTop.onclick = () => { setA3dViewpoint('top'); renderAirport3dUI(); };
+    const bkCab = document.getElementById('a3d-bk-cam-cab');
+    if (bkCab) bkCab.onclick = () => { setA3dViewpoint('gse_cab'); renderAirport3dUI(); };
+    const bkRst = document.getElementById('a3d-bk-reset');
+    if (bkRst) bkRst.onclick = () => { resetBackingScenario(); renderAirport3dUI(); };
     mount.querySelectorAll('#a3d-drive-pad .drive-key').forEach(btn => {
       const k = btn.dataset.k;
       const on = e => { e.preventDefault(); a3d.keys[k] = true; btn.classList.add('pressed'); };

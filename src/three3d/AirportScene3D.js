@@ -286,7 +286,12 @@ export class AirportScene3D {
     this.onInteract = opts.onInteract || null;
     this.disposed = false;
 
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      logarithmicDepthBuffer: true,
+      powerPreference: 'high-performance'
+    });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.08;
     this.renderer.shadowMap.enabled = true;
@@ -295,7 +300,7 @@ export class AirportScene3D {
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.Fog(0xbcdaf5, 175, 680);
 
-    this.camera = new THREE.PerspectiveCamera(48, 16 / 9, 0.7, 1200);
+    this.camera = new THREE.PerspectiveCamera(48, 16 / 9, 1.2, 1600);
     this.camera.position.set(38, 22, 54);
     this.smoothCam = null;
 
@@ -457,15 +462,23 @@ export class AirportScene3D {
       this.staticGroup.add(mtn);
     });
 
-    // Helper for flat painted decals on concrete/asphalt
+    // Helper for flat painted decals on concrete/asphalt (polygonOffset + depthWrite:false -> zero aerial flicker!)
     const addDecal = (tex, w, d, x, y, z, rotY = 0) => {
       const m = new THREE.Mesh(
         new THREE.PlaneGeometry(w, d),
-        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.72 })
+        new THREE.MeshStandardMaterial({
+          map: tex,
+          roughness: 0.72,
+          depthWrite: false,
+          polygonOffset: true,
+          polygonOffsetFactor: -4,
+          polygonOffsetUnits: -4
+        })
       );
       m.rotation.x = -Math.PI / 2;
       m.rotation.z = rotY;
-      m.position.set(x, y, z);
+      m.position.set(x, y + 0.08, z);
+      m.renderOrder = 5;
       m.receiveShadow = true;
       this.staticGroup.add(m);
       return m;
@@ -480,10 +493,18 @@ export class AirportScene3D {
 
     // 2. Expanded Runway 36/18 (460m length) + Dual Parallel Taxiways (A-TWY, B-TWY) & High-Speed Exits (A3–A6)
     const rwyTex = makeRunwayTexture(ap.rwy, ap.snow);
-    this.runwayMat = new THREE.MeshStandardMaterial({ map: rwyTex, roughness: 0.72, metalness: 0.08 });
+    this.runwayMat = new THREE.MeshStandardMaterial({
+      map: rwyTex,
+      roughness: 0.72,
+      metalness: 0.08,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2
+    });
     const rwy = new THREE.Mesh(new THREE.PlaneGeometry(460, 32), this.runwayMat);
     rwy.rotation.x = -Math.PI / 2;
-    rwy.position.set(0, 0.06, -104);
+    rwy.position.set(0, 0.14, -104);
+    rwy.renderOrder = 3;
     rwy.receiveShadow = true;
     this.staticGroup.add(rwy);
 
@@ -876,6 +897,128 @@ export class AirportScene3D {
       this.towedCarts.push(cart);
     }
 
+    // Long Articulated ULD Cargo Semi-Trailer (for SC5 Semi-Truck Reverse Bay-Parking Practice!)
+    const semi = new THREE.Group();
+    const chassis = new THREE.Mesh(
+      new THREE.BoxGeometry(2.35, 0.34, 6.2),
+      new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.45 })
+    );
+    chassis.position.set(0, 0.62, 0);
+    chassis.castShadow = true;
+    semi.add(chassis);
+    // Yellow safety side rails & reflective chevron bumper
+    [-1.16, 1.16].forEach(rx => {
+      const rail = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1, 0.32, 6.1),
+        new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 })
+      );
+      rail.position.set(rx, 0.92, 0);
+      semi.add(rail);
+    });
+    // Two silver ULD Cargo Containers strapped on the long flatbed
+    [-1.4, 1.4].forEach(uz => {
+      const uld = new THREE.Mesh(
+        new THREE.BoxGeometry(2.05, 1.65, 2.45),
+        new THREE.MeshStandardMaterial({ color: 0xdbe4ef, roughness: 0.32, metalness: 0.52 })
+      );
+      uld.position.set(0, 1.62, uz);
+      uld.castShadow = true;
+      semi.add(uld);
+      const stripe = new THREE.Mesh(
+        new THREE.BoxGeometry(2.09, 0.24, 2.47),
+        new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.35 })
+      );
+      stripe.position.set(0, 1.85, uz);
+      semi.add(stripe);
+    });
+    // Front steel drawbar tongue (+Z connects to TT rear hitch!)
+    const tongue = new THREE.Mesh(
+      new THREE.BoxGeometry(0.22, 0.16, 1.7),
+      new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4 })
+    );
+    tongue.position.set(0, 0.56, 3.65);
+    semi.add(tongue);
+    // Dual Rear Axle Wheels (-Z tail) + Red/Amber Rear Tail/Reverse Marker Lamps!
+    const wMat = new THREE.MeshStandardMaterial({ color: 0x16191f, roughness: 0.9 });
+    [-2.3, -1.25].forEach(wz => {
+      [-1.12, 1.12].forEach(wx => {
+        const w = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.28, 12), wMat);
+        w.rotation.z = Math.PI / 2;
+        w.position.set(wx, 0.42, wz);
+        semi.add(w);
+      });
+    });
+    [-0.95, 0.95].forEach(lx => {
+      const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.18, 0.1), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+      lamp.position.set(lx, 0.72, -3.14);
+      semi.add(lamp);
+    });
+    semi.visible = false;
+    this.longSemiTrailer = semi;
+    this.dynamicGroup.add(semi);
+
+    // Dedicated 3D Reverse Bay-Parking Dock Stall ("Chuồng Đỗ Rơ-Moóc Đầu Kéo" — visible in SC5!)
+    const bayGrp = new THREE.Group();
+    bayGrp.position.set(104, 0.14, 36);
+    const bayLen = 11.4, bayW = 5.0;
+    const bayBorderMat = new THREE.MeshBasicMaterial({
+      color: 0xfacc15,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -5
+    });
+    this.backingBayBorderMat = bayBorderMat;
+    // Bay floor pad & painted label
+    const bayPad = new THREE.Mesh(
+      new THREE.PlaneGeometry(bayLen, bayW),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 })
+    );
+    bayPad.rotation.x = -Math.PI / 2;
+    bayGrp.add(bayPad);
+    const baySign = new THREE.Mesh(
+      new THREE.PlaneGeometry(7.2, 2.6),
+      new THREE.MeshBasicMaterial({ map: makeRoadMarkingTexture('BAY 01 · DOCK', '#1E293B', '#FACC15', '#FACC15'), depthWrite: false, polygonOffset: true, polygonOffsetFactor: -6 })
+    );
+    baySign.rotation.x = -Math.PI / 2;
+    baySign.position.set(0.4, 0.03, 0);
+    bayGrp.add(baySign);
+    // 3 glowing perimeter lines (Left, Right, Back — opening on -X West side!)
+    const addBayLine = (w, d, x, z) => {
+      const l = new THREE.Mesh(new THREE.PlaneGeometry(w, d), bayBorderMat);
+      l.rotation.x = -Math.PI / 2;
+      l.position.set(x, 0.04, z);
+      bayGrp.add(l);
+    };
+    addBayLine(bayLen, 0.34, 0, -bayW * 0.5);
+    addBayLine(bayLen, 0.34, 0, bayW * 0.5);
+    addBayLine(0.38, bayW + 0.34, bayLen * 0.5, 0);
+    // Physical yellow-black rear dock bumper wall (+X end)
+    const dockWall = new THREE.Mesh(
+      new THREE.BoxGeometry(0.65, 1.25, bayW + 0.8),
+      new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.5 })
+    );
+    dockWall.position.set(bayLen * 0.5 + 0.45, 0.62, 0);
+    dockWall.castShadow = true;
+    bayGrp.add(dockWall);
+    // 10 Reflective Orange Safety Cones lining Left, Right & Entry edges!
+    const bayConeMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.4 });
+    const bayConeRingMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    [
+      [-5.6, -2.65], [-2.8, -2.65], [0, -2.65], [2.8, -2.65], [5.4, -2.65],
+      [-5.6, 2.65], [-2.8, 2.65], [0, 2.65], [2.8, 2.65], [5.4, 2.65]
+    ].forEach(([cx, cz]) => {
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.95, 10), bayConeMat);
+      cone.position.set(cx, 0.48, cz);
+      cone.castShadow = true;
+      bayGrp.add(cone);
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 0.16, 10), bayConeRingMat);
+      band.position.set(cx, 0.58, cz);
+      bayGrp.add(band);
+    });
+    bayGrp.visible = false;
+    this.backingBayGroup = bayGrp;
+    this.dynamicGroup.add(bayGrp);
+
     // Articulated 3D Ground Crew: Marshaller (8 ICAO signals), 2 Wing Walkers, Headset Man & 3 Warning Spotters!
     this.crewMarshaller = createArticulatedCrew3D('marshaller');
     this.crewMarshaller.position.set(0, 0, 32.5);
@@ -1177,8 +1320,25 @@ export class AirportScene3D {
       if (ud.beaconHalo) ud.beaconHalo.visible = beaconBlink;
       if (ud.highMast) ud.highMast.visible = state.ngoVehMode === 'high38';
 
-      // Position up to 6 Articulated Towed Baggage Carts along TT trail history!
-      const showCarts = state.ngoVehMode === 'towing' && Array.isArray(state.cartPoses);
+      // Position Long ULD Semi-Trailer + 3D Dock Bay (SC5 Reverse Backing Mode) OR 6 Articulated Towed Carts!
+      const isBackingMode = state.ngoDriveScenario === 'SC5' || state.ngoVehMode === 'backing';
+      if (this.backingBayGroup) {
+        this.backingBayGroup.visible = isBackingMode;
+        if (isBackingMode && this.backingBayBorderMat) {
+          const bk = state.backingStatus || {};
+          this.backingBayBorderMat.color.setHex(bk.parked ? 0x22c55e : (bk.jackknife ? 0xef4444 : 0xfacc15));
+        }
+      }
+      if (this.longSemiTrailer) {
+        if (isBackingMode && Array.isArray(state.cartPoses) && state.cartPoses[0]) {
+          this.longSemiTrailer.visible = true;
+          this.longSemiTrailer.position.set(state.cartPoses[0].x, 0, state.cartPoses[0].z);
+          this.longSemiTrailer.rotation.y = Math.PI / 2 - state.cartPoses[0].heading;
+        } else {
+          this.longSemiTrailer.visible = false;
+        }
+      }
+      const showCarts = !isBackingMode && state.ngoVehMode === 'towing' && Array.isArray(state.cartPoses);
       this.towedCarts.forEach((cart, ci) => {
         if (showCarts && state.cartPoses[ci]) {
           cart.visible = true;
@@ -1214,9 +1374,11 @@ export class AirportScene3D {
       Object.values(this.fodMeshes).forEach(m => { m.visible = false; });
     }
 
-    // Hide towed carts & jet blast outside drive mode
+    // Hide towed carts, semi-trailer & jet blast outside drive mode
     if (isFlight || isOps3d || this.compact) {
       this.towedCarts.forEach(c => { c.visible = false; });
+      if (this.longSemiTrailer) this.longSemiTrailer.visible = false;
+      if (this.backingBayGroup) this.backingBayGroup.visible = false;
       if (this.jetBlastCone) this.jetBlastCone.visible = false;
       if (this.impactRing) this.impactRing.visible = false;
     }
@@ -1269,7 +1431,12 @@ export class AirportScene3D {
       const ang = tSec * 0.22;
       targetCam = { pos: [Math.cos(ang) * 34 - 6, 12.5, 10 + Math.sin(ang) * 32], target: [0, 3.8, 10], fov: 44, povKind: 'compact' };
     } else {
-      targetCam = computeViewpointCamera(state.camMode, isFlight, flightPose, state.veh, state.cam, state.flightPhaseIdx);
+      const isBack = state.ngoDriveScenario === 'SC5' || state.ngoVehMode === 'backing';
+      const camExtra = isBack ? {
+        backingBay: state.backingBay || { cx: 104, cz: 36 },
+        trailerPose: (Array.isArray(state.cartPoses) && state.cartPoses[0]) ? state.cartPoses[0] : state.veh
+      } : null;
+      targetCam = computeViewpointCamera(state.camMode, isFlight, flightPose, state.veh, state.cam, state.flightPhaseIdx, camExtra);
     }
 
     if (!this.smoothCam || state.dragging) {

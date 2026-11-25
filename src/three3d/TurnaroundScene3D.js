@@ -280,8 +280,13 @@ export class TurnaroundScene3D {
     this.cameraPreset = 'spot'; // 'overview' | 'tower' | 'spot'
     this.doneSteps = new Set();
 
-    // Renderer
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    // Renderer (logarithmicDepthBuffer eliminates 100% of aerial Z-fighting at 2,000-9,500m altitude!)
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      logarithmicDepthBuffer: true,
+      powerPreference: 'high-performance'
+    });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.1;
     this.renderer.shadowMap.enabled = true;
@@ -292,7 +297,7 @@ export class TurnaroundScene3D {
     this.scene.background = new THREE.Color(0x9bc5e8);
     this.scene.fog = new THREE.FogExp2(0xb8d7f0, 0.00018);
 
-    this.camera = new THREE.PerspectiveCamera(46, 16 / 9, 0.8, 12000);
+    this.camera = new THREE.PerspectiveCamera(46, 16 / 9, 2.0, 9500);
 
     this.sunLight = new THREE.DirectionalLight(0xfff7e8, 2.2);
     this.sunLight.position.set(600, 950, 450);
@@ -540,7 +545,8 @@ export class TurnaroundScene3D {
       });
       const sea = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), waterMat);
       sea.rotation.x = -Math.PI / 2;
-      sea.position.y = -2.2;
+      sea.position.y = -3.0;
+      sea.renderOrder = 0;
       this.airportGroup.add(sea);
     } else {
       // Inland Chiba green plateau (NRT) or Hokkaido snow plain (CTS)
@@ -551,8 +557,9 @@ export class TurnaroundScene3D {
       });
       const ground = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), landMat);
       ground.rotation.x = -Math.PI / 2;
-      ground.position.y = -0.35;
+      ground.position.y = -1.2;
       ground.receiveShadow = true;
+      ground.renderOrder = 0;
       this.airportGroup.add(ground);
 
       // Rolling distant hills / mountains
@@ -585,11 +592,13 @@ export class TurnaroundScene3D {
       return mesh;
     };
 
-    // Artificial Island Landmass (+ KIX Island 2 + Seawall)
+    // Artificial Island Landmass (+ KIX Island 2 + Seawall) -> top strictly at y = 0.0
     const islandMat = new THREE.MeshStandardMaterial({ color: g.landColor, roughness: isSnow ? 0.58 : 0.88 });
-    addExtrudedPoly(g.boundaryXYZ, isIsland ? 2.1 : 0.25, isIsland ? -2.2 : -0.35, islandMat);
+    const isl1 = addExtrudedPoly(g.boundaryXYZ, isIsland ? 3.0 : 1.2, isIsland ? -3.0 : -1.2, islandMat);
+    if (isl1) isl1.renderOrder = 1;
     if (g.secondaryIslandXYZ) {
-      addExtrudedPoly(g.secondaryIslandXYZ, 2.1, -2.2, islandMat);
+      const isl2 = addExtrudedPoly(g.secondaryIslandXYZ, 3.0, -3.0, islandMat);
+      if (isl2) isl2.renderOrder = 1;
     }
 
     // Access Bridge (NGO Centrair Bridge / KIX Sky Gate Bridge)
@@ -612,15 +621,23 @@ export class TurnaroundScene3D {
 
     for (const rwy of g.runwaysXYZ) {
       const rwyTex = makeGeoRunwayTexture(rwy.label, isSnow);
-      const rwyMat = new THREE.MeshStandardMaterial({ map: rwyTex, roughness: 0.72, metalness: 0.08 });
+      const rwyMat = new THREE.MeshStandardMaterial({
+        map: rwyTex,
+        roughness: 0.72,
+        metalness: 0.08,
+        polygonOffset: true,
+        polygonOffsetFactor: -3,
+        polygonOffsetUnits: -3
+      });
       // Align PlaneGeometry cleanly using group wrapper (local -Z = thresholdA, local +Z = thresholdB)
       const rwyGroup = new THREE.Group();
-      rwyGroup.position.set(rwy.cx, 0.14, rwy.cz);
+      rwyGroup.position.set(rwy.cx, 0.42, rwy.cz);
       rwyGroup.rotation.y = rwy.rotY;
 
       const strip = new THREE.Mesh(new THREE.PlaneGeometry(rwy.widthM, rwy.actualLen), rwyMat);
       strip.rotation.x = -Math.PI / 2;
       strip.receiveShadow = true;
+      strip.renderOrder = 4;
       rwyGroup.add(strip);
 
       // Glowing Runway Edge Lights (instanced for 60fps!)
@@ -655,49 +672,92 @@ export class TurnaroundScene3D {
       this.airportGroup.add(rwyGroup);
     }
 
-    // 3. TAXIWAYS (Dark asphalt + Yellow centerlines)
-    const twyMat = new THREE.MeshStandardMaterial({ color: 0x3b4453, roughness: 0.78 });
-    const yellowMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+    // 3. TAXIWAYS (Dark asphalt at y=0.22 + Yellow centerlines at y=0.30, zero Z-fighting!)
+    const twyMat = new THREE.MeshStandardMaterial({
+      color: 0x3b4453,
+      roughness: 0.78,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1
+    });
+    const yellowMat = new THREE.MeshBasicMaterial({
+      color: 0xfacc15,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -5,
+      polygonOffsetUnits: -5
+    });
     for (const tw of g.taxiwaysXYZ) {
       for (let i = 0; i < tw.pointsXYZ.length - 1; i++) {
         const a = tw.pointsXYZ[i], b = tw.pointsXYZ[i + 1];
         const len = Math.hypot(b.x - a.x, b.z - a.z);
-        const seg = new THREE.Mesh(new THREE.BoxGeometry(tw.widthM, 0.12, len + tw.widthM * 0.4), twyMat);
-        seg.position.set((a.x + b.x) * 0.5, 0.05, (a.z + b.z) * 0.5);
-        seg.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
+        const seg = new THREE.Mesh(new THREE.PlaneGeometry(tw.widthM, len + tw.widthM * 0.4), twyMat);
+        seg.rotation.x = -Math.PI / 2;
+        const rot = Math.atan2(b.x - a.x, b.z - a.z);
+        const twGrp = new THREE.Group();
+        twGrp.position.set((a.x + b.x) * 0.5, 0.22, (a.z + b.z) * 0.5);
+        twGrp.rotation.y = rot;
         seg.receiveShadow = true;
-        this.airportGroup.add(seg);
+        seg.renderOrder = 2;
+        twGrp.add(seg);
 
-        const line = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.05, len), yellowMat);
-        line.position.set((a.x + b.x) * 0.5, 0.13, (a.z + b.z) * 0.5);
-        line.rotation.y = seg.rotation.y;
-        this.airportGroup.add(line);
+        const line = new THREE.Mesh(new THREE.PlaneGeometry(0.7, len), yellowMat);
+        line.rotation.x = -Math.PI / 2;
+        line.position.y = 0.08;
+        line.renderOrder = 6;
+        twGrp.add(line);
+        this.airportGroup.add(twGrp);
       }
     }
 
-    // 4. CONCRETE APRONS
-    const apronMat = new THREE.MeshStandardMaterial({ map: this.texConcrete, roughness: 0.76, metalness: 0.05 });
+    // 4. CONCRETE APRONS (y = 0.28, cleanly above taxiways & island!)
+    const apronMat = new THREE.MeshStandardMaterial({
+      map: this.texConcrete,
+      roughness: 0.76,
+      metalness: 0.05,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2
+    });
     for (const apr of g.apronsXYZ) {
-      addExtrudedPoly(apr.pointsXYZ, 0.12, 0.0, apronMat);
+      const m = addExtrudedPoly(apr.pointsXYZ, 0.14, 0.14, apronMat);
+      if (m) m.renderOrder = 3;
     }
 
-    // 5. GSE SERVICE ROAD (Highlighted asphalt corridor + white dashed center)
-    const roadMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
-    const whiteMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
+    // 5. GSE SERVICE ROAD (y = 0.48, cleanly above concrete apron!)
+    const roadMat = new THREE.MeshStandardMaterial({
+      color: 0x334155,
+      roughness: 0.8,
+      polygonOffset: true,
+      polygonOffsetFactor: -4,
+      polygonOffsetUnits: -4
+    });
+    const whiteMat = new THREE.MeshBasicMaterial({
+      color: 0xf8fafc,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -6,
+      polygonOffsetUnits: -6
+    });
     for (let i = 0; i < g.gseServiceRoadXYZ.length - 1; i++) {
       const a = g.gseServiceRoadXYZ[i], b = g.gseServiceRoadXYZ[i + 1];
       const len = Math.hypot(b.x - a.x, b.z - a.z);
       const rot = Math.atan2(b.x - a.x, b.z - a.z);
-      const rMesh = new THREE.Mesh(new THREE.BoxGeometry(12, 0.06, len + 10), roadMat);
-      rMesh.position.set((a.x + b.x) * 0.5, 0.14, (a.z + b.z) * 0.5);
-      rMesh.rotation.y = rot;
+      const rdGrp = new THREE.Group();
+      rdGrp.position.set((a.x + b.x) * 0.5, 0.48, (a.z + b.z) * 0.5);
+      rdGrp.rotation.y = rot;
+      const rMesh = new THREE.Mesh(new THREE.PlaneGeometry(12, len + 10), roadMat);
+      rMesh.rotation.x = -Math.PI / 2;
       rMesh.receiveShadow = true;
-      this.airportGroup.add(rMesh);
+      rMesh.renderOrder = 5;
+      rdGrp.add(rMesh);
 
-      const cl = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.04, len), whiteMat);
-      cl.position.set((a.x + b.x) * 0.5, 0.18, (a.z + b.z) * 0.5);
-      cl.rotation.y = rot;
-      this.airportGroup.add(cl);
+      const cl = new THREE.Mesh(new THREE.PlaneGeometry(0.45, len), whiteMat);
+      cl.rotation.x = -Math.PI / 2;
+      cl.position.y = 0.05;
+      cl.renderOrder = 6;
+      rdGrp.add(cl);
+      this.airportGroup.add(rdGrp);
     }
 
     // 6. TERMINAL 1 / TERMINAL 2 ARCHITECTURAL BUILDINGS
@@ -760,42 +820,43 @@ export class TurnaroundScene3D {
     this.radarDish = radar;
     this.airportGroup.add(towerGroup);
 
-    // 8. ALL 8 NUMBERED SPOTS / GATES PAINTED ON APRON
-    const redEraMat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
+    // 8. ALL 8 NUMBERED SPOTS / GATES PAINTED ON APRON (y=0.52, depthWrite=false -> zero Z-fighting!)
+    const redEraMat = new THREE.MeshBasicMaterial({
+      color: 0xdc2626,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -6,
+      polygonOffsetUnits: -6
+    });
     for (const sp of g.spotsXYZ) {
       const sg = new THREE.Group();
-      sg.position.set(sp.pos.x, 0.16, sp.pos.z);
+      sg.position.set(sp.pos.x, 0.52, sp.pos.z);
       sg.rotation.y = sp.rotY;
 
-      // Yellow lead-in centerline (+Z = nose)
-      const lead = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 78), yellowMat);
-      lead.position.set(0, 0, -2);
-      sg.add(lead);
-
-      // Nosewheel stop bar
-      const stopBar = new THREE.Mesh(new THREE.BoxGeometry(8.5, 0.04, 0.65), yellowMat);
-      stopBar.position.set(0, 0, 26);
-      sg.add(stopBar);
-
-      // Red Equipment Restraint Area (ERA) perimeter box
-      const eraW = 68, eraL = 78;
-      const addEraEdge = (w, d, x, z) => {
-        const edge = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, d), redEraMat);
-        edge.position.set(x, 0, z);
-        sg.add(edge);
+      const addFlatLine = (w, d, x, z, mat) => {
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat);
+        m.rotation.x = -Math.PI / 2;
+        m.position.set(x, 0, z);
+        m.renderOrder = 6;
+        sg.add(m);
       };
-      addEraEdge(eraW, 0.45, 0, eraL * 0.5);
-      addEraEdge(eraW, 0.45, 0, -eraL * 0.5);
-      addEraEdge(0.45, eraL, -eraW * 0.5, 0);
-      addEraEdge(0.45, eraL, eraW * 0.5, 0);
+      addFlatLine(0.65, 78, 0, -2, yellowMat);
+      addFlatLine(8.5, 0.7, 0, 26, yellowMat);
+
+      const eraW = 68, eraL = 78;
+      addFlatLine(eraW, 0.5, 0, eraL * 0.5, redEraMat);
+      addFlatLine(eraW, 0.5, 0, -eraL * 0.5, redEraMat);
+      addFlatLine(0.5, eraL, -eraW * 0.5, 0, redEraMat);
+      addFlatLine(0.5, eraL, eraW * 0.5, 0, redEraMat);
 
       // Painted Spot Number Placard on Apron
       const numPlane = new THREE.Mesh(
         new THREE.PlaneGeometry(10, 6.4),
-        new THREE.MeshBasicMaterial({ map: makeSpotNumberTexture(sp.id) })
+        new THREE.MeshBasicMaterial({ map: makeSpotNumberTexture(sp.id), depthWrite: false, polygonOffset: true, polygonOffsetFactor: -7 })
       );
       numPlane.rotation.x = -Math.PI / 2;
-      numPlane.position.set(0, 0.05, 34);
+      numPlane.position.set(0, 0.04, 34);
+      numPlane.renderOrder = 7;
       sg.add(numPlane);
 
       this.airportGroup.add(sg);
@@ -812,9 +873,8 @@ export class TurnaroundScene3D {
     const sp = this.activeSpot;
     if (!sp) return;
 
-    // Position the entire Spot Ops local coordinate frame at the active Spot!
-    // Everything inside `spotOpsGroup` uses aircraft local meters (+Z Nose, +X Port, -X Starboard)
-    this.spotOpsGroup.position.set(sp.pos.x, 0.14, sp.pos.z);
+    // Position the entire Spot Ops local coordinate frame at the active Spot (flush on concrete apron y=0.30)!
+    this.spotOpsGroup.position.set(sp.pos.x, 0.30, sp.pos.z);
     this.spotOpsGroup.rotation.y = sp.rotY;
 
     // Keep shadow camera centered tightly on the active Spot for crisp aircraft & GSE shadows!
