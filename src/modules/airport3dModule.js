@@ -466,7 +466,8 @@ function stepPhysics(dt, now) {
 
   if (Math.abs(v.speed) > 0.10) {
     const dir = v.speed >= 0 ? 1 : -1;
-    const steerGain = (isBackMode && v.speed < 0) ? 2.05 : 3.4;
+    // True bicycle-model turning rate when reversing semi-trailer (~0.48 rad/s -> controlled 28°/s, never instant jackknife!)
+    const steerGain = (isBackMode && v.speed < 0) ? 0.92 : (isBackMode ? 2.2 : 3.4);
     v.heading += v.steerAngle * steerGain * dt * dir * Math.min(1, Math.abs(v.speed) / 3.0);
   }
   const nx = Math.max(-270, Math.min(270, v.x + Math.cos(v.heading) * v.speed * dt));
