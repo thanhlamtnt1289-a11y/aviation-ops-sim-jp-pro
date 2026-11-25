@@ -1293,26 +1293,28 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
       };
     }
     if (camMode === 'backing') {
-      // Dedicated semi-truck / TT trailer reverse bay-parking camera framing TT cab, hitch angle, trailer tail & dock bay!
+      // Dedicated semi-truck / TT trailer reverse bay-parking camera (supports smooth driveZoom!)
+      const zMul = (extra && extra.driveZoom) ? extra.driveZoom : 1.0;
       const tr = (extra && extra.trailerPose) ? extra.trailerPose : veh;
       const bay = (extra && extra.backingBay) ? extra.backingBay : null;
       const focusX = bay ? (tr.x * 0.62 + bay.cx * 0.38) : (veh.x * 0.45 + tr.x * 0.55);
       const focusZ = bay ? (tr.z * 0.62 + bay.cz * 0.38) : (veh.z * 0.45 + tr.z * 0.55);
       return {
-        pos: [focusX - 18.5, 14.5, focusZ + 17.5],
+        pos: [focusX - 18.5 * zMul, 14.5 * zMul, focusZ + 17.5 * zMul],
         target: [focusX + 1.5, 1.4, focusZ],
         fov: 50,
         povKind: 'backing'
       };
     }
     if (camMode === 'top') {
+      const zMul = (extra && extra.driveZoom) ? extra.driveZoom : 1.0;
       if (!isFlightMode && extra && extra.backingBay) {
         const bay = extra.backingBay;
         const midX = (veh.x + bay.cx) * 0.5;
         const midZ = (veh.z + bay.cz) * 0.5;
-        return { pos: [midX, 38, midZ + 2.5], target: [midX, 0, midZ], fov: 48, povKind: 'top' };
+        return { pos: [midX, Math.min(180, 38 * zMul), midZ + 2.5], target: [midX, 0, midZ], fov: 48, povKind: 'top' };
       }
-      return { pos: [0, 228, 18], target: [0, 0, -6], fov: 52, povKind: 'top' };
+      return { pos: [0, Math.min(340, 228 * zMul), 18], target: [0, 0, -6], fov: 52, povKind: 'top' };
     }
     if (camMode === 'orbit') {
       const c = orbitCam;
@@ -1325,9 +1327,10 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
       };
     }
     if (!isFlightMode && camMode === 'chase') {
+      const zMul = (extra && extra.driveZoom) ? extra.driveZoom : 1.0;
       const vch = Math.cos(veh.heading), vsh = Math.sin(veh.heading);
       return {
-        pos: [veh.x - vch * 22, 11.5, veh.z - vsh * 22],
+        pos: [veh.x - vch * 22 * zMul, Math.max(5, 11.5 * zMul), veh.z - vsh * 22 * zMul],
         target: [veh.x + vch * 14, 1.8, veh.z + vsh * 14],
         fov: 54,
         povKind: 'chase'

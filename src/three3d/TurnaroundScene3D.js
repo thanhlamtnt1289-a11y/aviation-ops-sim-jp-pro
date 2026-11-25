@@ -6,6 +6,8 @@ import {
   AIRCRAFT_3D_SPECS,
   AIRLINE_LIVERIES,
   createProceduralAirliner3D,
+  createJetBlastHazardZone3D,
+  animateJetBlastZone3D,
   animateAircraft3D,
   resolveAircraft3DType
 } from './aircraft_3d_models.js';
@@ -279,18 +281,22 @@ export class TurnaroundScene3D {
     this.spotId = opts.spotId || null;
     this.cameraPreset = 'spot'; // 'overview' | 'tower' | 'spot'
     this.doneSteps = new Set();
+    this.showBlastZone = true; // Shows glowing Jet Blast + Engine Intake danger zone clearly!
 
-    // Renderer (logarithmicDepthBuffer eliminates 100% of aerial Z-fighting at 2,000-9,500m altitude!)
+    // Renderer (standard depth buffer + dynamic altitude-scaled near plane -> 60fps zero-lag & zero Z-fighting!)
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
-      logarithmicDepthBuffer: true,
       powerPreference: 'high-performance'
     });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.1;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this._onCtxLost = e => { e.preventDefault(); this.stop(); };
+    this._onCtxRestored = () => { this.start(); };
+    canvas.addEventListener('webglcontextlost', this._onCtxLost);
+    canvas.addEventListener('webglcontextrestored', this._onCtxRestored);
 
     // Scene & Lighting
     this.scene = new THREE.Scene();
@@ -302,7 +308,7 @@ export class TurnaroundScene3D {
     this.sunLight = new THREE.DirectionalLight(0xfff7e8, 2.2);
     this.sunLight.position.set(600, 950, 450);
     this.sunLight.castShadow = true;
-    this.sunLight.shadow.mapSize.set(2048, 2048);
+    this.sunLight.shadow.mapSize.set(1024, 1024);
     this.sunLight.shadow.camera.near = 100;
     this.sunLight.shadow.camera.far = 3000;
     const sd = 240;
@@ -881,11 +887,13 @@ export class TurnaroundScene3D {
     this.sunLight.target.position.set(sp.pos.x, 0, sp.pos.z);
     this.sunLight.position.set(sp.pos.x + 280, 420, sp.pos.z + 240);
 
-    // 1. Procedural Airliner (True real-world meters!)
+    // 1. Real Sculpted GLB Airliner + High-Visibility Jet Blast & Engine Ingestion Danger Zone!
     this.aircraftMesh = createProceduralAirliner3D(this.aircraftType, this.liveryId);
+    const spec = AIRCRAFT_3D_SPECS[this.aircraftType];
+    this.blastZone = createJetBlastHazardZone3D(spec);
+    this.aircraftMesh.add(this.blastZone);
     this.spotOpsGroup.add(this.aircraftMesh);
 
-    const spec = AIRCRAFT_3D_SPECS[this.aircraftType];
     const ap = spec.attachPoints;
 
     // 2. Wheel Chocks & Safety Cones (Visible after 'chock')
@@ -1052,13 +1060,17 @@ export class TurnaroundScene3D {
     }
   }
 
+  setShowBlastZone(flag) {
+    this.showBlastZone = Boolean(flag);
+  }
+
   update(dt, timeSec) {
-    // Resize cleanly to CSS box
+    // Resize cleanly to CSS box (cap DPR at 1.5 to prevent Retina GPU zoom-out lag)
     const w = this.canvas.clientWidth || 720;
     const h = this.canvas.clientHeight || 400;
-    if (this.canvas.width !== Math.floor(w * Math.min(window.devicePixelRatio || 1, 2)) ||
-        this.canvas.height !== Math.floor(h * Math.min(window.devicePixelRatio || 1, 2))) {
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    if (this.canvas.width !== Math.floor(w * dpr) || this.canvas.height !== Math.floor(h * dpr)) {
+      this.renderer.setPixelRatio(dpr);
       this.renderer.setSize(w, h, false);
       this.camera.aspect = w / h;
       this.camera.updateProjectionMatrix();
@@ -1068,7 +1080,7 @@ export class TurnaroundScene3D {
     this.waterUniforms.uTime.value = timeSec;
     if (this.radarDish) this.radarDish.rotation.y += dt * 1.4;
 
-    // Animate aircraft fans & anti-collision lights
+    // Animate aircraft lights & High-Visibility Rear Jet Blast + Front Intake Danger Zone
     const beaconOn = !this.doneSteps.has('chock') || this.pushbackActive;
     animateAircraft3D(this.aircraftMesh, timeSec, {
       dt,
@@ -1076,6 +1088,9 @@ export class TurnaroundScene3D {
       beaconOn,
       strobeOn: this.pushbackProgress > 0.55
     });
+    if (this.blastZone) {
+      animateJetBlastZone3D(this.blastZone, timeSec, this.showBlastZone || beaconOn);
+    }
 
     // Update GSE actors along GSE Service Road waypoints
     for (const actor of Object.values(this.gseActors)) {
@@ -1132,11 +1147,18 @@ export class TurnaroundScene3D {
 
     const { radius, theta, phi } = this.orbit.spherical;
     const sinPhi = Math.sin(phi);
+    const camY = Math.max(2.5, this.orbit.target.y + radius * Math.cos(phi));
     this.camera.position.set(
       this.orbit.target.x + radius * sinPhi * Math.sin(theta),
-      Math.max(2.5, this.orbit.target.y + radius * Math.cos(phi)),
+      camY,
       this.orbit.target.z + radius * sinPhi * Math.cos(theta)
     );
+    // Dynamic altitude-scaled near plane -> ultra-high depth precision at 2,350m with zero GPU Early-Z penalty!
+    const desiredNear = Math.max(1.8, Math.min(45, camY * 0.018));
+    if (Math.abs(this.camera.near - desiredNear) > 0.5) {
+      this.camera.near = desiredNear;
+      this.camera.updateProjectionMatrix();
+    }
     this.camera.lookAt(this.orbit.target);
 
     this.renderer.render(this.scene, this.camera);

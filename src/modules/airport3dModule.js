@@ -83,6 +83,9 @@ export const a3d = {
   camShake: 0,
   lastSpotterWarnTime: 0,
   cam: { tx: 0, ty: 2, tz: 10, dist: 105, yaw: 0.45, pitch: 0.50 },
+  driveZoom: 1.0,
+  _lastMinimapMs: 0,
+  _lastBkDomMs: 0,
   keys: { up: false, down: false, left: false, right: false, brake: false },
   dragging: false,
   lastMouse: { x: 0, y: 0 },
@@ -653,20 +656,24 @@ function stepPhysics(dt, now) {
       }
 
       a3d.backingStatus = { hitchDeg, latErr, angErr, depthPct, jackknife, parked, hintJa, hintVi, hintEn };
-      const bkEl = document.getElementById('a3d-backing-live');
-      if (bkEl) {
-        const badgeCls = parked ? 'badge-ok' : (jackknife ? 'badge-danger' : 'badge-accent');
-        bkEl.innerHTML = `
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
-            <span class="badge ${jackknife ? 'badge-danger' : (hitchDeg > 40 ? 'badge-warn' : 'badge-ok')}">${t('折れ角', 'Góc gập moóc', 'Hitch')}: ${hitchDeg}°</span>
-            <span class="badge badge-neutral">${t('横ズレ', 'Lệch ngang', 'Lat')}: ${latErr >= 0 ? '+' : ''}${latErr}m</span>
-            <span class="badge badge-neutral">${t('角度差', 'Lệch góc', 'Angle')}: ${angErr}°</span>
-            <span class="badge ${badgeCls}">${t('進入', 'Vào chuồng', 'Depth')}: ${depthPct}%</span>
-          </div>
-          <div class="alert ${parked ? 'alert-ok' : (jackknife ? 'alert-danger' : 'alert-info')}" style="margin:0;padding:7px 9px;font-size:12px;">
-            ${t(hintJa, hintVi, hintEn)}
-          </div>
-        `;
+      // Throttle DOM innerHTML updates to ~8fps (prevents 60fps DOM thrashing & lag!)
+      if (now - (a3d._lastBkDomMs || 0) > 125) {
+        a3d._lastBkDomMs = now;
+        const bkEl = document.getElementById('a3d-backing-live');
+        if (bkEl) {
+          const badgeCls = parked ? 'badge-ok' : (jackknife ? 'badge-danger' : 'badge-accent');
+          bkEl.innerHTML = `
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+              <span class="badge ${jackknife ? 'badge-danger' : (hitchDeg > 40 ? 'badge-warn' : 'badge-ok')}">${t('折れ角', 'Góc gập moóc', 'Hitch')}: ${hitchDeg}°</span>
+              <span class="badge badge-neutral">${t('横ズレ', 'Lệch ngang', 'Lat')}: ${latErr >= 0 ? '+' : ''}${latErr}m</span>
+              <span class="badge badge-neutral">${t('角度差', 'Lệch góc', 'Angle')}: ${angErr}°</span>
+              <span class="badge ${badgeCls}">${t('進入', 'Vào chuồng', 'Depth')}: ${depthPct}%</span>
+            </div>
+            <div class="alert ${parked ? 'alert-ok' : (jackknife ? 'alert-danger' : 'alert-info')}" style="margin:0;padding:7px 9px;font-size:12px;">
+              ${t(hintJa, hintVi, hintEn)}
+            </div>
+          `;
+        }
       }
     }
   }
@@ -733,10 +740,14 @@ export function stopAirport3dLoop() {
 }
 
 function drawNgoMinimap() {
+  const now = performance.now();
+  if (now - (a3d._lastMinimapMs || 0) < 120) return; // Throttle to ~8fps (zero GPU bitmap churn!)
+  a3d._lastMinimapMs = now;
   const c = document.getElementById('a3d-minimap');
-  if (!c) return;
+  if (!c || c.offsetParent === null) return;
+  const W = 230, H = 145;
+  if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
   const ctx = c.getContext('2d');
-  const W = c.width = 230, H = c.height = 145;
   const mx = wx => ((wx + 290) / 580) * W;
   const mz = wz => ((wz + 165) / 280) * H;
   // Sea & Island
@@ -1147,9 +1158,21 @@ export function renderAirport3dUI() {
     });
   }
 
-  // Orbit drag + wheel zoom
+  // Orbit drag + smooth wheel zoom (in Drive chase/backing/top, zooms around vehicle smoothly without yanking away!)
   const canvas = document.getElementById('airport3d-gl');
-  canvas.onmousedown = e => { a3d.dragging = true; a3d.lastMouse = { x: e.clientX, y: e.clientY }; if (a3d.camMode !== 'orbit') setA3dViewpoint('orbit'); };
+  canvas.onmousedown = e => {
+    a3d.dragging = true;
+    a3d.lastMouse = { x: e.clientX, y: e.clientY };
+    if (a3d.camMode !== 'orbit') {
+      if (a3d.subtab === 'drive') {
+        a3d.cam.tx = a3d.veh.x;
+        a3d.cam.ty = 2;
+        a3d.cam.tz = a3d.veh.z;
+        a3d.cam.dist = Math.max(24, Math.min(90, 32 * (a3d.driveZoom || 1)));
+      }
+      setA3dViewpoint('orbit');
+    }
+  };
   canvas.onmousemove = e => {
     if (!a3d.dragging) return;
     const dx = e.clientX - a3d.lastMouse.x, dy = e.clientY - a3d.lastMouse.y;
@@ -1159,7 +1182,15 @@ export function renderAirport3dUI() {
   };
   canvas.onmouseup = () => { a3d.dragging = false; };
   canvas.onmouseleave = () => { a3d.dragging = false; };
-  canvas.onwheel = e => { e.preventDefault(); if (a3d.camMode !== 'orbit') setA3dViewpoint('orbit'); a3d.cam.dist = Math.max(22, Math.min(280, a3d.cam.dist + e.deltaY * 0.14)); };
+  canvas.onwheel = e => {
+    e.preventDefault();
+    if (a3d.subtab === 'drive' && (a3d.camMode === 'chase' || a3d.camMode === 'backing' || a3d.camMode === 'top')) {
+      a3d.driveZoom = Math.max(0.55, Math.min(2.6, (a3d.driveZoom || 1.0) + e.deltaY * 0.0012));
+      return;
+    }
+    if (a3d.camMode !== 'orbit') setA3dViewpoint('orbit');
+    a3d.cam.dist = Math.max(18, Math.min(250, a3d.cam.dist + e.deltaY * 0.12));
+  };
 
   startAirport3dLoop();
 }

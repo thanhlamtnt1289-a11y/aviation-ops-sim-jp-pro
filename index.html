@@ -14,11 +14,12 @@
   <link rel="icon" type="image/svg+xml" href="./public/icon.svg" />
   <link rel="apple-touch-icon" href="./public/icon.svg" />
   <link rel="stylesheet" href="./src/styles/app.css" />
-  <!-- Zero-Node 100% Local Offline Three.js Import Map (Zero external CDN dependency) -->
+  <!-- Zero-Node 100% Local Offline Three.js + GLTFLoader Import Map (Zero external CDN dependency) -->
   <script type="importmap">
   {
     "imports": {
-      "three": "./vendor/three.module.min.js"
+      "three": "./vendor/three.module.min.js",
+      "three/addons/loaders/GLTFLoader.js": "./vendor/GLTFLoader.js"
     }
   }
   </script>

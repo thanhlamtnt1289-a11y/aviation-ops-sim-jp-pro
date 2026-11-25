@@ -3,7 +3,13 @@ import * as THREE from 'three';
 import { AIRCRAFT_PROFILES } from '../data/aircraft.js';
 import { A3D_AIRPORTS, A3D_SPOTS, A3D_CLOUDS, A3D_FLIGHT_PHASES, computeFlightCyclePose, computeViewpointCamera } from '../data/airports.js';
 import { createDetailedAirliner3D } from './aircraftBuilder3D.js';
-import { createProceduralAirliner3D } from './aircraft_3d_models.js';
+import {
+  AIRCRAFT_3D_SPECS,
+  createProceduralAirliner3D,
+  createJetBlastHazardZone3D,
+  animateJetBlastZone3D,
+  resolveAircraft3DType
+} from './aircraft_3d_models.js';
 import {
   createOpenCabTowingTractor3D,
   createBaggageCart3D,
@@ -156,7 +162,7 @@ function makeRoadMarkingTexture(text, bg = '#334155', fg = '#FACC15', border = n
     ctx.strokeRect(10, 10, 492, 140);
   }
   ctx.fillStyle = fg;
-  ctx.font = '900 66px "Be Vietnam Pro", "Noto Sans JP", sans-serif';
+  ctx.font = '900 62px "Be Vietnam Pro", "Hiragino Sans", "Noto Sans JP", -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, 256, 84);
@@ -289,18 +295,18 @@ export class AirportScene3D {
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
-      logarithmicDepthBuffer: true,
       powerPreference: 'high-performance'
     });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.08;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    canvas.addEventListener('webglcontextlost', e => e.preventDefault());
 
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.Fog(0xbcdaf5, 175, 680);
 
-    this.camera = new THREE.PerspectiveCamera(48, 16 / 9, 1.2, 1600);
+    this.camera = new THREE.PerspectiveCamera(48, 16 / 9, 1.4, 1500);
     this.camera.position.set(38, 22, 54);
     this.smoothCam = null;
 
@@ -308,7 +314,7 @@ export class AirportScene3D {
     this.sunLight = new THREE.DirectionalLight(0xfff8eb, 2.1);
     this.sunLight.position.set(110, 195, 95);
     this.sunLight.castShadow = true;
-    this.sunLight.shadow.mapSize.set(2048, 2048);
+    this.sunLight.shadow.mapSize.set(1024, 1024);
     this.sunLight.shadow.camera.near = 20;
     this.sunLight.shadow.camera.far = 520;
     const d = 165;
@@ -1126,15 +1132,23 @@ export class AirportScene3D {
     if (this.builtFleetId === key && this.activeAc) return;
     if (this.activeAc) this.dynamicGroup.remove(this.activeAc);
     this.builtFleetId = key;
-    const highDetailIds = new Set(['B789', 'B788', 'B773', 'B77W', 'A321', 'B738']);
-    if (highDetailIds.has(acId)) {
+    if (acId !== 'DHC8' && acId !== 'B77F') {
+      // Use real sculpted GLB commercial airliner models (amvlab/aircraft-models CC-BY 4.0)!
+      const resolved = resolveAircraft3DType(acId);
+      const spec = AIRCRAFT_3D_SPECS[resolved];
       this.activeAc = createProceduralAirliner3D(acId, liveryId);
-      // Scale slightly so 62.8m-73.9m true-scale widebodies fit Spot 7 apron proportions cleanly in Module G
-      const s = (acId === 'B773' || acId === 'B77W') ? 0.76 : ((acId === 'B789' || acId === 'B788') ? 0.80 : 0.92);
+      const s = (resolved === 'B77W') ? 0.72 : (resolved === 'B789' ? 0.78 : 0.90);
       this.activeAc.scale.setScalar(s);
+      // Attach High-Visibility Rear Jet Blast + Engine Intake Suction Danger Zone directly to aircraft!
+      this.activeBlastZone = createJetBlastHazardZone3D(spec);
+      this.activeBlastZone.visible = false;
+      this.activeAc.add(this.activeBlastZone);
     } else {
       const prof = AIRCRAFT_PROFILES[acId] || AIRCRAFT_PROFILES.A320;
       this.activeAc = createDetailedAirliner3D(prof.visual3d || {});
+      this.activeBlastZone = createJetBlastHazardZone3D(AIRCRAFT_3D_SPECS.B789);
+      this.activeBlastZone.visible = false;
+      this.activeAc.add(this.activeBlastZone);
     }
     this.activeAc.position.set(0, 0, 10);
     this.dynamicGroup.add(this.activeAc);
@@ -1176,7 +1190,7 @@ export class AirportScene3D {
     const W = Math.max(240, Math.round(rect.width));
     const H = Math.max(200, Math.round(rect.height));
     const rawDpr = window.devicePixelRatio || 1;
-    const dpr = state.gfxQuality === 'low' ? 0.85 : (state.gfxQuality === 'med' ? Math.min(rawDpr, 1.25) : Math.min(rawDpr, 2));
+    const dpr = state.gfxQuality === 'low' ? 0.85 : (state.gfxQuality === 'med' ? Math.min(rawDpr, 1.2) : Math.min(rawDpr, 1.5));
 
     if (this.canvas.width !== Math.round(W * dpr) || this.canvas.height !== Math.round(H * dpr)) {
       this.renderer.setPixelRatio(dpr);
@@ -1349,15 +1363,8 @@ export class AirportScene3D {
         }
       });
 
-      // Live Jet Blast Plume behind active scenario aircraft when engines running!
-      if (this.jetBlastCone) {
-        this.jetBlastCone.visible = Boolean(drvSc && drvSc.blastOn);
-        if (this.jetBlastCone.visible) {
-          this.jetBlastCone.position.set(acPose.x, 0, acPose.z);
-          this.jetBlastCone.rotation.y = Math.PI / 2 - acPose.heading;
-          this.jetBlastCone.material.opacity = 0.18 + Math.sin(tSec * 12) * 0.07;
-        }
-      }
+      // Hide legacy faint cone; high-visibility activeBlastZone attached to activeAc renders the full Jet Blast + Intake danger zone!
+      if (this.jetBlastCone) this.jetBlastCone.visible = false;
 
       // Collision Impact Shockwave Ring
       if (this.impactRing) {
@@ -1416,14 +1423,29 @@ export class AirportScene3D {
     this.activeAc.rotation.x = -(acPose.pitch || 0);
     if (this.activeAc.userData.gearGroup) this.activeAc.userData.gearGroup.visible = acPose.y < 22;
 
-    // Spin Engine Fans & Blink Aircraft Lights
+    // Spin Engine Fans, Blink Aircraft Lights & Show High-Visibility Jet Blast Danger Zone whenever engines/beacon active!
     const fanSpeed = acPose.beaconOn ? 0.38 : 0.025;
     this.activeAc.userData.fans.forEach(f => { f.rotation.z += fanSpeed; });
     const lts = this.activeAc.userData.lights;
     if (lts.beaconTop) lts.beaconTop.visible = Boolean(acPose.beaconOn && beaconBlink);
+    if (lts.beaconBot) lts.beaconBot.visible = Boolean(acPose.beaconOn && beaconBlink);
     if (lts.strobeL) lts.strobeL.visible = Boolean(acPose.beaconOn && strobeOn);
     if (lts.strobeR) lts.strobeR.visible = Boolean(acPose.beaconOn && strobeOn);
+    if (lts.strobe_L) lts.strobe_L.visible = Boolean(acPose.beaconOn && strobeOn);
+    if (lts.strobe_R) lts.strobe_R.visible = Boolean(acPose.beaconOn && strobeOn);
     if (lts.noseLight) lts.noseLight.visible = Boolean(acPose.beaconOn);
+
+    // Show vivid glowing Jet Blast + Engine Intake Suction Danger Zone on ground whenever engines/beacons/blast are active!
+    const onGround = acPose.y < 1.5;
+    const drvSc2 = state.ngoLiveAc || null;
+    const blastShouldShow = onGround && (
+      Boolean(drvSc2 && drvSc2.blastOn) ||
+      Boolean(acPose.beaconOn) ||
+      Boolean(state.blastActive)
+    );
+    if (this.activeBlastZone) {
+      animateJetBlastZone3D(this.activeBlastZone, tSec, blastShouldShow);
+    }
 
     // Camera Smooth Damping
     let targetCam;
@@ -1432,10 +1454,11 @@ export class AirportScene3D {
       targetCam = { pos: [Math.cos(ang) * 34 - 6, 12.5, 10 + Math.sin(ang) * 32], target: [0, 3.8, 10], fov: 44, povKind: 'compact' };
     } else {
       const isBack = state.ngoDriveScenario === 'SC5' || state.ngoVehMode === 'backing';
-      const camExtra = isBack ? {
-        backingBay: state.backingBay || { cx: 192, cz: 26 },
-        trailerPose: (Array.isArray(state.cartPoses) && state.cartPoses[0]) ? state.cartPoses[0] : state.veh
-      } : null;
+      const camExtra = {
+        driveZoom: state.driveZoom || 1.0,
+        backingBay: isBack ? (state.backingBay || { cx: 192, cz: 26 }) : null,
+        trailerPose: isBack && Array.isArray(state.cartPoses) && state.cartPoses[0] ? state.cartPoses[0] : state.veh
+      };
       targetCam = computeViewpointCamera(state.camMode, isFlight, flightPose, state.veh, state.cam, state.flightPhaseIdx, camExtra);
     }
 
@@ -1451,6 +1474,7 @@ export class AirportScene3D {
     }
 
     this.camera.fov = this.smoothCam.fov;
+    this.camera.near = Math.max(1.2, Math.min(18, this.smoothCam.pos[1] * 0.015));
     this.camera.updateProjectionMatrix();
     const shk = state.camShake || 0;
     const sx = shk > 0.01 ? (Math.random() - 0.5) * shk * 1.4 : 0;
@@ -1518,7 +1542,7 @@ export class AirportScene3D {
       if (state.labelMode === 'smart' && priority < 1) return;
       const p = this.projectToScreen(pt, W, H);
       if (!p || p.x < -30 || p.x > W + 30 || p.y < 44 || p.y > H - 46) return;
-      ctx.font = '600 11px "Be Vietnam Pro", "Noto Sans JP", system-ui, sans-serif';
+      ctx.font = '600 11px "Be Vietnam Pro", "Hiragino Sans", "Noto Sans JP", -apple-system, sans-serif';
       const tw = ctx.measureText(text).width + 12;
       const th = 20;
       let rx = p.x - tw / 2, ry = p.y - th / 2;

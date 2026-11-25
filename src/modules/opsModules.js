@@ -18,6 +18,7 @@ export const taState = {
   aircraftType: 'B789',
   liveryId: appState.livery || 'ANA',
   cameraPreset: 'spot', // 'overview' | 'tower' | 'spot'
+  showBlastZone: true,
   done: [],
   elapsedMin: 0,
   safetyScore: 100,
@@ -139,6 +140,7 @@ function renderTurnaroundControlsAndChecklist() {
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <span class="badge badge-accent">⏱ ${taState.elapsedMin} / ${ap.targetMin} min</span>
             <span class="badge ${taState.safetyScore >= 85 ? 'badge-ok' : 'badge-danger'}">🛡 Safety ${taState.safetyScore}pt</span>
+            <button class="btn btn-sm ${taState.showBlastZone ? 'btn-danger-outline' : ''}" id="ta-toggle-blast">🔥 ${t('ブラスト危険域', 'Vùng nguy hiểm sau máy bay', 'Jet Blast Zone')}</button>
             <button class="btn btn-sm" id="ta-sync-wb">⚖ ${t('W&Bへ同期', 'Mở W&B tàu bay này', 'Sync to W&B')}</button>
             <button class="btn btn-sm" id="ta-reset">↺ ${t('リセット', 'Làm lại', 'Reset')}</button>
           </div>
@@ -315,6 +317,14 @@ function renderTurnaroundControlsAndChecklist() {
     spotSel.onchange = () => {
       taState.spotId = spotSel.value;
       if (taScene3d) taScene3d.setSpot(taState.spotId);
+      renderTurnaroundControlsAndChecklist();
+    };
+  }
+  const blastBtn = document.getElementById('ta-toggle-blast');
+  if (blastBtn) {
+    blastBtn.onclick = () => {
+      taState.showBlastZone = !taState.showBlastZone;
+      if (taScene3d) taScene3d.setShowBlastZone(taState.showBlastZone);
       renderTurnaroundControlsAndChecklist();
     };
   }
