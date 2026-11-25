@@ -59,7 +59,9 @@ function makeGeoRunwayTexture(rwyPair = '36/18', isSnow = false) {
     ctx.fillRect(x, 1924, 20, 96);
   }
 
-  // Runway Numbers (rA at bottom/A-end, rB at top/B-end)
+  // Runway Numbers:
+  // PlaneGeometry rotated -PI/2 maps canvas top (y=0, v=1) -> local -Z (thresholdA = rA!)
+  // and canvas bottom (y=2048, v=0) -> local +Z (thresholdB = rB!)
   const drawNum = (yPos, rot, txt) => {
     ctx.save();
     ctx.fillStyle = '#F8FAFC';
@@ -71,8 +73,8 @@ function makeGeoRunwayTexture(rwyPair = '36/18', isSnow = false) {
     ctx.fillText(txt, 0, 0);
     ctx.restore();
   };
-  drawNum(205, Math.PI, rB);
-  drawNum(1843, 0, rA);
+  drawNum(205, Math.PI, rA);
+  drawNum(1843, 0, rB);
 
   // Aiming point bars
   ctx.fillStyle = '#E5ECF4';
@@ -611,10 +613,7 @@ export class TurnaroundScene3D {
     for (const rwy of g.runwaysXYZ) {
       const rwyTex = makeGeoRunwayTexture(rwy.label, isSnow);
       const rwyMat = new THREE.MeshStandardMaterial({ map: rwyTex, roughness: 0.72, metalness: 0.08 });
-      const rwyMesh = new THREE.Mesh(new THREE.PlaneGeometry(rwy.widthM, rwy.actualLen), rwyMat);
-      rwyMesh.rotation.x = -Math.PI / 2;
-      rwyMesh.rotation.z = -rwy.rotY;
-      // Align PlaneGeometry cleanly using group wrapper
+      // Align PlaneGeometry cleanly using group wrapper (local -Z = thresholdA, local +Z = thresholdB)
       const rwyGroup = new THREE.Group();
       rwyGroup.position.set(rwy.cx, 0.14, rwy.cz);
       rwyGroup.rotation.y = rwy.rotY;
@@ -705,7 +704,8 @@ export class TurnaroundScene3D {
     for (const tm of g.terminalsXYZ) {
       const tg = new THREE.Group();
       tg.position.set(tm.pos.x, 0, tm.pos.z);
-      tg.rotation.y = (tm.rotDeg * Math.PI) / 180;
+      // Compass heading clockwise -> negative rotation around Three.js +Y axis!
+      tg.rotation.y = -(tm.rotDeg * Math.PI) / 180;
 
       const wallMat = new THREE.MeshStandardMaterial({ map: this.texGlass, color: 0xdbeafe, roughness: 0.25, metalness: 0.45 });
       const roofMat = new THREE.MeshStandardMaterial({ color: tm.color || 0xe2e8f0, roughness: 0.48, metalness: 0.22 });
