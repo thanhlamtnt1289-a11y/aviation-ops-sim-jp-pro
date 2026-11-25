@@ -51,7 +51,7 @@ export const a3d = {
   ngoVehMode: 'standard', // 'standard' (TT 30km/h) | 'towing' (TT + 6 carts 15km/h) | 'high38' (>3.8m) | 'backing' (Semi-Trailer Reverse Bay)
   ngoDriveScenario: 'SC1', // 'SC1' | 'SC2' | 'SC3' | 'SC4' | 'SC5' (Reverse Trailer Bay Parking)
   ngoScenarioTime: 0,
-  backingBay: { cx: 104, cz: 36, len: 11.4, w: 5.0 },
+  backingBay: { cx: 192, cz: 26, len: 11.4, w: 5.0 },
   backingStatus: { hitchDeg: 0, latErr: 0, angErr: 0, depthPct: 0, jackknife: false, parked: false, hintJa: '', hintVi: '', hintEn: '' },
   prevHitch: null,
   trailerHeadings: [0, 0, 0, 0, 0, 0],
@@ -348,18 +348,18 @@ function wrapAngle(a) {
 }
 
 function resetBackingScenario() {
-  // Position Open-Cab TT facing West (-X) with slight lateral offset so trailer tail points East (+X) toward BAY 01 (104, 36)!
+  // Wide-open Cargo Apron Practice Yard: TT faces West (-X), trailer tail points East (+X) toward BAY 01 (192, 26)!
   a3d.ngoDriveScenario = 'SC5';
   a3d.ngoVehMode = 'backing';
   a3d.ngoScenarioTime = 0;
-  a3d.veh.x = 83.5;
-  a3d.veh.z = 31.6;
-  a3d.veh.heading = Math.PI - 0.14;
+  a3d.veh.x = 171.0;
+  a3d.veh.z = 22.2;
+  a3d.veh.heading = Math.PI - 0.08;
   a3d.veh.speed = 0;
   a3d.veh.steerAngle = 0;
   a3d.prevHitch = null;
-  a3d.trailerHeadings = [Math.PI - 0.14, Math.PI, Math.PI, Math.PI, Math.PI, Math.PI];
-  a3d.backingStatus = { hitchDeg: 0, latErr: -4.4, angErr: 8, depthPct: 0, jackknife: false, parked: false, hintJa: '', hintVi: '', hintEn: '' };
+  a3d.trailerHeadings = [Math.PI - 0.08, Math.PI, Math.PI, Math.PI, Math.PI, Math.PI];
+  a3d.backingStatus = { hitchDeg: 0, latErr: -3.8, angErr: 5, depthPct: 0, jackknife: false, parked: false, hintJa: '', hintVi: '', hintEn: '' };
   a3d.camMode = 'backing';
   const hx = a3d.veh.x - Math.cos(a3d.veh.heading) * 1.95;
   const hz = a3d.veh.z - Math.sin(a3d.veh.heading) * 1.95;
@@ -458,14 +458,16 @@ function stepPhysics(dt, now) {
   const targetSteer = (a3d.keys.left ? -0.52 : 0) + (a3d.keys.right ? 0.52 : 0);
   v.steerAngle = (v.steerAngle || 0) + (targetSteer - (v.steerAngle || 0)) * Math.min(1, dt * 11);
 
+  const isBackMode = a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing';
   if (a3d.keys.brake) v.speed = Math.abs(v.speed) < 0.35 ? 0 : v.speed - Math.sign(v.speed) * 20 * dt;
-  else if (a3d.keys.up) v.speed = Math.min(12.2, v.speed + 9.2 * dt);
-  else if (a3d.keys.down) v.speed = Math.max(-4.5, v.speed - 9.0 * dt);
-  else v.speed = Math.abs(v.speed) < 0.15 ? 0 : v.speed - Math.sign(v.speed) * 4.8 * dt;
+  else if (a3d.keys.up) v.speed = Math.min(isBackMode ? 7.5 : 12.2, v.speed + 8.5 * dt);
+  else if (a3d.keys.down) v.speed = Math.max(isBackMode ? -3.4 : -4.5, v.speed - 7.5 * dt);
+  else v.speed = Math.abs(v.speed) < 0.15 ? 0 : v.speed - Math.sign(v.speed) * 5.2 * dt;
 
-  if (Math.abs(v.speed) > 0.12) {
+  if (Math.abs(v.speed) > 0.10) {
     const dir = v.speed >= 0 ? 1 : -1;
-    v.heading += v.steerAngle * 3.6 * dt * dir * Math.min(1, Math.abs(v.speed) / 3.5);
+    const steerGain = (isBackMode && v.speed < 0) ? 2.05 : 3.4;
+    v.heading += v.steerAngle * steerGain * dt * dir * Math.min(1, Math.abs(v.speed) / 3.0);
   }
   const nx = Math.max(-270, Math.min(270, v.x + Math.cos(v.heading) * v.speed * dt));
   const nz = Math.max(-148, Math.min(96, v.z + Math.sin(v.heading) * v.speed * dt));
@@ -581,8 +583,8 @@ function stepPhysics(dt, now) {
       const jackknife = hitchDeg >= 62;
       const latErr = Number((tr.z - bay.cz).toFixed(2));
       const angErr = Math.round(Math.abs(wrapAngle(tr.heading - Math.PI)) * 180 / Math.PI);
-      // Bay X spans [98.3, 109.7]; trailer center enters cleanly around x = 102.5..105.8
-      const depthPct = Math.max(0, Math.min(100, Math.round(((tr.x - 95.0) / 8.8) * 100)));
+      // Bay X spans [186.3, 197.7]; trailer center enters cleanly around x = 190.5..193.8
+      const depthPct = Math.max(0, Math.min(100, Math.round(((tr.x - 183.0) / 8.8) * 100)));
       const tailX = tr.x - Math.cos(tr.heading) * 3.1;
       const tailZ = tr.z - Math.sin(tr.heading) * 3.1;
 
@@ -636,13 +638,13 @@ function stepPhysics(dt, now) {
         hintVi = '🟢 Đã lọt chuẩn vào chuồng! Phanh dừng hẳn (Space) để chốt đạt chuẩn PASS!';
         hintEn = '🟢 Inside Bay! Brake to a full stop (Space) to complete PASS!';
       } else if (latErr < -0.65) {
-        hintJa = '↙ バック(▼)＋右ハンドル(▶)で荷台後端を南側（枠中央）へ振る → その後左(◀)で追従！';
-        hintVi = '↪ Lùi (▼) + đánh lái PHẢI (▶) để bẻ đuôi moóc dịch sang TRÁI vào tâm chuồng → rồi trả TRÁI (◀) bám thẳng!';
-        hintEn = '↪ Reverse (▼) + Steer RIGHT (▶) to swing trailer tail toward bay center, then chase LEFT (◀)!';
+        hintJa = '↙ バック(▼)＋左ハンドル(◀)で荷台後端を枠中央(+Z側)へ誘導 → 揃ったら右(▶)で追従！';
+        hintVi = '↪ Lùi (▼) + đánh lái TRÁI (◀) để đẩy đuôi moóc dịch sang tâm BAY 01 → rồi trả PHẢI (▶) bám thẳng!';
+        hintEn = '↪ Reverse (▼) + Steer LEFT (◀) to swing trailer tail into bay center, then chase RIGHT (▶)!';
       } else if (latErr > 0.65) {
-        hintJa = '↖ バック(▼)＋左ハンドル(◀)で荷台後端を北側（枠中央）へ振る → その後右(▶)で追従！';
-        hintVi = '↩ Lùi (▼) + đánh lái TRÁI (◀) để bẻ đuôi moóc dịch sang PHẢI vào tâm chuồng → rồi trả PHẢI (▶) bám thẳng!';
-        hintEn = '↩ Reverse (▼) + Steer LEFT (◀) to swing trailer tail toward bay center, then chase RIGHT (▶)!';
+        hintJa = '↖ バック(▼)＋右ハンドル(▶)で荷台後端を枠中央(-Z側)へ誘導 → 揃ったら左(◀)で追従！';
+        hintVi = '↩ Lùi (▼) + đánh lái PHẢI (▶) để đẩy đuôi moóc dịch vào tâm BAY 01 → rồi trả TRÁI (◀) bám thẳng!';
+        hintEn = '↩ Reverse (▼) + Steer RIGHT (▶) to swing trailer tail into bay center, then chase LEFT (◀)!';
       } else {
         hintJa = '🎯 枠中心線に一致！小刻みに微調整しながらゆっくり後退(▼)してBAY 01奥へ！';
         hintVi = '🎯 Đuôi moóc đã thẳng tâm chuồng! Giữ tay lái êm, lùi chậm (▼) vào vạch BAY 01!';
@@ -940,7 +942,7 @@ export function renderAirport3dUI() {
           <div class="airport3d-stage ${a3d.expanded ? 'expanded' : ''}" id="a3d-stage-box">
             <canvas id="airport3d-gl"></canvas>
             <canvas id="airport3d-hud2d"></canvas>
-            <div class="a3d-minimap-wrap" title="NGO Centrair Official Tactical Map">
+            <div class="a3d-minimap-wrap" style="${(a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing') ? 'display:none;' : ''}" title="NGO Centrair Official Tactical Map">
               <canvas id="a3d-minimap"></canvas>
             </div>
             <div class="raycast-toast" id="a3d-raycast-toast"></div>

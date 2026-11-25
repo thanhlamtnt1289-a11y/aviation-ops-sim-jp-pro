@@ -957,9 +957,9 @@ export class AirportScene3D {
     this.longSemiTrailer = semi;
     this.dynamicGroup.add(semi);
 
-    // Dedicated 3D Reverse Bay-Parking Dock Stall ("Chuồng Đỗ Rơ-Moóc Đầu Kéo" — visible in SC5!)
+    // Dedicated 3D Reverse Bay-Parking Dock Stall ("Chuồng Đỗ Rơ-Moóc Đầu Kéo" — wide-open Cargo Practice Yard!)
     const bayGrp = new THREE.Group();
-    bayGrp.position.set(104, 0.14, 36);
+    bayGrp.position.set(192, 0.14, 26);
     const bayLen = 11.4, bayW = 5.0;
     const bayBorderMat = new THREE.MeshBasicMaterial({
       color: 0xfacc15,
@@ -1433,7 +1433,7 @@ export class AirportScene3D {
     } else {
       const isBack = state.ngoDriveScenario === 'SC5' || state.ngoVehMode === 'backing';
       const camExtra = isBack ? {
-        backingBay: state.backingBay || { cx: 104, cz: 36 },
+        backingBay: state.backingBay || { cx: 192, cz: 26 },
         trailerPose: (Array.isArray(state.cartPoses) && state.cartPoses[0]) ? state.cartPoses[0] : state.veh
       } : null;
       targetCam = computeViewpointCamera(state.camMode, isFlight, flightPose, state.veh, state.cam, state.flightPhaseIdx, camExtra);
