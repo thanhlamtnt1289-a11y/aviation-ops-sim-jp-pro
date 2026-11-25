@@ -779,10 +779,15 @@ export class TurnaroundScene3D {
 
       // Red Equipment Restraint Area (ERA) perimeter box
       const eraW = 68, eraL = 78;
-      sg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(eraW, 0.04, 0.45), redEraMat), { position: new THREE.Vector3(0, 0, eraL * 0.5) }));
-      sg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(eraW, 0.04, 0.45), redEraMat), { position: new THREE.Vector3(0, 0, -eraL * 0.5) }));
-      sg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.04, eraL), redEraMat), { position: new THREE.Vector3(-eraW * 0.5, 0, 0) }));
-      sg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.04, eraL), redEraMat), { position: new THREE.Vector3(eraW * 0.5, 0, 0) }));
+      const addEraEdge = (w, d, x, z) => {
+        const edge = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, d), redEraMat);
+        edge.position.set(x, 0, z);
+        sg.add(edge);
+      };
+      addEraEdge(eraW, 0.45, 0, eraL * 0.5);
+      addEraEdge(eraW, 0.45, 0, -eraL * 0.5);
+      addEraEdge(0.45, eraL, -eraW * 0.5, 0);
+      addEraEdge(0.45, eraL, eraW * 0.5, 0);
 
       // Painted Spot Number Placard on Apron
       const numPlane = new THREE.Mesh(
