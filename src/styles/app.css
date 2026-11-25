@@ -1743,7 +1743,22 @@ body:not(.theme-dark) .seg-tab.active {
 
 /* 3D Avionics Deck & Responsive Mobile Drawer */
 .a3d-deck {
-  grid-template-columns: minmax(220px, 1.15fr) minmax(240px, 1.3fr) minmax(190px, 0.95fr);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+}
+.a3d-cluster {
+  flex: 1 1 200px;
+  min-width: 0;
+  border-right: none;
+  padding: 6px 9px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+.a3d-cluster:last-child {
+  padding-right: 9px;
 }
 .airport3d-stage #airport3d-gl,
 .airport3d-stage #airport3d-hud2d {
@@ -1752,10 +1767,10 @@ body:not(.theme-dark) .seg-tab.active {
 .a3d-minimap-wrap {
   position: absolute;
   left: 12px;
-  bottom: 50px;
+  bottom: 58px;
   z-index: 9;
-  width: 230px;
-  height: 145px;
+  width: 210px;
+  height: 132px;
   border-radius: 8px;
   overflow: hidden;
   border: 1.5px solid rgba(56, 189, 248, 0.55);

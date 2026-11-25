@@ -455,12 +455,12 @@ function drawNgoMinimap() {
   ctx.fillStyle = '#FACC15';
   ctx.fillRect(mx(-128), mz(-24), 10, 8);
   ctx.fillRect(mx(-238), mz(45), 10, 8);
-  // Labels
+  // Labels (clean inner padding so nothing clips at bottom edge)
   ctx.fillStyle = '#F8FAFC'; ctx.font = '700 8px monospace'; ctx.textAlign = 'center';
   ctx.fillText('RWY 36/18 (3500m)', mx(0), mz(-101));
-  ctx.fillText('T2 #71-80', mx(-186), mz(95));
-  ctx.fillText('T1 (#1-25)', mx(-25), mz(101));
-  ctx.fillText('CARGO #101+', mx(188), mz(98));
+  ctx.fillText('T2 #71-80', mx(-186), mz(90));
+  ctx.fillText('T1 (#1-25)', mx(-25), mz(92));
+  ctx.fillText('CARGO #101+', mx(188), mz(92));
   ctx.fillStyle = '#F472B6'; ctx.fillText('PERIMETER 40', mx(0), mz(-145));
   // Live GSE Vehicle Arrow
   const vx = mx(a3d.veh.x), vz = mz(a3d.veh.z);
