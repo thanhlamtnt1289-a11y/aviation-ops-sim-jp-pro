@@ -686,17 +686,52 @@ export const A3D_SPOTS = [
   ];
 
   // Solid 1:1 Meter Building & Infrastructure Colliders on Chubu Centrair (RJGG) Island
+  // ===================================================================================
+  // NGO NORTH CARGO DISTRICT (貨物地区) — single source of truth for 3D scene, obstacles & minimap
+  // Source: Centrair 将来構想 (2021) facility list & floor areas; centrair.jp cargo facility guide
+  //   第1国際貨物上屋 41,757㎡ · 第2 13,772㎡ · 第3 16,351㎡ · 国内エアライン上屋 2,020㎡ ·
+  //   国内フォワーダー上屋 1,590㎡ (all 2-storey steel) + トラック待機場, 燻蒸施設, 貨物事務棟, 北ゲート.
+  //   Landside faces carry the 20m truck canopy (庇); airside faces open onto the cargo apron (#101–#119).
+  // Footprints = floor area ÷ 2 floors. Building order along the apron is approximate.
+  // Coordinates: +X North, +Z East (airside face = low Z, landside/truck face = high Z).
+  // ===================================================================================
+  export const NGO_CARGO_DISTRICT = [
+    { id: 'ict1', kind: 'intl', x1: 560, x2: 830, z1: 78, z2: 156, h: 15.5, floorM2: 41757, canopy: true,
+      ja: '第1国際貨物上屋', vi: 'Kho hàng Quốc tế số 1', en: "Int'l Cargo Terminal 1", sign: 'INTERNATIONAL CARGO TERMINAL 1' },
+    { id: 'ict2', kind: 'intl', x1: 850, x2: 965, z1: 78, z2: 138, h: 13.5, floorM2: 13772, canopy: true,
+      ja: '第2国際貨物上屋', vi: 'Kho hàng Quốc tế số 2', en: "Int'l Cargo Terminal 2", sign: 'INTERNATIONAL CARGO TERMINAL 2' },
+    { id: 'ict3', kind: 'intl', x1: 985, x2: 1115, z1: 78, z2: 141, h: 13.5, floorM2: 16351, canopy: true,
+      ja: '第3国際貨物上屋', vi: 'Kho hàng Quốc tế số 3', en: "Int'l Cargo Terminal 3", sign: 'INTERNATIONAL CARGO TERMINAL 3' },
+    { id: 'dom_air', kind: 'dom', x1: 1135, x2: 1180, z1: 78, z2: 100, h: 9.5, floorM2: 2020, canopy: false,
+      ja: '国内エアライン上屋', vi: 'Kho hàng Nội địa (Hãng bay)', en: 'Domestic Airline Cargo Shed', sign: 'DOMESTIC AIRLINE CARGO' },
+    { id: 'dom_fwd', kind: 'dom', x1: 1135, x2: 1175, z1: 114, z2: 134, h: 9.5, floorM2: 1590, canopy: false,
+      ja: '国内フォワーダー上屋', vi: 'Kho Đại lý Nội địa (Forwarder)', en: 'Domestic Forwarder Shed', sign: 'DOMESTIC FORWARDER' },
+    { id: 'fumig', kind: 'fumig', x1: 1200, x2: 1232, z1: 80, z2: 102, h: 7.5, floorM2: 0, canopy: false,
+      ja: '燻蒸施設', vi: 'Khu xông khử trùng', en: 'Fumigation Facility', sign: 'FUMIGATION' },
+    { id: 'cargo_office', kind: 'office', x1: 598, x2: 662, z1: 196, z2: 224, h: 19, floorM2: 0, canopy: false,
+      ja: '貨物事務棟（1F ローソン）', vi: 'Tòa văn phòng Cargo (Lawson tầng 1)', en: 'Cargo Office Building (Lawson 1F)', sign: 'CARGO OFFICE' },
+    { id: 'truck_yard', kind: 'truckyard', x1: 690, x2: 1010, z1: 186, z2: 242, h: 0, floorM2: 0, canopy: false,
+      ja: 'トラック待機場', vi: 'Bãi chờ xe tải', en: 'Truck Waiting Area', sign: 'TRUCK WAITING AREA' },
+    { id: 'north_gate', kind: 'gate', x1: 548, x2: 572, z1: 238, z2: 262, h: 4.5, floorM2: 0, canopy: false,
+      ja: '北ゲート（有人ゲート・貨物地区入口）', vi: 'Cổng Bắc (có bảo vệ · lối vào khu Cargo)', en: 'North Gate (manned · Cargo District entry)', sign: 'NORTH GATE' }
+  ];
+  // Cargo handling companies named by Centrair for the cargo district (assignment per building is not published here)
+  export const NGO_CARGO_HANDLERS = [
+    { ja: 'ANA中部空港（ANA Cargo）', vi: 'ANA Chubu Airport (ANA Cargo)', en: 'ANA Chubu Airport (ANA Cargo)' },
+    { ja: 'ドリームスカイ名古屋／中部スカイサポート（JALグループ）', vi: 'Dream Sky Nagoya / Chubu Sky Support (nhóm JAL)', en: 'Dream Sky Nagoya / Chubu Sky Support (JAL Group)' },
+    { ja: 'スカイポートサービス', vi: 'Skyport Service', en: 'Skyport Service' }
+  ];
+
   export const A3D_OBSTACLES = [
     { id: 't1_main', x1: -165, x2: 185, z1: 68, z2: 175, name: 'Terminal 1 Main' },
     { id: 't1_nwing', x1: 185, x2: 430, z1: 66, z2: 112, name: 'T1 North Wing' },
     { id: 't1_swing', x1: -435, x2: -165, z1: 66, z2: 112, name: 'T1 South Wing' },
     { id: 'center_pier', x1: 28, x2: 64, z1: -180, z2: 40, name: 'T1 Center Pier (300m)' },
-    { id: 'tower', x1: -158, x2: -134, z1: 215, z2: 239, name: 'Centrair ATC Tower (86.75m)' },
+    { id: 'tower', x1: 318, x2: 342, z1: 163, z2: 187, name: 'Centrair ATC Tower (86.75m, NE of T1)' },
     { id: 'fod_hall', x1: -535, x2: -455, z1: 145, z2: 225, name: 'Flight of Dreams' },
     { id: 't2_main', x1: -960, x2: -565, z1: 95, z2: 168, name: 'Terminal 2 LCC' },
     { id: 'fire', x1: 465, x2: 515, z1: 62, z2: 102, name: 'Airport Fire Station' },
-    { id: 'cargo1', x1: 545, x2: 880, z1: 72, z2: 155, name: 'Cargo Warehouse 1 & 2' },
-    { id: 'cargo2', x1: 910, x2: 1290, z1: 72, z2: 155, name: 'Int\'l Cargo Warehouse 3' },
+    ...NGO_CARGO_DISTRICT.filter(b => b.h > 0).map(b => ({ id: b.id, x1: b.x1, x2: b.x2, z1: b.z1, z2: b.z2, name: b.en })),
     { id: 'fuel_farm', x1: 1330, x2: 1510, z1: 150, z2: 290, name: 'Jet A-1 Fuel Farm' },
     { id: 'coast_guard', x1: 1620, x2: 1820, z1: 68, z2: 135, name: 'Japan Coast Guard Base' }
   ];
@@ -767,22 +802,31 @@ export const A3D_SPOTS = [
       ruleEn: '[GSE STAGING] Park neatly inside white-dashed ESA bays outside red ERA; set parking brake, shut off engine, and chock wheels.'
     },
     {
-      id: 'tower', cam: { tx: -146, ty: 42, tz: 227, dist: 185, yaw: 0.65, pitch: 0.36 }, badge: 'ATC 86.75m', badgeCls: 'badge-accent',
-      ja: '中部管制塔 (Chubu Tower · 高さ86.75m)',
+      id: 'tower', cam: { tx: 330, ty: 42, tz: 175, dist: 185, yaw: 0.65, pitch: 0.36 }, badge: 'ATC 86.75m', badgeCls: 'badge-accent',
+      ja: '中部管制塔 (Centrair Tower · 高さ86.75m)',
       vi: 'Đài kiểm soát không lưu Chubu (Cao 86,75m)',
       en: 'Chubu ATC Control Tower (Height 86.75m)',
       ruleJa: '高さ86.75mの管制塔から滑走路36/18・誘導路A/B/C・全エプロン・場周道路を見渡し統括します。',
       ruleVi: 'Đài không lưu cao 86,75m điều hành toàn bộ đường băng 36/18, đường lăn A/B/C, sân đỗ T1/T2/沖留/Cargo.',
-      ruleEn: 'Standing 86.75m tall, Chubu Tower oversees RWY 36/18, Taxiways A/B/C, T1, T2, Remote, and Cargo aprons.'
+      ruleEn: 'Standing 86.75m tall, Centrair Tower oversees RWY 36/18, Taxiways A/B/C, T1, T2, Remote, and Cargo aprons.'
     },
     {
       id: 'cargo_fire', cam: { tx: 680, ty: 12, tz: 55, dist: 420, yaw: -0.55, pitch: 0.48 }, badge: 'CARGO #101-119', badgeCls: 'badge-accent',
       ja: '北貨物地区 (#101〜#119)・空港消防所・燃料タンク群・海保N地区',
       vi: 'Khu Hàng hóa Bắc (#101–#119), Trạm Cứu hỏa, Kho xăng & Căn cứ Hải cảnh N',
       en: 'North Cargo Apron (#101–#119), ARFF Fire Station, Fuel Farm & Coast Guard N-Area',
-      ruleJa: 'B777F大型貨物機スポット#101〜#119、第1〜第3貨物上屋、赤回転灯付きの空港消防所、北端の海上保安庁航空基地を実寸再現。',
-      ruleVi: 'Tái hiện tỷ lệ 1:1 dãy 19 bãi tàu hàng #101–#119, 3 nhà kho Cargo, Trạm cứu hỏa đèn xoay đỏ, kho bồn Jet A-1 và căn cứ tuần duyên N1–N6.',
-      ruleEn: 'Full 1:1 North Cargo district with stands #101–#119, Warehouses 1–3, ARFF Fire Station, Jet A-1 tank farm, and Coast Guard N-Area.'
+      ruleJa: 'B777F大型貨物機スポット#101〜#119、赤回転灯付きの空港消防所、燃料タンク群、北端の海上保安庁航空基地を再現。',
+      ruleVi: 'Dãy bãi tàu hàng #101–#119, Trạm cứu hỏa đèn xoay đỏ, kho bồn Jet A-1 và căn cứ tuần duyên N1–N6.',
+      ruleEn: 'Freighter stands #101–#119, ARFF Fire Station, Jet A-1 tank farm and Coast Guard N-Area.'
+    },
+    {
+      id: 'cargo_wh', cam: { tx: 840, ty: 8, tz: 120, dist: 380, yaw: -0.35, pitch: 0.55 }, badge: '貨物地区 26ha', badgeCls: 'badge-accent',
+      ja: '貨物地区：第1〜第3国際貨物上屋・国内上屋・トラック待機場・北ゲート',
+      vi: 'Khu Cargo: Kho Quốc tế số 1–3, Kho Nội địa, Bãi chờ xe tải & Cổng Bắc',
+      en: 'Cargo District: Int\'l Cargo Terminals 1–3, Domestic Sheds, Truck Waiting Area & North Gate',
+      ruleJa: '空港島北側の貨物地区（約26ha）。第1国際貨物上屋（41,757㎡）・第2（13,772㎡）・第3（16,351㎡）・国内エアライン上屋・国内フォワーダー上屋（各2階建）、10トン車が入る20mの庇、トラック待機場、燻蒸施設、貨物事務棟（1Fローソン）、有人の北ゲート。上屋とフォワーダー上屋間は無ナンバー車両通行帯でTT・ドーリーによるインタクト輸送。主なハンドリング会社：ANA中部空港／ドリームスカイ名古屋・中部スカイサポート／スカイポートサービス。',
+      ruleVi: 'Khu Cargo phía Bắc đảo (~26ha). Kho Quốc tế số 1 (41.757㎡), số 2 (13.772㎡), số 3 (16.351㎡), Kho Nội địa hãng bay & Kho Forwarder nội địa (đều 2 tầng); mái che 20m đủ cho xe 10 tấn; bãi chờ xe tải; khu xông khử trùng; tòa văn phòng Cargo (Lawson tầng 1); Cổng Bắc có bảo vệ. Giữa kho và kho forwarder có làn xe không biển số cho TT kéo dolly chở nguyên ULD (インタクト輸送). Các công ty handling chính: ANA Chubu Airport / Dream Sky Nagoya – Chubu Sky Support / Skyport Service.',
+      ruleEn: 'North Cargo District (~26ha): Int\'l Cargo Terminal 1 (41,757㎡), 2 (13,772㎡), 3 (16,351㎡), Domestic Airline Shed and Domestic Forwarder Shed (all 2-storey); 20m truck canopy for 10t trucks; truck waiting area; fumigation facility; Cargo Office Building (Lawson 1F); manned North Gate. An unregistered-vehicle lane lets TTs tow ULD dollies intact to forwarder sheds. Main handlers: ANA Chubu Airport / Dream Sky Nagoya – Chubu Sky Support / Skyport Service.'
     }
   ];
 
@@ -1196,7 +1240,7 @@ export const A3D_FLIGHT_PHASES = [
       safetyVi: 'Đường băng 3.500m × 60m (RWY 36) thông thoáng. Bãi Spot 7 đã quét sạch FOD, toàn bộ xe GSE & nhân sự đứng ngoài vạch đỏ ERA.',
       safetyEn: 'Full-scale 3,500m × 60m RWY 36 and taxiways are clear. Spot 7 FOD sweep complete; all GSE and ramp crew hold outside red ERA.',
       roles: [
-        { roleJa: '中部管制塔 (Chubu Tower 86.75m)', roleVi: 'Đài kiểm soát không lưu Chubu', roleEn: 'Chubu Tower ATC (118.45 MHz)', badge: 'TOWER',
+        { roleJa: '中部管制塔 (Centrair Tower 86.75m)', roleVi: 'Đài kiểm soát không lưu Chubu', roleEn: 'Centrair Tower ATC (118.85 MHz)', badge: 'TOWER',
           tasksJa: ['滑走路36着陸許可（Cleared to Land RWY 36）を発出', '着陸後の高速離脱誘導路 A6 → A-TWY → C-TWY → Spot 7 ルートを指示'],
           tasksVi: ['Cấp huấn lệnh hạ cánh đường băng 36 (Cleared to Land RWY 36)', 'Hướng dẫn thoát nhanh qua đường lăn A6 → A-TWY → C-TWY về Spot 7'],
           tasksEn: ['Issue landing clearance on 3,500m Runway 36', 'Assign high-speed exit A6 → A-TWY → C-TWY → Spot 7 taxi route'] },
@@ -1403,7 +1447,7 @@ export const A3D_FLIGHT_PHASES = [
       safetyVi: 'Tàu bay tăng tốc dọc đường băng thật 3.500m từ ngưỡng Nam (-1.680m), đạt VR kéo mũi rời đất, thu càng và vươn cao trên Vịnh Ise!',
       safetyEn: 'Aircraft accelerates ~2,000m down full-scale RWY 36 from South threshold (-1,680m), rotates at VR, retracts gear, and climbs over Ise Bay.',
       roles: [
-        { roleJa: '中部管制塔（タワー）', roleVi: 'Đài kiểm soát không lưu (Tower)', roleEn: 'Chubu Tower & Departure ATC', badge: 'TAKEOFF',
+        { roleJa: '中部管制塔（タワー）', roleVi: 'Đài kiểm soát không lưu (Tower)', roleEn: 'Centrair Tower & Departure ATC', badge: 'TAKEOFF',
           tasksJa: ['滑走路36離陸許可（Cleared for Takeoff RWY 36）発出・離陸後にセントレア進入管制へ移管'],
           tasksVi: ['Cấp huấn lệnh cất cánh RWY 36 và chuyển giao cho kiểm soát tiếp cận Centrair Departure'],
           tasksEn: ['Issue takeoff clearance on RWY 36 and hand off airborne flight to Centrair Departure'] },
@@ -1582,10 +1626,10 @@ export const A3D_FLIGHT_PHASES = [
   }
 
 export const A3D_RADIO_COMMS = [
-    { ch: 'NGO TWR 118.45',
-      ja: 'Chubu Tower: "All Nippon 102, wind 360 at 10kt, Runway 36 (3,500m), cleared to land."（中部滑走路36着陸許可）',
-      vi: 'Chubu Tower 118.45: "ANA 102, gió 360/10kt, Đường băng 36 (3.500m), cho phép hạ cánh."',
-      en: 'Chubu Tower 118.45: "All Nippon 102, wind 360 at 10kt, Runway 36 (3,500m), cleared to land."' },
+    { ch: 'NGO TWR 118.85',
+      ja: 'Centrair Tower: "All Nippon 102, wind 360 at 10kt, Runway 36 (3,500m), cleared to land."（中部滑走路36着陸許可）',
+      vi: 'Centrair Tower 118.85: "ANA 102, gió 360/10kt, Đường băng 36 (3.500m), cho phép hạ cánh."',
+      en: 'Centrair Tower 118.85: "All Nippon 102, wind 360 at 10kt, Runway 36 (3,500m), cleared to land."' },
     { ch: 'NGO GND 121.7',
       ja: 'Chubu Ground: "NH102, vacate A6, taxi via A-TWY and C-TWY to Spot 7."（A6離脱→誘導路A・C経由スポット7へ）',
       vi: 'Chubu Ground 121.7: "NH102, rời đường băng qua A6, lăn theo A-TWY và C-TWY vào Spot 7."',
@@ -1618,10 +1662,10 @@ export const A3D_RADIO_COMMS = [
       ja: 'Headset: "トーバー切離し・バイパスピン抜去！左前方で提示します。行ってらっしゃいませ！(お見送り)"',
       vi: 'Headset Man: "Đã tháo thanh kéo & rút chốt đỏ Bypass Pin! Mời nhìn bên trái, chúc chuyến bay thượng lộ bình an!"',
       en: 'Headset Man: "Towbar disconnected, bypass pin removed! Showing pin on your forward-left. Have a safe flight!"' },
-    { ch: 'NGO TWR 118.45',
-      ja: 'Chubu Tower: "All Nippon 102, Runway 36 (3,500m), cleared for takeoff!"（中部滑走路36離陸許可！）',
-      vi: 'Chubu Tower 118.45: "ANA 102, Đường băng 36 (3.500m), cho phép cất cánh!"',
-      en: 'Chubu Tower 118.45: "All Nippon 102, Runway 36 (3,500m), cleared for takeoff!"' }
+    { ch: 'NGO TWR 118.85',
+      ja: 'Centrair Tower: "All Nippon 102, Runway 36 (3,500m), cleared for takeoff!"（中部滑走路36離陸許可！）',
+      vi: 'Centrair Tower 118.85: "ANA 102, Đường băng 36 (3.500m), cho phép cất cánh!"',
+      en: 'Centrair Tower 118.85: "All Nippon 102, Runway 36 (3,500m), cleared for takeoff!"' }
   ];
 
   // 3D Volumetric Clouds Spanning the 4.37km Island & Ise Bay
@@ -1635,7 +1679,7 @@ export const A3D_RADIO_COMMS = [
   ];
 
 export const A3D_AIRPORTS = {
-    NGO: { id: 'NGO', nameJa: '中部国際 セントレア (NGO · 実寸4.37km島)', nameVi: 'Chubu Centrair NGO (Đảo thật 4,37km)', nameEn: 'Chubu Centrair NGO (1:1 4.37km Island)', rwy: '36/18', twr: 'Chubu Tower 118.45', island: true, snow: false, city: false, bridge: true, seaCol: [28, 92, 148], landCol: [212, 224, 204] },
+    NGO: { id: 'NGO', nameJa: '中部国際 セントレア (NGO · 実寸4.37km島)', nameVi: 'Chubu Centrair NGO (Đảo thật 4,37km)', nameEn: 'Chubu Centrair NGO (1:1 4.37km Island)', rwy: '36/18', twr: 'Centrair Tower 118.85', island: true, snow: false, city: false, bridge: true, seaCol: [28, 92, 148], landCol: [212, 224, 204] },
     HND: { id: 'HND', nameJa: '羽田空港 (HND)', nameVi: 'Tokyo Haneda HND', nameEn: 'Tokyo Haneda (HND)', rwy: '34R/16L', twr: 'Tokyo Tower 118.1', island: true, snow: false, city: true, bridge: false, seaCol: [44, 96, 148], landCol: [212, 224, 206] },
     NRT: { id: 'NRT', nameJa: '成田国際 (NRT)', nameVi: 'Narita NRT', nameEn: 'Tokyo Narita (NRT)', rwy: '34L/16R', twr: 'Narita Tower 118.2', island: false, snow: false, city: false, bridge: false, seaCol: [104, 138, 84], landCol: [216, 232, 204] },
     KIX: { id: 'KIX', nameJa: '関西国際 (KIX)', nameVi: 'Kansai KIX', nameEn: 'Kansai Intl (KIX)', rwy: '06R/24L', twr: 'Kansai Tower 118.2', island: true, snow: false, city: false, bridge: true, seaCol: [42, 102, 158], landCol: [218, 228, 212] },
@@ -1699,35 +1743,45 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
       return [ac.x - lx * sh + lz1 * ch, ac.y + ly1, ac.z + lx * ch + lz1 * sh];
     };
 
+    const acInfo = (extra && extra.acInfo) || { halfL: 18.8, cockpitY: 4.7 };
+    // Point on the aircraft every ground-crew POV looks at (cockpit window) — follows the moving jet
+    const acCockpit = acLocalToW(0, acInfo.cockpitY - 0.6, acInfo.halfL - 3.0);
+    const crewEye = (pt, fallback) => (pt ? [pt[0], 1.68, pt[1]] : fallback);
     if (camMode === 'pilot') {
       return {
-        pos: acLocalToW(0, 4.7, 15.8),
-        target: acLocalToW(0, 3.3, 120.0),
+        pos: acLocalToW(0, acInfo.cockpitY, acInfo.halfL - 2.6),
+        target: acLocalToW(0, acInfo.cockpitY - 1.2, acInfo.halfL + 120.0),
         fov: 58,
         povKind: 'pilot'
       };
     }
     if (camMode === 'tower') {
       const lookAt = isFlightMode ? [ac.x, Math.max(1.5, ac.y + 2), ac.z] : [veh.x, 1.5, veh.z];
-      return { pos: [-146, 82.5, 224], target: lookAt, fov: 46, povKind: 'tower' };
+      return { pos: [330, 82.5, 172], target: lookAt, fov: 46, povKind: 'tower' };
     }
+    // Ground-crew POVs: eye = the actual 3D crew member's head (1.68m), always looking at the aircraft
+    const crew = (extra && extra.crew) || {};
     if (camMode === 'marshaller') {
-      const targetPt = (isFlightMode && phaseIdx <= 1) ? [ac.x, Math.max(2, ac.y + 3), ac.z] : [0, 3.4, 14];
-      return { pos: [0, 1.95, 35.5], target: targetPt, fov: 56, povKind: 'marshaller' };
+      const eye = crewEye(crew.marshaller, [0, 1.68, (extra && extra.noseZ ? extra.noseZ : 29) + 6]);
+      return { pos: eye, target: acCockpit, fov: 55, povKind: 'marshaller' };
     }
     if (camMode === 'headset') {
-      if (isFlightMode && (phaseIdx === 7 || phaseIdx === 8)) {
-        const pCrew = (flightPose && flightPose.crew[0]) ? [flightPose.crew[0].x, 1.85, flightPose.crew[0].z] : acLocalToW(-5.5, 1.85, 22);
-        return { pos: pCrew, target: [ac.x, Math.max(2.5, ac.y + 3.2), ac.z], fov: 58, povKind: 'headset' };
-      }
-      return { pos: [-6.8, 1.85, 29.5], target: [0.5, 3.2, 11.5], fov: 56, povKind: 'headset' };
+      const eye = crewEye(crew.headset, acLocalToW(3.5, 1.68, acInfo.halfL - 4));
+      return { pos: eye, target: acLocalToW(0, 1.2, acInfo.halfL - 5.5), fov: 60, povKind: 'headset' };
     }
     if (camMode === 'loadmaster') {
-      return { pos: [-22.5, 2.7, 11.5], target: [-2.0, 2.5, 9.5], fov: 56, povKind: 'loadmaster' };
+      const cargo = (extra && extra.cargoDoor) || [-2.0, 2.2, 18];
+      const eye = crew.loadmaster ? [crew.loadmaster[0], 1.68, crew.loadmaster[1]] : [cargo[0] - 9.5, 1.68, cargo[2] - 6.5];
+      return { pos: eye, target: cargo, fov: 58, povKind: 'loadmaster' };
     }
     if (camMode === 'terminal') {
-      const look = isFlightMode ? [ac.x * 0.65, Math.max(2, ac.y * 0.7 + 2), Math.min(20, ac.z)] : [0, 4, -180];
-      return { pos: [46, 17.5, -145], target: look, fov: 54, povKind: 'terminal' };
+      // Centrair Sky Deck (roof of the 300m Center Pier, deck floor y ≈ 15.6m)
+      const look = isFlightMode ? [ac.x, Math.max(2, ac.y + 3), ac.z] : [0, 3.5, 10];
+      const nearStands = look[2] > -120 && look[0] < 300 && look[0] > -300;
+      const pos = nearStands
+        ? [38.6, 18.2, Math.max(-168, Math.min(-12, look[2] - 28))]   // leaning on the south rail, facing Spot 7
+        : [46, 18.2, -176.4];                                           // at the deck-tip rail, facing the runway
+      return { pos, target: look, fov: 52, povKind: 'terminal' };
     }
     if (camMode === 'gse_cab') {
       const vch = Math.cos(veh.heading), vsh = Math.sin(veh.heading);
@@ -1782,11 +1836,13 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
         povKind: 'chase'
       };
     }
+    // Cinematic chase: behind-left of the aircraft, rotates with its heading (never swings across the scene)
     const isRwyPhase = (phaseIdx === 0 || phaseIdx === 1 || phaseIdx === 8 || phaseIdx === 9);
-    const dist = isRwyPhase ? 96 : 58;
-    const elev = isRwyPhase ? 28 : 22;
+    const dist = (isRwyPhase ? 3.2 : 2.4) * Math.max(16, acInfo.halfL);
+    const elev = isRwyPhase ? 0.42 : 0.5;
+    const back = acLocalToW(-dist * 0.45, 0, -dist * 0.85);
     return {
-      pos: [ac.x + dist * 0.58, Math.max(8, ac.y + elev), ac.z + dist * 0.82],
+      pos: [back[0], Math.max(8, ac.y + dist * elev), back[2]],
       target: [ac.x, ac.y + 3.2, ac.z],
       fov: 48,
       povKind: 'flight_follow'

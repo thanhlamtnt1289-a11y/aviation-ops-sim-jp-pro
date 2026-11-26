@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import { convertAirportToCartesian } from '../data/airport_geo_data.js';
 import { AIRCRAFT_PROFILES } from '../data/aircraft.js';
 import { createDetailedAirliner3D } from './aircraftBuilder3D.js';
+import { registerProceduralFallback, createFleetAircraft3D } from './aircraft_3d_models.js';
+registerProceduralFallback(createDetailedAirliner3D);
 import {
   AIRCRAFT_3D_SPECS,
   AIRLINE_LIVERIES,
@@ -19,6 +21,7 @@ import {
   createArticulatedCrew3D,
   animateCrewSignal
 } from './crewBuilder3D.js';
+import { buildTurnaroundGseMesh } from './gseLibrary3D.js';
 
 // =====================================================================
 // PROCEDURAL PBR TEXTURES (RUNWAY, CONCRETE, GLASS, SPOT SIGN)
@@ -338,304 +341,8 @@ function populateTextbookSpotMarkings(group, opts = {}) {
 // =====================================================================
 // REALISTIC ARTICULATED 3D GSE VEHICLE BUILDERS (WITH ANIMATED LIFTS, OUTRIGGERS, HOSES, BELTS & ULDS!)
 // =====================================================================
-export function buildTurnaroundGseMesh(kind, targetHeightY = 2.8, extra = {}) {
-  const g = new THREE.Group();
-  g.userData = { kind, targetHeightY };
-
-  const addBox = (w, h, d, col, x, y, z, metal = 0.25, rough = 0.42, parent = g) => {
-    const m = new THREE.Mesh(
-      new THREE.BoxGeometry(w, h, d),
-      new THREE.MeshStandardMaterial({ color: col, metalness: metal, roughness: rough })
-    );
-    m.position.set(x, y, z);
-    m.castShadow = true;
-    m.receiveShadow = true;
-    parent.add(m);
-    return m;
-  };
-  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x16191f, roughness: 0.9 });
-  const rimMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.6, roughness: 0.3 });
-  const addWheels = (wx, wzArr, r = 0.42) => {
-    const wheels = [];
-    for (const wz of wzArr) {
-      [-wx, wx].forEach(x => {
-        const wg = new THREE.Group();
-        wg.position.set(x, r, wz);
-        const w = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.26, 12), wheelMat);
-        w.rotation.z = Math.PI / 2;
-        const hub = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.48, r * 0.48, 0.28, 10), rimMat);
-        hub.rotation.z = Math.PI / 2;
-        wg.add(w, hub);
-        g.add(wg);
-        wheels.push(wg);
-      });
-    }
-    g.userData.wheels = wheels;
-  };
-
-  // Helper: 4 Deployable Yellow Hydraulic Outriggers (アウトリガー)
-  const addOutriggers = (xSpan, zFront, zBack) => {
-    const riggers = [];
-    [[xSpan, zFront], [-xSpan, zFront], [xSpan, zBack], [-xSpan, zBack]].forEach(([rx, rz]) => {
-      const rg = new THREE.Group();
-      rg.position.set(rx, 0.45, rz);
-      addBox(0.32, 0.14, 0.16, 0xfacc15, Math.sign(rx) * 0.14, 0, 0, 0.3, 0.4, rg);
-      const foot = addBox(0.14, 0.44, 0.14, 0xf59e0b, Math.sign(rx) * 0.26, -0.22, 0, 0.3, 0.4, rg);
-      addBox(0.28, 0.05, 0.28, 0x1e293b, Math.sign(rx) * 0.26, -0.43, 0, 0.4, 0.6, rg);
-      rg.scale.x = 0.01;
-      rg.visible = false;
-      g.add(rg);
-      riggers.push({ group: rg, foot });
-    });
-    g.userData.outriggers = riggers;
-  };
-
-  if (kind === 'stairs') {
-    // Motorized Passenger Boarding Stairs (パッセンジャー・ステップ車)
-    const topY = Math.max(2.6, Math.min(5.3, targetHeightY));
-    addBox(2.25, 0.78, 6.2, 0xf8fafc, 0, 0.78, -0.3);
-    addBox(2.15, 1.38, 1.9, 0x0284c7, 0, 1.75, -2.35);
-    const rampLen = Math.hypot(4.1, topY - 1.05);
-    const rampAng = Math.atan2(topY - 1.05, 4.1);
-    const ramp = addBox(1.78, 0.32, rampLen, 0xe2e8f0, 0, (topY + 1.05) * 0.5, 0.45);
-    ramp.rotation.x = -rampAng;
-    // Handrails along stair ramp
-    [-0.92, 0.92].forEach(rx => {
-      const rail = addBox(0.08, 0.85, rampLen, 0xfacc15, rx, (topY + 1.05) * 0.5 + 0.52, 0.45);
-      rail.rotation.x = -rampAng;
-    });
-    // Top docking canopy flush with doorL1
-    addBox(2.08, 0.24, 1.55, 0xfacc15, 0, topY - 0.12, 2.65);
-    addBox(0.10, 1.05, 1.5, 0x0284c7, -0.98, topY + 0.42, 2.65);
-    addBox(0.10, 1.05, 1.5, 0x0284c7, 0.98, topY + 0.42, 2.65);
-    addBox(2.12, 0.12, 0.22, 0x1e293b, 0, topY + 0.05, 3.42); // Soft rubber bumper!
-    addWheels(1.08, [-2.2, 1.65], 0.42);
-    addOutriggers(1.08, 1.95, -2.0);
-  } else if (kind === 'catering' || kind === 'cabinClean') {
-    // Authentic Catering Food Loader (フード・ローダー: Floor set -19cm below aircraft sill + 4 Yellow Outriggers!)
-    // & Cabin Cleaning Lift Truck (キャビン・サービス・カー)
-    const isCat = kind === 'catering';
-    const accent = isCat ? 0x0ea5e9 : 0x10b981;
-    const dockFloorY = Math.max(2.3, targetHeightY - 0.19); // Textbook 図5-4: -19cm below cabin sill!
-    // Truck cab & low chassis (+Z faces aircraft door!)
-    addBox(2.42, 0.65, 7.6, 0x334155, 0, 0.68, -0.2);
-    addBox(2.34, 1.75, 1.95, 0xf8fafc, 0, 1.62, 2.62); // Low-profile forward cab under bridge!
-    addBox(2.38, 0.55, 1.85, 0x38bdf8, 0, 2.02, 2.68, 0.75, 0.12); // Cab windshield
-    addBox(2.36, 0.26, 1.98, accent, 0, 1.08, 2.62);
-
-    // X-Scissor Lift Arms supporting the Refrigerated Van Body
-    const scissorPivot = new THREE.Group();
-    scissorPivot.position.set(0, 0.98, -1.05);
-    addBox(1.55, 1.0, 3.2, 0x475569, 0, 0.5, 0, 0.6, 0.4, scissorPivot);
-    g.add(scissorPivot);
-
-    // Elevating Refrigerated Van Box + Front Telescoping Half-Canopy Platform
-    const vanGroup = new THREE.Group();
-    vanGroup.position.set(0, 1.35, 0);
-    addBox(2.46, 2.25, 5.15, 0xf8fafc, 0, 1.15, -1.15, 0.18, 0.35, vanGroup);
-    addBox(2.50, 0.34, 5.18, accent, 0, 0.42, -1.15, 0.2, 0.4, vanGroup);
-    // Refrigeration unit on front of van box
-    addBox(1.45, 0.58, 0.45, 0xe2e8f0, 0, 2.02, 1.58, 0.3, 0.4, vanGroup);
-    // Front loading platform & rubber bumper over cab roof (+Z)
-    addBox(2.15, 0.18, 2.25, 0xcbd5e1, 0, 0.08, 2.48, 0.5, 0.38, vanGroup);
-    addBox(0.08, 0.95, 2.15, 0xfacc15, -1.02, 0.58, 2.45, 0.3, 0.4, vanGroup);
-    addBox(0.08, 0.95, 2.15, 0xfacc15, 1.02, 0.58, 2.45, 0.3, 0.4, vanGroup);
-    addBox(2.18, 0.16, 0.22, 0x111827, 0, 0.14, 3.62, 0.1, 0.9, vanGroup);
-    g.add(vanGroup);
-
-    addWheels(1.16, [-2.4, 2.25], 0.46);
-    addOutriggers(1.20, 1.55, -2.85);
-    g.userData.vanGroup = vanGroup;
-    g.userData.scissorPivot = scissorPivot;
-    g.userData.restY = 1.35;
-    g.userData.dockFloorY = dockFloorY;
-  } else if (kind === 'highloader') {
-    // Authentic Dual-Platform High-Lift / Low-Deck ULD Loader (ハイリフト・ローダー)
-    // Front Bridge Platform stays flush at cargo sill; Main Rear Platform cycles up & down transferring ULDs!
-    const sillY = Math.max(1.95, Math.min(3.5, targetHeightY));
-    const uldCode = extra.uldCode || 'AKE';
-    const isAkh = uldCode === 'AKH';
-    addBox(3.15, 0.48, 8.4, 0xe2e8f0, 0, 0.44, 0, 0.35, 0.38);
-    // Side operator console on right-front (+X/-X)
-    addBox(0.55, 1.35, 1.35, 0x0284c7, -1.45, 1.35, 2.15, 0.3, 0.4);
-
-    // Front Bridge Platform (raises to cargo sill & stays locked level with aircraft cargo floor!)
-    const bridgeGroup = new THREE.Group();
-    bridgeGroup.position.set(0, 0.85, 2.65);
-    addBox(2.65, 0.22, 2.75, 0xd4dce6, 0, 0, 0, 0.5, 0.35, bridgeGroup);
-    addBox(0.10, 0.72, 2.6, 0xf59e0b, -1.28, 0.42, 0, 0.3, 0.4, bridgeGroup);
-    addBox(0.10, 0.72, 2.6, 0xf59e0b, 1.28, 0.42, 0, 0.3, 0.4, bridgeGroup);
-    addBox(2.68, 0.16, 0.20, 0x111827, 0, 0.08, 1.42, 0.1, 0.9, bridgeGroup);
-    g.add(bridgeGroup);
-
-    // Main Rear Scissor Lift Platform (oscillates between dolly height 0.56m and sillY!)
-    const mainPlat = new THREE.Group();
-    mainPlat.position.set(0, 0.68, -1.65);
-    addBox(3.05, 0.22, 4.65, 0xc8d2de, 0, 0, 0, 0.5, 0.35, mainPlat);
-    addBox(0.10, 0.65, 4.5, 0xf59e0b, -1.48, 0.38, 0, 0.3, 0.4, mainPlat);
-    addBox(0.10, 0.65, 4.5, 0xf59e0b, 1.48, 0.38, 0, 0.3, 0.4, mainPlat);
-
-    // Realistic Beveled Aluminium AKE / AKH ULD Container riding on rollers!
-    const uldH = isAkh ? 1.14 : 1.60;
-    const uldW = isAkh ? 2.25 : 1.92;
-    const uldGrp = new THREE.Group();
-    uldGrp.position.set(0, 0.12 + uldH * 0.5, 0);
-    addBox(uldW, uldH, 1.56, 0xdbe4ef, 0, 0, 0, 0.58, 0.26, uldGrp);
-    addBox(uldW + 0.03, 0.22, 1.58, 0x0b3b8c, 0, uldH * 0.30, 0, 0.2, 0.4, uldGrp);
-    mainPlat.add(uldGrp);
-    g.add(mainPlat);
-
-    // Scissor cylinder column under main platform
-    const scissorMesh = addBox(1.4, 1.0, 2.8, 0x334155, 0, 0.55, -1.65, 0.5, 0.5);
-    addWheels(1.48, [-3.1, -0.4, 2.8], 0.34);
-
-    g.userData.bridgeGroup = bridgeGroup;
-    g.userData.mainPlat = mainPlat;
-    g.userData.uldGrp = uldGrp;
-    g.userData.scissorMesh = scissorMesh;
-    g.userData.sillY = sillY;
-  } else if (kind === 'belt') {
-    // Mobile Baggage Conveyor Belt Loader (ベルト・ローダー) with Animated Suitcases at 50cm spacing!
-    const topY = Math.max(1.55, Math.min(2.85, targetHeightY));
-    addBox(2.05, 0.88, 5.4, 0xf59e0b, 0, 0.72, -0.35);
-    addBox(0.92, 0.82, 1.55, 0x1e293b, 0.52, 1.38, -1.45); // Driver seat & controls on right side
-
-    const boomGroup = new THREE.Group();
-    const boomLen = 6.9;
-    const restAng = 0.08;
-    const dockAng = Math.atan2(topY - 0.85, 5.6);
-    boomGroup.position.set(-0.18, 0.95, -2.2);
-    // Inclined conveyor bed + dark rubber belt
-    addBox(0.96, 0.22, boomLen, 0xe2e8f0, 0, 0, boomLen * 0.5, 0.35, 0.4, boomGroup);
-    addBox(0.76, 0.06, boomLen - 0.2, 0x111827, 0, 0.13, boomLen * 0.5, 0.05, 0.95, boomGroup);
-    addBox(0.98, 0.16, 0.20, 0x111827, 0, 0.10, boomLen, 0.05, 0.95, boomGroup); // Soft nose bumper
-
-    // 4 Suitcases spaced evenly along the belt (animated riding up/down when docked!)
-    const bagCols = [0x2563eb, 0xdc2626, 0x0f766e, 0xd97706];
-    const bags = [];
-    for (let bi = 0; bi < 4; bi++) {
-      const bag = addBox(0.54, 0.26, 0.72, bagCols[bi], 0, 0.28, 1.0 + bi * 1.45, 0.15, 0.55, boomGroup);
-      bag.visible = false;
-      bags.push(bag);
-    }
-    boomGroup.rotation.x = -restAng;
-    g.add(boomGroup);
-    addWheels(0.98, [-1.95, 1.65], 0.38);
-
-    g.userData.boomGroup = boomGroup;
-    g.userData.bags = bags;
-    g.userData.restAng = restAng;
-    g.userData.dockAng = dockAng;
-    g.userData.boomLen = boomLen;
-  } else if (kind === 'fuel') {
-    // Authentic Japanese Airport Hydrant Dispenser / Servicer (ハイドラント・サービサー)
-    // Parks UNDER starboard wing facing FORWARD (+Z) so forward escape route is 100% clear!
-    const wingY = Math.max(2.15, targetHeightY);
-    addBox(2.38, 1.32, 6.2, 0xf8fafc, 0, 1.02, 0);
-    addBox(2.42, 0.32, 4.0, 0xdc2626, 0, 1.18, -0.95); // Red "FLAMMABLE JET A-1" stripe
-    addBox(2.32, 1.58, 1.85, 0xf8fafc, 0, 1.28, 2.12); // Forward cab (+Z = clear escape!)
-    addBox(2.35, 0.55, 1.75, 0x38bdf8, 0, 1.68, 2.18, 0.75, 0.12);
-
-    // Rear Elevating Fueling Platform (昇降作業台) + Riser Hose + Pit Hose + Red Bonding Wire + Extinguisher!
-    const liftDeck = new THREE.Group();
-    liftDeck.position.set(0, 1.55, -1.85);
-    addBox(1.65, 0.16, 1.65, 0xfacc15, 0, 0, 0, 0.35, 0.4, liftDeck);
-    addBox(0.07, 0.85, 1.6, 0xf59e0b, -0.78, 0.45, 0, 0.3, 0.4, liftDeck);
-    addBox(0.07, 0.85, 1.6, 0xf59e0b, 0.78, 0.45, 0, 0.3, 0.4, liftDeck);
-    g.add(liftDeck);
-
-    // Black Jet A-1 Wing Coupling Hose + Pit Intake Hose + Red Bonding Wire + Wheeled Fire Extinguisher (visible when docked!)
-    const fuelHookups = new THREE.Group();
-    fuelHookups.visible = false;
-    const riserH = Math.max(1.2, wingY - 1.4);
-    addBox(0.11, riserH, 0.11, 0x111827, -0.25, 1.4 + riserH * 0.5, -1.85, 0.1, 0.85, fuelHookups);
-    // Pit intake hose curving down to White Hydrant Pit (+1.1m X, -2.6m Z)
-    const pitHose = addBox(0.12, 0.12, 2.4, 0x111827, 0.65, 0.35, -2.2, 0.1, 0.85, fuelHookups);
-    pitHose.rotation.y = 0.48;
-    // Red Grounding / Bonding Wire (アース・ボンディング線)
-    const bondWire = addBox(0.035, 0.035, 3.2, 0xef4444, -0.95, 0.18, -0.6, 0.2, 0.5, fuelHookups);
-    bondWire.rotation.y = -0.35;
-    // Red Wheeled Ramp Fire Extinguisher (消火器) stationed upwind!
-    const extTank = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.95, 12), new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.35 }));
-    extTank.position.set(-2.15, 0.52, 1.2);
-    fuelHookups.add(extTank);
-    g.add(fuelHookups);
-
-    addWheels(1.16, [-2.1, 2.0], 0.44);
-    g.userData.liftDeck = liftDeck;
-    g.userData.fuelHookups = fuelHookups;
-    g.userData.dockDeckY = Math.max(1.6, wingY - 1.25);
-  } else if (kind === 'gpu') {
-    // Ground Power Unit (GPU AC 115V / 400Hz) + Deployable Orange Power Cable
-    addBox(1.75, 1.22, 3.15, 0xeab308, 0, 0.88, 0);
-    addBox(1.80, 0.22, 3.20, 0x1e293b, 0, 1.52, 0);
-    const led = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: 0x22c55e }));
-    led.position.set(0, 1.72, 1.1);
-    g.add(led);
-
-    // 3D Orange 400Hz Power Cable reaching up into starboard nose receptacle when docked!
-    const cableGrp = new THREE.Group();
-    cableGrp.visible = false;
-    const c1 = addBox(0.11, 0.11, 3.1, 0xf97316, 0, 0.18, 2.25, 0.1, 0.7, cableGrp);
-    c1.rotation.x = -0.12;
-    const c2 = addBox(0.10, 1.35, 0.10, 0xf97316, 0, 0.92, 3.65, 0.1, 0.7, cableGrp);
-    c2.rotation.x = 0.15;
-    g.add(cableGrp);
-
-    addWheels(0.88, [-1.0, 1.0], 0.32);
-    g.userData.cableGrp = cableGrp;
-    g.userData.led = led;
-  } else if (kind === 'lav' || kind === 'water') {
-    // Lavatory Truck (汚水車 — Slate/Yellow hose) & Potable Water Truck (給水車 — Clean Blue tank/hose)
-    const isLav = kind === 'lav';
-    const col = isLav ? 0x64748b : 0x0284c7;
-    const hoseCol = isLav ? 0xfacc15 : 0x38bdf8;
-    const panelY = Math.max(1.9, targetHeightY);
-    addBox(2.15, 1.35, 5.2, 0xf8fafc, 0, 1.02, -0.2);
-    addBox(2.20, 0.68, 3.3, col, 0, 1.38, -0.95);
-    addBox(2.08, 1.42, 1.55, col, 0, 1.12, 1.95);
-    // Elevating rear/front service platform + flexible hose up to aircraft panel!
-    const lift = new THREE.Group();
-    lift.position.set(0, 1.05, 2.65);
-    addBox(1.45, 0.14, 1.1, 0xcbd5e1, 0, 0, 0, 0.4, 0.4, lift);
-    const hose = addBox(0.10, Math.max(0.9, panelY - 1.0), 0.10, hoseCol, 0.22, (panelY - 1.0) * 0.5, 0.35, 0.1, 0.7, lift);
-    hose.visible = false;
-    g.add(lift);
-    addWheels(1.06, [-1.8, 1.75], 0.40);
-    g.userData.serviceLift = lift;
-    g.userData.serviceHose = hose;
-    g.userData.dockLiftY = Math.max(1.15, panelY - 1.15);
-  } else if (kind === 'dolly_train') {
-    // Authentic Open-Cab TT Tractor ("TT Mui Trần") pulling 2 ULD Dollies / Baggage Carts along U-Loop!
-    const tt = createOpenCabTowingTractor3D();
-    tt.position.set(0, 0, 3.2);
-    g.add(tt);
-    const c1 = createBaggageCart3D(0);
-    c1.position.set(0, 0, -0.4);
-    const c2 = createBaggageCart3D(1);
-    c2.position.set(0, 0, -3.9);
-    g.add(c1, c2);
-    g.userData.tt = tt;
-  } else if (kind === 'tug') {
-    // Heavy Aircraft Pushback Tractor + Towbar + Flashing Amber Rotating Beacon!
-    addBox(3.05, 1.18, 5.8, 0xf59e0b, 0, 0.88, 0, 0.35, 0.35);
-    addBox(3.08, 0.24, 5.84, 0x1e293b, 0, 0.42, 0, 0.4, 0.5);
-    addBox(2.28, 0.88, 2.15, 0x38bdf8, 0, 1.84, 0.45, 0.8, 0.12);
-    const beacon = new THREE.Mesh(
-      new THREE.SphereGeometry(0.24, 10, 10),
-      new THREE.MeshBasicMaterial({ color: 0xfacc15 })
-    );
-    beacon.position.set(0, 2.48, 0.45);
-    g.add(beacon);
-    // Yellow Towbar extending from front (+Z) to couple onto aircraft noseGear!
-    const towbar = addBox(0.22, 0.20, 4.4, 0xfacc15, 0, 0.52, 4.85, 0.4, 0.35);
-    addBox(0.42, 0.26, 0.35, 0xef4444, 0, 0.52, 7.05, 0.3, 0.4); // Red shear-pin coupler head!
-    g.userData.towbar = towbar;
-    g.userData.beacon = beacon;
-    addWheels(1.48, [-1.9, 1.9], 0.52);
-  }
-  return g;
-}
+// GSE: dựng bằng thư viện chung gseLibrary3D.js (đồng nhất với cảnh Sân bay 3D NGO)
+export { buildTurnaroundGseMesh };
 
 // =====================================================================
 // MAIN TURNAROUND 3D ENGINE CLASS (5 REAL AIRPORTS + TEXTBOOK GSE & CREW)
@@ -1208,14 +915,14 @@ export class TurnaroundScene3D {
       const profKey = sp.terminal === 'CARGO' ? 'B77F' : (sp.widebodyCapable !== false && idx % 2 === 0 ? 'B788' : 'B738');
       const prof = AIRCRAFT_PROFILES[profKey] || AIRCRAFT_PROFILES.B738;
       const liv = idx % 2 === 0 ? 'ANA' : 'JAL';
-      const parked = createDetailedAirliner3D({ ...(prof.visual3d || {}), liveryId: liv });
+      const parked = createFleetAircraft3D(prof.id || 'A320', liv, prof.visual3d);
       parked.position.set(sp.pos.x, 0.30, sp.pos.z);
       parked.rotation.y = sp.rotY;
       this.airportGroup.add(parked);
     });
 
     if (g.taxiwaysXYZ && g.taxiwaysXYZ.length > 0 && g.taxiwaysXYZ[0].pointsXYZ.length >= 2) {
-      const twyJet = createDetailedAirliner3D({ ...(AIRCRAFT_PROFILES.A320.visual3d || {}), liveryId: 'ANA' });
+      const twyJet = createFleetAircraft3D('A320', 'ANA');
       this.airportGroup.add(twyJet);
       this.ambientTraffic.push({
         mesh: twyJet,
@@ -1815,10 +1522,17 @@ export class TurnaroundScene3D {
     this._updateCrewChoreography(timeSec, acX, acZ, acYaw, spec, ap, halfL, halfSpan, bodyW);
 
     // Smoothly damp OrbitControls camera
-    const damp = Math.min(1, dt * 6.5);
+    // Exponential damping; theta takes the SHORTEST way round (no 300° spins when switching presets)
+    const damp = this.orbit.dragging ? 1 : 1 - Math.exp(-dt * 6.0);
+    const g = this.orbit.goalSpherical;
+    let dTheta = g.theta - this.orbit.spherical.theta;
+    dTheta = Math.atan2(Math.sin(dTheta), Math.cos(dTheta));
+    g.theta = this.orbit.spherical.theta + dTheta;
+    // Large jumps (spot ↔ island overview): zoom in log-space so the camera doesn't skim across the island
+    const r0 = this.orbit.spherical.radius, r1 = g.radius;
     this.orbit.target.lerp(this.orbit.goalTarget, damp);
-    this.orbit.spherical.radius += (this.orbit.goalSpherical.radius - this.orbit.spherical.radius) * damp;
-    this.orbit.spherical.theta += (this.orbit.goalSpherical.theta - this.orbit.spherical.theta) * damp;
+    this.orbit.spherical.radius = Math.exp(Math.log(r0) + (Math.log(r1) - Math.log(r0)) * damp);
+    this.orbit.spherical.theta += dTheta * damp;
     this.orbit.spherical.phi += (this.orbit.goalSpherical.phi - this.orbit.spherical.phi) * damp;
 
     const { radius, theta, phi } = this.orbit.spherical;

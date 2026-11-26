@@ -1,6 +1,7 @@
 // Module G: Three.js PBR 5-Airport Simulator + Direct 3D Raycasting + 10 POVs + GSE Drive + 100pt 3D Exam
 import { AIRCRAFT_PROFILES } from '../data/aircraft.js';
 import {
+  NGO_CARGO_DISTRICT,
   A3D_AIRPORTS,
   A3D_FACILITIES,
   A3D_FLIGHT_PHASES,
@@ -359,7 +360,7 @@ function wrapAngle(a) {
 }
 
 function resetBackingScenario() {
-  // Wide-open Cargo Apron Practice Yard: TT faces West (-X), trailer tail points East (+X) toward BAY 01 (192, 26)!
+  // Wide-open Cargo Apron Practice Yard: TT faces West (-X), trailer tail points East (+X) toward BAY 01 (218, 26) — synced with AirportScene3D.js!
   a3d.ngoDriveScenario = 'SC5';
   a3d.ngoVehMode = 'backing';
   a3d.ngoScenarioTime = 0;
@@ -589,12 +590,12 @@ function stepPhysics(dt, now) {
       const jackknife = hitchDeg >= 62;
       const latErr = Number((tr.z - bay.cz).toFixed(2));
       const angErr = Math.round(Math.abs(wrapAngle(tr.heading - Math.PI)) * 180 / Math.PI);
-      // Bay X spans [186.3, 197.7]; trailer center enters cleanly around x = 190.5..193.8
+      // Bay X spans [212.3, 223.7] (cx 218 ± len/2); depth 100% when trailer center reaches x ≈ 217.8
       const depthPct = Math.max(0, Math.min(100, Math.round(((tr.x - 209.0) / 8.8) * 100)));
       const tailX = tr.x - Math.cos(tr.heading) * 3.1;
       const tailZ = tr.z - Math.sin(tr.heading) * 3.1;
 
-      // Check rear dock wall bumper (+X >= 121.7) & side bay cones (|z - 22| > 2.1 when trailer inside bay X)
+      // Check rear dock wall bumper (+X >= 223.55) & side bay cones (|z - 26| > 1.95 when trailer inside bay X)
       const hitBackWall = tailX >= bay.cx + bay.len * 0.5 - 0.15;
       const hitSideCones = (tailX > bay.cx - bay.len * 0.5 + 0.4) && (Math.abs(tailZ - bay.cz) > bay.w * 0.5 - 0.55);
       if ((hitBackWall || hitSideCones) && Math.abs(v.speed) > 0.3 && now - a3d.lastViolTime > 1500) {
@@ -811,8 +812,13 @@ function drawNgoMinimap() {
   ctx.fillRect(mx(26), mz(-180), Math.max(3, mx(66) - mx(26)), mz(75) - mz(-180)); // 300m Center Pier!
   ctx.fillStyle = '#0284C7';
   ctx.fillRect(mx(-960), mz(95), mx(-565) - mx(-960), 5); // T2 LCC
+  // Cargo District buildings (same data as the 3D scene) + ATC Tower NE of T1
   ctx.fillStyle = '#CBD5E1';
-  ctx.fillRect(mx(545), mz(75), mx(1290) - mx(545), 6); // Cargo Sheds 1-3
+  NGO_CARGO_DISTRICT.filter(b => b.h > 0).forEach(b => {
+    ctx.fillRect(mx(b.x1), mz(b.z1), Math.max(1.5, mx(b.x2) - mx(b.x1)), Math.max(1.5, mz(b.z2) - mz(b.z1)));
+  });
+  ctx.fillStyle = '#F87171';
+  ctx.beginPath(); ctx.arc(mx(330), mz(175), 2.2, 0, Math.PI * 2); ctx.fill();
 
   // Moving AI Airliner & GSE Traffic Dots
   const tSec = a3d.aiTime || 0;
@@ -1048,7 +1054,7 @@ export function renderAirport3dUI() {
           <div class="card"><div class="card-title"><span class="ja">${t('3D直接クリック ＆ 実技検定', 'Thao tác 3D trực tiếp & Thi 100đ', 'Direct 3D Ops & 100pt Exam')}</span><span class="badge badge-warn">RAYCAST</span></div><div id="a3d-handson-panel"></div></div>
         ` : `
           <div class="card">
-            <div class="card-title"><span class="ja">🚜 ${t('NGOセントレア 実戦運転 ＆ 牽引バック実習 (TT mui trần)', '5 Bài Tập Lái Xe TT Mui Trần & Lùi Rơ-Moóc Vào Chuồng', '5 Live NGO TT Driving & Semi-Trailer Reverse Scenarios')}</span></div>
+            <div class="card-title"><span class="ja">🚜 ${t('NGOセントレア 実戦運転 ＆ 牽引バック実習（オープンキャブTT）', '5 Bài Tập Lái Xe TT Mui Trần & Lùi Rơ-Moóc Vào Chuồng', '5 Live NGO TT Driving & Semi-Trailer Reverse Scenarios')}</span></div>
             <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
               ${[
                 ['SC5', t('🅿 SC5: トレーラー牽引バック車庫入れ実習（大型牽引・逆ハンドル練習）', '🅿 SC5: Luyện kéo rơ-moóc lùi vô chuồng BAY 01 (Như lái xe đầu kéo — đánh lái ngược)', '🅿 SC5: Semi-Trailer Reverse Bay Parking Drill (Articulated Counter-Steer)')],

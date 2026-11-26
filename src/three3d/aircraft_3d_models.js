@@ -249,6 +249,38 @@ const RAW_SPECS = {
   }
 };
 
+// Derived fleet types: real 1:1 length/span/height on the nearest sculpted GLB airframe,
+// attach points scaled from the parent type so GSE always docks at the correct doors.
+function deriveSpec(baseId, o) {
+  const b = RAW_SPECS[baseId];
+  const kL = o.lengthM / b.lengthM;
+  const kR = o.fuseRadius / b.fuseRadius;
+  const kY = (o.bellyClearanceM ?? b.bellyClearanceM * kR) / b.bellyClearanceM;
+  const att = {};
+  Object.entries(b.attachFromNose).forEach(([key, v]) => {
+    att[key] = { ...v, m: Number((v.m * kL).toFixed(2)) };
+    if (v.y !== undefined) att[key].y = Number((v.y * (key.startsWith('door') ? (kR * 0.5 + kY * 0.5) : kY)).toFixed(2));
+    if (v.spanX !== undefined) att[key].spanX = Number((v.spanX * (o.wingspanM / b.wingspanM)).toFixed(2));
+  });
+  return {
+    ...b,
+    bellyClearanceM: b.bellyClearanceM * kY,
+    groundLiftM: b.groundLiftM * kY,
+    engineSpanX: b.engineSpanX * (o.wingspanM / b.wingspanM),
+    blastLenM: Math.round(b.blastLenM * Math.sqrt(kL)),
+    ...o,
+    attachFromNose: { ...att, ...(o.attachFromNose || {}) }
+  };
+}
+Object.assign(RAW_SPECS, {
+  A320: deriveSpec('A321', { id: 'A320', wbId: 'A320', name: 'Airbus A320', shortName: 'A320', lengthM: 37.57, wingspanM: 35.8, tailHeightM: 11.76, fuseRadius: 1.98, defaultLivery: 'ANA', reg: 'JA8385' }),
+  E190: deriveSpec('B738', { id: 'E190', wbId: 'E190', name: 'Embraer E190', shortName: 'E190', lengthM: 36.24, wingspanM: 28.72, tailHeightM: 10.57, fuseRadius: 1.5, bellyClearanceM: 0.95, gseCargoType: 'belt', uldCode: 'BULK', defaultLivery: 'JAL', reg: 'JA245J' }),
+  B788: deriveSpec('B789', { id: 'B788', wbId: 'B788', name: 'Boeing 787-8', shortName: 'B787-8', lengthM: 56.7, wingspanM: 60.1, tailHeightM: 16.9, fuseRadius: 2.88, defaultLivery: 'ANA', reg: 'JA801A' }),
+  B763: deriveSpec('B789', { id: 'B763', wbId: 'B763', name: 'Boeing 767-300ER', shortName: 'B767-300', lengthM: 54.9, wingspanM: 47.6, tailHeightM: 15.85, fuseRadius: 2.51, defaultLivery: 'JAL', reg: 'JA623J' }),
+  A359: deriveSpec('B77W', { id: 'A359', wbId: 'A359', name: 'Airbus A350-900', shortName: 'A350-900', lengthM: 66.8, wingspanM: 64.75, tailHeightM: 17.05, fuseRadius: 2.98, defaultLivery: 'JAL', reg: 'JA01XJ' }),
+  B77F: deriveSpec('B77W', { id: 'B77F', wbId: 'B77F', name: 'Boeing 777F', shortName: 'B777F', lengthM: 63.7, wingspanM: 64.8, tailHeightM: 18.6, fuseRadius: 3.1, freighter: true, gseCargoType: 'mdl', uldCode: 'PMC', defaultLivery: 'ANA', reg: 'JA771F' })
+});
+
 export const AIRCRAFT_3D_SPECS = Object.fromEntries(
   Object.entries(RAW_SPECS).map(([k, sp]) => [k, { ...sp, attachPoints: buildAttachPoints(sp) }])
 );
@@ -257,9 +289,7 @@ export function resolveAircraft3DType(acId) {
   if (!acId) return 'B789';
   const up = String(acId).toUpperCase();
   if (AIRCRAFT_3D_SPECS[up]) return up;
-  if (up === 'B788' || up === 'B763' || up === 'A359') return 'B789';
-  if (up === 'B773' || up === 'B77F') return 'B77W';
-  if (up === 'A320') return 'A321';
+  if (up === 'B773') return 'B77W';
   return 'B738';
 }
 
@@ -479,8 +509,8 @@ function drawOrangeStar(ctx, cx, cy, outerR, innerR, fill = '#FF5000') {
   ctx.restore();
 }
 
-function getLiveryTextureSet(livery, regStr) {
-  const key = `${livery.id}_${regStr}`;
+function getLiveryTextureSet(livery, regStr, freighter = false) {
+  const key = `${livery.id}_${regStr}_${freighter ? 'F' : 'P'}`;
   if (liveryTexSetCache.has(key)) return liveryTexSetCache.get(key);
 
   // 1. TAIL FIN BACKGROUND TEXTURE (512x512: u = chordFrac [0=leading edge .. 1=trailing edge], v = height [0=bottom .. 1=top])
@@ -659,7 +689,7 @@ function getLiveryTextureSet(livery, regStr) {
 
   // Crisp Oval Passenger Cabin Window Row along uNose = 0.14 .. 0.79 (y ≈ 222)
   gSym.fillStyle = '#0F1C2E';
-  for (let wx = 292; wx <= 1610; wx += 22) {
+  for (let wx = 292; wx <= (freighter ? 0 : 1610); wx += 22) {
     if (doorStations.some(dx => Math.abs(wx - (dx + 14)) < 24)) continue;
     gSym.beginPath();
     if (gSym.roundRect) gSym.roundRect(wx, 216, 10, 18, 4);
@@ -744,7 +774,7 @@ function getLiveryTextureSet(livery, regStr) {
 
 function createLiveryAirframeMaterial(spec, livery, bakedInfo) {
   const regStr = spec.defaultLivery === livery.id ? spec.reg : `${livery.regPrefix}${spec.id === 'B789' ? '92A' : (spec.id === 'B77W' ? '41J' : '18P')}`;
-  const texSet = getLiveryTextureSet(livery, regStr);
+  const texSet = getLiveryTextureSet(livery, regStr, Boolean(spec.freighter));
   const halfSpan = spec.wingspanM * 0.5;
 
   const mat = new THREE.MeshStandardMaterial({
@@ -753,7 +783,7 @@ function createLiveryAirframeMaterial(spec, livery, bakedInfo) {
     metalness: 0.10
   });
 
-  mat.customProgramCacheKey = () => `jp_livery_v2_${spec.id}_${livery.id}`;
+  mat.customProgramCacheKey = () => `jp_livery_v3_${spec.id}_${livery.id}_${spec.freighter ? 'F' : 'P'}`;
   mat.onBeforeCompile = shader => {
     shader.uniforms.uTailBgTex = { value: texSet.tailBgTex };
     shader.uniforms.uTailLogoTex = { value: texSet.tailLogoTex };
@@ -1207,6 +1237,20 @@ export function createProceduralAirliner3D(acId = 'B789', liveryId = null) {
     });
 
   return root;
+}
+
+// Single entry point used by BOTH 3D scenes for every aircraft (parked, taxiing, active).
+// Jets → sculpted GLB + livery shader at real 1:1 dimensions; only the DHC8 turboprop (no GLB) is procedural.
+let _detailedBuilder = null;
+export function registerProceduralFallback(fn) { _detailedBuilder = fn; }
+export function createFleetAircraft3D(profileId = 'A320', liveryId = 'ANA', profileVisual = null) {
+  const up = String(profileId || 'A320').toUpperCase();
+  if (up === 'DHC8' && _detailedBuilder) {
+    const g = _detailedBuilder({ ...(profileVisual || {}), liveryId });
+    g.userData.spec = g.userData.spec || { ...AIRCRAFT_3D_SPECS.E190, id: 'DHC8', lengthM: 32.8, wingspanM: 28.4, attachPoints: AIRCRAFT_3D_SPECS.E190.attachPoints };
+    return g;
+  }
+  return createProceduralAirliner3D(up, AIRLINE_LIVERIES[liveryId] ? liveryId : null);
 }
 
 export function animateAircraft3D(acGroup, timeSec, opts = {}) {
