@@ -1,16 +1,23 @@
-// Module F: Unified 140-Question Exam Suite (90 特定技能 + 50 NGO Centrair Airside Driving License)
+// Module F: Unified 200-Question Exam Suite (90 SSW-1 + 60 SSW-2 + 50 NGO Centrair Airside Driving License)
 // Pure Trilingual: Japanese (ja) · Vietnamese (vi) · English (en) — Zero Language Mixing!
 import { QUIZ_TOPICS, QUIZ_BANK, renderQuizVisualSvg } from '../data/quizBank.js';
+import { QUIZ_BANK_TG2 } from '../data/quizBankTg2.js';
 import { NGO_DRIVING_QUIZ, renderNgoVisualSvg } from '../data/centrairNgo.js';
 import { appState, saveState, updateProgressBadges, t } from '../core/state.js';
 
-export const ALL_QUESTIONS = [...QUIZ_BANK, ...NGO_DRIVING_QUIZ];
+export const ALL_QUESTIONS = [...QUIZ_BANK, ...QUIZ_BANK_TG2, ...NGO_DRIVING_QUIZ];
 
 const UNIFIED_TOPICS = {
   all: { ja: `全分野 (${ALL_QUESTIONS.length}問)`, vi: `Tất cả (${ALL_QUESTIONS.length} câu)`, en: `All Topics (${ALL_QUESTIONS.length} Qs)` },
   ngo_driving: { ja: '🚗 NGOセントレア車両運転講習 (50問)', vi: '🚗 Bằng lái Sân đỗ NGO Centrair (50 câu)', en: '🚗 NGO Centrair Airside Driving (50 Qs)' },
   stage_tg1: { ja: '① 特定技能1号', vi: '① Kỹ năng đặc định số 1', en: '① SSW (i)' },
   stage_tg2: { ja: '④ 特定技能2号（総合）', vi: '④ Kỹ năng đặc định số 2 (tổng hợp)', en: '④ SSW (ii) (all topics)' },
+  tg2_loadcontrol: { ja: '2号：ロードコントロール・LIR/W&B', vi: 'Số 2: Load Control · LIR / W&B', en: 'SSW-2: Load Control · LIR / W&B' },
+  tg2_leadership: { ja: '2号：作業責任者・現場統括', vi: 'Số 2: Trưởng nhóm (作業責任者)', en: 'SSW-2: Ramp Supervision & Leadership' },
+  tg2_safety_sms: { ja: '2号：SMS・ヒヤリハット・安全', vi: 'Số 2: SMS · Near-miss · An toàn', en: 'SSW-2: SMS, Near-Miss & Ramp Safety' },
+  tg2_irregular: { ja: '2号：イレギュラー・緊急対応', vi: 'Số 2: Xử lý bất thường & Khẩn cấp', en: 'SSW-2: Irregular Ops & Emergencies' },
+  tg2_winter_wx: { ja: '2号：防除雪氷・悪天候対策', vi: 'Số 2: Chống băng tuyết & Thời tiết xấu', en: 'SSW-2: De-icing & Adverse Weather' },
+  tg2_dgr_advanced: { ja: '2号：危険物(DGR)実務管理', vi: 'Số 2: DGR Nâng cao & NOTOC', en: 'SSW-2: Advanced DGR & NOTOC' },
   turnaround: { ja: 'ターンアラウンド・GSE', vi: 'Turnaround & GSE', en: 'Turnaround & GSE' },
   pax: { ja: '旅客サービス', vi: 'Dịch vụ Hành khách', en: 'Passenger Service' },
   cargo: { ja: '貨物・ULDビルドアップ・危険物', vi: 'Hàng hóa, ULD Buildup & DGR', en: 'Cargo, ULD Buildup & DGR' },
@@ -40,10 +47,10 @@ export function stopQuizTimer() {
   }
 }
 
-// Roadmap stage exams: ① 1号 = turnaround + passengers + safety · ④ 2号 = every SSW question (incl. W&B & cargo)
+// Roadmap stage exams: ① 1号 = turnaround + passengers + safety · ④ 2号 = all tg2_* + cargo + wb
 const STAGE_TOPICS = {
   stage_tg1: ['turnaround', 'pax', 'safety'],
-  stage_tg2: ['turnaround', 'pax', 'safety', 'cargo', 'wb']
+  stage_tg2: ['tg2_loadcontrol', 'tg2_leadership', 'tg2_safety_sms', 'tg2_irregular', 'tg2_winter_wx', 'tg2_dgr_advanced', 'cargo', 'wb']
 };
 export function questionsForTopic(tp) {
   if (tp === 'all') return ALL_QUESTIONS;
