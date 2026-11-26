@@ -14,6 +14,7 @@ export const DEFAULT_STATE = {
   taCompleted: 0,
   paxSolved: [],
   cargoSolved: [],
+  uldSolved: [],
   safetyChecked: {},
   safetyReports: [],
   quizStats: { answered: 0, correct: 0, bestExam: null, bestNgoExam: null },
@@ -97,7 +98,7 @@ export const STATIC_I18N = {
   navAirport3d: ['3D空港・NGO運転実習', 'Sân bay 3D & Lái xe NGO', '3D Airport & NGO Driving'],
   navTurnaround: ['ターンアラウンド (5空港)', 'Turnaround (5 sân bay Nhật)', 'Turnaround (5 JP Airports)'],
   navPax: ['旅客サービス・PRM', 'Dịch vụ Hành khách & PRM', 'Passenger Service & PRM'],
-  navCargo: ['航空貨物・ULD・危険物', 'Hàng hóa, ULD & DGR', 'Cargo, ULD & IATA DGR'],
+  navCargo: ['貨物・3D ULDビルドアップ・DGR', 'Đóng hàng ULD 3D, Hàng hóa & DGR', '3D ULD Buildup, Cargo & DGR'],
   navSafety: ['安全管理・FOD・SMS', 'An toàn Sân đỗ, FOD & SMS', 'Safety, FOD & SMS'],
   navQuiz: ['特定技能＆NGO運転試験', 'Ôn thi Hàng không & Bằng lái NGO', 'SSW & NGO Driving Exams'],
   navOps: ['合図・無線・ライトガン・辞典', 'Tín hiệu, Light Gun, Radio & Từ điển', 'Signals, Light Gun, Radio & Dict'],
@@ -178,7 +179,7 @@ export function computeOverallProgress() {
   const wbTotal = WB_SCENARIOS.length;
   const wbDone = appState.wbSolved.length;
   const paxDone = appState.paxSolved.length;
-  const cargoDone = appState.cargoSolved.length;
+  const cargoDone = appState.cargoSolved.length + (appState.uldSolved || []).length;
   const safetyDone = Object.values(appState.safetyChecked).filter(Boolean).length;
   const a3dDone = (appState.airport3dSolved || []).length + ((appState.exam3dBest || 0) >= 80 ? 1 : 0);
   const bestQuiz = Math.max(appState.quizStats.bestExam || 0, appState.quizStats.bestNgoExam || 0);
@@ -186,7 +187,7 @@ export function computeOverallProgress() {
     Math.min(1, wbDone / wbTotal),
     appState.taBestScore !== null ? Math.min(1, appState.taBestScore / 100) : 0,
     Math.min(1, paxDone / 5),
-    Math.min(1, cargoDone / 5),
+    Math.min(1, cargoDone / 11),
     Math.min(1, safetyDone / 16),
     bestQuiz > 0 ? Math.min(1, bestQuiz / 100) : Math.min(0.6, appState.quizStats.answered / 50),
     Math.min(1, a3dDone / 4)
@@ -200,17 +201,19 @@ export function updateProgressBadges() {
   const wbDone = appState.wbSolved.length;
   const safetyDone = Object.values(appState.safetyChecked).filter(Boolean).length;
   const a3dDone = (appState.airport3dSolved || []).length + ((appState.exam3dBest || 0) >= 80 ? 1 : 0);
+  const cargoTotalDone = appState.cargoSolved.length + (appState.uldSolved || []).length;
   const overall = computeOverallProgress();
 
   setTxt('badge-dashboard', `${overall}%`);
   setTxt('badge-wb', `${wbDone}/${wbTotal}`);
   setTxt('badge-turnaround', appState.taBestScore !== null ? `${appState.taBestScore}pt` : '—');
   setTxt('badge-pax', `${appState.paxSolved.length}/5`);
-  setTxt('badge-cargo', `${appState.cargoSolved.length}/5`);
+  setTxt('badge-cargo', `${cargoTotalDone}/11`);
   setTxt('badge-safety', `${safetyDone}/16`);
   const bestQuiz = Math.max(appState.quizStats.bestExam || 0, appState.quizStats.bestNgoExam || 0);
   setTxt('badge-quiz', bestQuiz > 0 ? `${bestQuiz}%` : `${appState.quizStats.answered}Q`);
   setTxt('badge-airport3d', `${a3dDone}/4`);
+  setTxt('badge-ops', '128');
 
   const bar = document.getElementById('overall-bar');
   if (bar) bar.style.width = `${overall}%`;

@@ -46,7 +46,8 @@ export function renderDashboard(actions) {
           <div style="font-family:var(--font-mono);font-size:26px;font-weight:800;color:#38BDF8;">${overall}%</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;">
-          <button class="efb-btn active" id="dash-go-ngo-exam">🚗 ${t('NGO車両運転 50問試験へ', 'Thi Bằng lái Sân đỗ NGO (50 câu)', 'NGO Airside Driving Exam (50Q)')}</button>
+          <button class="efb-btn active" id="dash-go-uld-sim">🏗 ${t('3D ULDビルドアップ実習へ', 'Chơi Đóng hàng ULD 3D thực tế', 'Open 3D ULD Buildup Game')}</button>
+          <button class="efb-btn" id="dash-go-ngo-exam">🚗 ${t('NGO車両運転 50問試験へ', 'Thi Bằng lái Sân đỗ NGO (50 câu)', 'NGO Airside Driving Exam (50Q)')}</button>
           <button class="efb-btn" id="dash-go-3d">🛫 ${t('3D空港 (Three.js) を開く', 'Mở Sân bay 3D Three.js', 'Open Three.js 3D Airport')}</button>
           <button class="efb-btn" id="dash-go-wb">⚖ ${t('W&B + 3D分割画面へ', 'Mở W&B + 3D song song', 'Open W&B + Split 3D')}</button>
         </div>
@@ -83,7 +84,7 @@ export function renderDashboard(actions) {
         </div>
         <div class="ja" style="font-weight:700;margin-top:8px;">${t(`F. 特定技能＆NGO運転 模擬試験 (${totalQ}問)`, `F. Ôn thi Kỹ năng Đặc định & Lái xe NGO (${totalQ} câu)`, `F. SSW & NGO Driving Exam Bank (${totalQ} Qs)`)}</div>
         <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
-          ${t('公式NGO運転50問＋特定技能90問・図版SVG 32問・タイマー模試', '50 câu chuẩn giáo trình NGO + 90 câu hàng không · 32 hình SVG', '50 official NGO driving + 90 SSW questions · 32 SVG visuals')}
+          ${t('公式NGO運転50問＋特定技能110問・図版SVG 32問・タイマー模試', '50 câu chuẩn giáo trình NGO + 110 câu JEAE · 32 hình SVG', '50 official NGO driving + 110 JEAE SSW questions · 32 SVG visuals')}
         </div>
       </button>
 
@@ -110,7 +111,7 @@ export function renderDashboard(actions) {
           <button class="btn" id="dash-go-guide">📘 ${t('NGO運転 7段階速度＆パス表', 'Sổ tay Tốc độ & Thẻ Pass NGO', 'NGO Speed & Pass Guide')}</button>
           <button class="btn" data-nav="turnaround">⏱ A. ${t('ターンアラウンド', 'Turnaround', 'Turnaround')} (${appState.taBestScore !== null ? appState.taBestScore + 'pt' : 'Start'})</button>
           <button class="btn" data-nav="pax">🧳 B. ${t('旅客サービス', 'Hành khách', 'Passenger')} (${appState.paxSolved.length}/5)</button>
-          <button class="btn" data-nav="cargo">📦 C. ${t('貨物・DGR', 'Hàng hóa & DGR', 'Cargo & DGR')} (${appState.cargoSolved.length}/5)</button>
+          <button class="btn" data-nav="cargo">🏗 C. ${t('3D ULD・貨物・DGR', 'Đóng ULD 3D & DGR', '3D ULD & DGR')} (${appState.cargoSolved.length + (appState.uldSolved || []).length}/11)</button>
           <button class="btn" data-nav="safety">🛡 E. ${t('安全・SMS', 'An toàn SMS', 'Safety / SMS')} (${safetyDone}/16)</button>
         </div>
       </div>
@@ -129,6 +130,8 @@ export function renderDashboard(actions) {
   `;
 
   mount.querySelectorAll('[data-nav]').forEach(el => { el.onclick = () => actions.go(el.dataset.nav); });
+  const bUld = document.getElementById('dash-go-uld-sim');
+  if (bUld) bUld.onclick = () => actions.openUldBuildup();
   const bNgo = document.getElementById('dash-go-ngo-exam');
   if (bNgo) bNgo.onclick = () => actions.openNgoExam();
   const b3d = document.getElementById('dash-go-3d');

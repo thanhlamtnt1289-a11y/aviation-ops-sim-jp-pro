@@ -7,13 +7,13 @@ import { appState, saveState, updateProgressBadges, t } from '../core/state.js';
 export const ALL_QUESTIONS = [...QUIZ_BANK, ...NGO_DRIVING_QUIZ];
 
 const UNIFIED_TOPICS = {
-  all: { ja: '全分野 (140問)', vi: 'Tất cả (140 câu)', en: 'All Topics (140 Qs)' },
+  all: { ja: `全分野 (${ALL_QUESTIONS.length}問)`, vi: `Tất cả (${ALL_QUESTIONS.length} câu)`, en: `All Topics (${ALL_QUESTIONS.length} Qs)` },
   ngo_driving: { ja: '🚗 NGOセントレア車両運転講習 (50問)', vi: '🚗 Bằng lái Sân đỗ NGO Centrair (50 câu)', en: '🚗 NGO Centrair Airside Driving (50 Qs)' },
   turnaround: { ja: 'ターンアラウンド・GSE', vi: 'Turnaround & GSE', en: 'Turnaround & GSE' },
   pax: { ja: '旅客サービス', vi: 'Dịch vụ Hành khách', en: 'Passenger Service' },
-  cargo: { ja: '貨物・ULD・危険物', vi: 'Hàng hóa, ULD & DGR', en: 'Cargo, ULD & DGR' },
+  cargo: { ja: '貨物・ULDビルドアップ・危険物', vi: 'Hàng hóa, ULD Buildup & DGR', en: 'Cargo, ULD Buildup & DGR' },
   wb: { ja: '重量重心計算 (W&B)', vi: 'Weight & Balance', en: 'Weight & Balance' },
-  safety: { ja: '法令・安全 (SMS/FOD)', vi: 'Pháp luật & An toàn', en: 'Law & Safety (SMS/FOD)' }
+  safety: { ja: '法令・安全 (SMS/SHELL/FOD)', vi: 'Pháp luật & An toàn (SMS/SHELL)', en: 'Law & Safety (SMS/SHELL/FOD)' }
 };
 
 export const quizState = {

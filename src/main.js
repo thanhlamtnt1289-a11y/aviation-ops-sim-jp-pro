@@ -19,7 +19,7 @@ import {
 import { renderQuizModule, openNgoExamMode, stopQuizTimer } from './modules/quizModule.js';
 import {
   taState, renderTurnaroundModule, stopTurnaround3D, setTurnaroundNavCallback,
-  renderPaxModule, renderCargoModule, renderSafetyModule
+  renderPaxModule, renderCargoModule, openCargoSubtab, stopCargo3D, renderSafetyModule
 } from './modules/opsModules.js';
 import { AIRCRAFT_PROFILES, WB_SCENARIOS } from './data/aircraft.js';
 import { A3D_AIRPORTS } from './data/airports.js';
@@ -30,9 +30,9 @@ const MODULE_TITLES = {
   airport3d: ['G. 5空港 3Dシミュレーター ＆ NGOセントレア運転実習', 'G. Sân bay 3D PBR & Thực hành Lái xe NGO Centrair', 'G. 5-Airport Three.js PBR 3D & NGO Airside Driving'],
   turnaround: ['A. ターンアラウンド・シミュレーター（5大空港）', 'A. Mô phỏng Turnaround (5 sân bay Nhật Bản)', 'A. Turnaround Simulator (5 Japanese Airports)'],
   pax: ['B. 旅客サービス（搭乗手続・手荷物・PRM）', 'B. Dịch vụ Hành khách (Check-in, Hành lý, PRM)', 'B. Passenger Service (Check-in, Baggage, PRM)'],
-  cargo: ['C. 航空貨物・ULD・IATA危険物（DGR）', 'C. Hàng hóa Hàng không, ULD & IATA DGR', 'C. Air Cargo, ULD & IATA Dangerous Goods'],
+  cargo: ['C. 3D ULDビルドアップ実技ゲーム・航空貨物・IATA危険物', 'C. Trò chơi Đóng hàng ULD 3D thực tế, Hàng hóa & IATA DGR', 'C. Realistic 3D ULD Build-up Sim, Air Cargo & IATA DGR'],
   safety: ['E. 安全管理・FOD・コンプライアンス（JCAB/SMS）', 'E. An toàn Sân đỗ, FOD & Luật JCAB/SMS', 'E. Safety, FOD & Compliance (JCAB/SMS)'],
-  quiz: ['F. 特定技能 ＆ NGO車両運転講習 総合試験（140問）', 'F. Ôn thi Kỹ năng Đặc định & Bằng lái Sân đỗ NGO (140 câu)', 'F. SSW & NGO Airside Driving Exam Suite (140 Qs)'],
+  quiz: ['F. 特定技能 ＆ NGO車両運転講習 総合試験（160問）', 'F. Ôn thi Kỹ năng Đặc định & Bằng lái Sân đỗ NGO (160 câu)', 'F. SSW & NGO Airside Driving Exam Suite (160 Qs)'],
   ops: ['H. マーシャリング・ライトガン・MCA無線・音声辞典', 'H. Marshalling, Light Gun, MCA Radio & Từ điển', 'H. Marshalling, Light Gun, MCA Radio & Dictionary']
 };
 
@@ -90,6 +90,11 @@ const navActions = {
     openNgoExamMode();
     setHash('#quiz/ngo');
   },
+  openUldBuildup: () => {
+    switchModule('cargo');
+    openCargoSubtab('buildup');
+    setHash('#cargo/buildup');
+  },
   openWbIn3D: () => {
     a3d.subtab = 'flight';
     a3d.fleetAircraftId = wbState.aircraftId;
@@ -113,6 +118,7 @@ export function switchModule(mod, skipHash = false) {
   if (appState.activeModule === 'airport3d' && mod !== 'airport3d') stopAirport3dLoop();
   if (appState.activeModule === 'wb' && mod !== 'wb') stopWbSplit3D();
   if (appState.activeModule === 'turnaround' && mod !== 'turnaround') stopTurnaround3D();
+  if (appState.activeModule === 'cargo' && mod !== 'cargo') stopCargo3D();
   if (appState.activeModule === 'quiz' && mod !== 'quiz') stopQuizTimer();
 
   appState.activeModule = mod;
@@ -165,6 +171,11 @@ function applyHashRoute() {
   if (seg === '3d' || seg === 'airport3d') {
     if (arg && A3D_AIRPORTS[arg]) a3d.airportId = arg;
     switchModule('airport3d', true);
+    return true;
+  }
+  if (seg === 'uld' || (seg === 'cargo' && arg)) {
+    switchModule('cargo', true);
+    openCargoSubtab(arg || 'buildup');
     return true;
   }
   if (seg === 'quiz' && arg === 'ngo') {

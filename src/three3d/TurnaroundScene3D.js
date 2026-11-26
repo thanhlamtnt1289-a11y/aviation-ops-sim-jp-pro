@@ -303,7 +303,7 @@ export class TurnaroundScene3D {
     this.scene.background = new THREE.Color(0x9bc5e8);
     this.scene.fog = new THREE.FogExp2(0xb8d7f0, 0.00018);
 
-    this.camera = new THREE.PerspectiveCamera(46, 16 / 9, 2.0, 9500);
+    this.camera = new THREE.PerspectiveCamera(46, 16 / 9, 2.0, 16000);
 
     this.sunLight = new THREE.DirectionalLight(0xfff7e8, 2.2);
     this.sunLight.position.set(600, 950, 450);
@@ -395,7 +395,7 @@ export class TurnaroundScene3D {
     this._onWheel = e => {
       e.preventDefault();
       const factor = e.deltaY > 0 ? 1.12 : 0.89;
-      this.orbit.goalSpherical.radius = Math.max(26, Math.min(4800, this.orbit.goalSpherical.radius * factor));
+      this.orbit.goalSpherical.radius = Math.max(26, Math.min(6500, this.orbit.goalSpherical.radius * factor));
     };
     this._onContext = e => e.preventDefault();
 
@@ -469,11 +469,17 @@ export class TurnaroundScene3D {
     const sp = this.activeSpot.pos;
 
     if (preset === 'overview') {
-      // Wide dramatic aerial overview of the entire real-scale island / runway / terminals
-      this.orbit.goalTarget.set(sp.x * 0.35, 0, sp.z * 0.35);
-      this.orbit.goalSpherical.radius = 2350;
+      // Wide dramatic aerial overview calibrated to frame 100% of multi-runway / dual-island real-scale layouts!
+      const rwys = this.geoData.runwaysXYZ || [];
+      let midX = sp.x * 0.35, midZ = sp.z * 0.35;
+      if (rwys.length > 1) {
+        midX = rwys.reduce((s, r) => s + r.cx, 0) / rwys.length;
+        midZ = rwys.reduce((s, r) => s + r.cz, 0) / rwys.length;
+      }
+      this.orbit.goalTarget.set(midX, 0, midZ);
+      this.orbit.goalSpherical.radius = this.geoData.overviewRadius || 2450;
       this.orbit.goalSpherical.theta = 0.72;
-      this.orbit.goalSpherical.phi = 0.88;
+      this.orbit.goalSpherical.phi = 0.86;
     } else if (preset === 'tower') {
       // Positioned right beside the airport's real ATC Control Tower looking toward the active Spot & Runway!
       const tw = this.geoData.atcTowerXYZ;
@@ -549,7 +555,7 @@ export class TurnaroundScene3D {
           }
         `
       });
-      const sea = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), waterMat);
+      const sea = new THREE.Mesh(new THREE.PlaneGeometry(24000, 24000), waterMat);
       sea.rotation.x = -Math.PI / 2;
       sea.position.y = -3.0;
       sea.renderOrder = 0;
@@ -561,19 +567,19 @@ export class TurnaroundScene3D {
         roughness: isSnow ? 0.62 : 0.92,
         metalness: 0.04
       });
-      const ground = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), landMat);
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(24000, 24000), landMat);
       ground.rotation.x = -Math.PI / 2;
       ground.position.y = -1.2;
       ground.receiveShadow = true;
       ground.renderOrder = 0;
       this.airportGroup.add(ground);
 
-      // Rolling distant hills / mountains
+      // Rolling distant hills / mountains (placed cleanly beyond NRT's +2,450m RWY B!)
       const hillCol = isSnow ? 0xb4c8dc : 0x3b6340;
       const hillMat = new THREE.MeshStandardMaterial({ color: hillCol, roughness: 0.92 });
       [
-        [-2800, -3400, 950, 260], [1800, -3800, 1200, 320],
-        [-3200, 2400, 1100, 220], [3200, 1800, 980, 210]
+        [-2800, -3600, 950, 260], [2200, -4200, 1200, 320],
+        [-3200, 2600, 1100, 220], [4600, 2200, 980, 210]
       ].forEach(([hx, hz, hr, hh]) => {
         const hill = new THREE.Mesh(new THREE.ConeGeometry(hr, hh, 12), hillMat);
         hill.position.set(hx, hh * 0.45 - 5, hz);

@@ -5,87 +5,97 @@ export const JP_AIRPORTS = {
       code: 'NGO',
       nameJa: '中部国際空港（セントレア / Centrair）',
       nameVi: 'Sân bay Quốc tế Chubu Centrair (NGO)',
+      nameEn: 'Chubu Centrair International Airport (NGO)',
       targetMin: 40,
       windRisk: 0.45,
-      ruleJa: '海上空港のため伊勢湾からの横風・強風警戒が高い（風速規定超過時は高所作業・コンテナ扉開閉に厳重注意）。単一滑走路でコンパクトな動線。',
-      ruleVi: 'Sân bay trên đảo nhân tạo vịnh Ise: rủi ro gió ngang mạnh cao (cần chú ý nghiêm ngặt khi mở cửa hầm hàng/thao tác trên cao). Bố trí sân đỗ gọn, hiệu quả.'
+      ruleJa: '海上人工島（伊勢湾）：3,500m×60m単一滑走路（36/18）、センターピア先端〜滑走路約400m。強風時の高所作業・コンテナ扉開閉に厳重注意。',
+      ruleVi: 'Đảo nhân tạo Vịnh Ise: đường băng đơn 3.500m×60m (36/18), mũi Center Pier cách đường băng ~400m. Chú ý gió ngang mạnh khi mở cửa hầm/làm việc trên cao.',
+      ruleEn: 'Ise Bay artificial island: single 3,500m×60m RWY (36/18), Center Pier tip ~400m from runway. Strict high-wind precautions for elevated work & cargo doors.'
     },
     NRT: {
       code: 'NRT',
       nameJa: '成田国際空港（Narita）',
       nameVi: 'Sân bay Quốc tế Narita (NRT)',
+      nameEn: 'Tokyo Narita International Airport (NRT)',
       targetMin: 55,
       windRisk: 0.25,
-      ruleJa: '国際線・貨物便の大型機比率が高くULD作業量が多い。運用時間制限（カーフュー）に留意し、定時出発管理が重要。',
-      ruleVi: 'Trung tâm quốc tế & hàng hóa máy bay thân rộng, khối lượng ULD lớn. Chú ý giờ giới nghiêm khai thác (curfew) và đảm bảo đúng giờ khởi hành.'
+      ruleJa: '千葉県下総台地：A滑走路4,000m（34L/16R）・B滑走路2,500m（34R/16L）。大型貨物機・ULDビルドアップ量が多く、カーフュー（運用時間制限）管理が重要。',
+      ruleVi: 'Cao nguyên Chiba: RWY A 4.000m (34L/16R) & RWY B 2.500m (34R/16L) cách nhau ~2.450m. Tỷ lệ tàu rộng & hàng ULD lớn, lưu ý giờ giới nghiêm (curfew).',
+      ruleEn: 'Chiba inland plateau: RWY A 4,000m (34L/16R) & RWY B 2,500m (34R/16L) spaced ~2,450m apart. Heavy widebody/freighter ULD volume & curfew management.'
     },
     HND: {
       code: 'HND',
       nameJa: '東京国際空港（羽田 / Haneda）',
       nameVi: 'Sân bay Quốc tế Haneda (HND)',
+      nameEn: 'Tokyo Haneda International Airport (HND)',
       targetMin: 35,
       windRisk: 0.30,
-      ruleJa: '国内線・国際線の超高密度発着。ターンアラウンド標準時間が短く、プッシュバック許可のタイミングとスポット周囲の車両交錯防止が最重要。',
-      ruleVi: 'Mật độ chuyến bay cực cao, thời gian turnaround rất gấp (35 phút). Cần kiểm soát chính xác giờ xin pushback và phòng tránh va chạm xe GSE.'
+      ruleJa: '東京湾埋立地（4滑走路：A 3,000m・B 2,500m・C 3,360m・D 2,500m桟橋島）。超高密度発着のためプッシュバック許可と車両交錯防止が最重要。',
+      ruleVi: 'Vịnh Tokyo (4 đường băng: A 3.000m, B 2.500m, C 3.360m, D 2.500m đảo cầu cảng). Mật độ cực cao, thời gian quay đầu 35 phút rất gấp.',
+      ruleEn: 'Tokyo Bay (4 runways: A 3,000m, B 2,500m, C 3,360m, D 2,500m offshore pier). Ultra-high density 35-min turnarounds & strict pushback coordination.'
     },
     KIX: {
       code: 'KIX',
       nameJa: '関西国際空港（Kansai）',
       nameVi: 'Sân bay Quốc tế Kansai (KIX)',
+      nameEn: 'Kansai International Airport (KIX)',
       targetMin: 45,
       windRisk: 0.40,
-      ruleJa: '24時間運用の海上空港。台風・強風・塩害への配慮と、国際線乗継手荷物の仕分け・タイムマネジメントがポイント。',
-      ruleVi: 'Sân bay biển hoạt động 24h: chú ý gió lớn/bão và xử lý hành lý nối chuyến quốc tế đúng giờ cut-off.'
+      ruleJa: '大阪湾人工2島（24時間運用）：1期島A滑走路3,500m＆全長約1.7kmのT1ウイング、2期島B滑走路4,000m。強風・台風対策と国際貨物乗継（機移し）が鍵。',
+      ruleVi: 'Đảo nhân tạo kép Vịnh Osaka (24h): Đảo 1 RWY A 3.500m + nhà ga T1 dài ~1,7km; Đảo 2 RWY B 4.000m. Lưu ý gió bão & hàng chuyển tiếp quốc tế.',
+      ruleEn: 'Osaka Bay 24h dual islands: Island 1 RWY 06R/24L (3,500m) + 1.66km T1 wing; Island 2 RWY 06L/24R (4,000m). Typhoon wind & ship-to-ship cargo focus.'
     },
     CTS: {
       code: 'CTS',
       nameJa: '新千歳空港（Shin-Chitose）',
       nameVi: 'Sân bay Shin-Chitose (CTS - Hokkaido)',
+      nameEn: 'New Chitose Airport (CTS - Hokkaido)',
       targetMin: 45,
       windRisk: 0.35,
-      ruleJa: '冬季は除雪・凍結路面でのGSE低速走行、防除氷作業（De-icing）との連携、スキー板等の長尺手荷物対応が重要。',
-      ruleVi: 'Mùa đông cần chú ý mặt sân trơn trượt, lái xe GSE tốc độ thấp, phối hợp phun chống đóng băng (De-icing) và hành lý cồng kềnh (ván trượt tuyết).'
+      ruleJa: '北海道石狩平野：3,000m平行2滑走路（01L/19R・01R/19L、間隔300m）と半円形ターミナル。冬季は凍結路低速走行・60℃以上の防除氷液散布（クリーン・エアクラフト）が必須。',
+      ruleVi: 'Hokkaido: 2 đường băng song song 3.000m cách tâm 300m & nhà ga bán nguyệt. Mùa đông bắt buộc chạy chậm chống trượt & phun De-icing ≥60°C.',
+      ruleEn: 'Hokkaido plain: 3,000m close-parallel runways (300m spacing) & C-shaped terminal. Winter snow ops require ≥60°C de-icing (Clean Aircraft Concept).'
     }
   };
 
-  // Danh sách 12 bước nghiệp vụ Turnaround từ On-block đến Off-block
+  // Danh sách 12 bước nghiệp vụ Turnaround từ On-block đến Off-block (Chuẩn giáo trình JEAE SSW-I/II)
   export const TA_STEPS = [
     { id: 'marshal', duration: 2, req: [], outdoor: true,
-      ja: '駐機誘導（マーシャリング）', vi: 'Hướng dẫn máy bay vào bãi đỗ (Marshalling)',
-      detailJa: '停止線確認・パドル誘導・両翼クリアランス監視', detailVi: 'Canh vạch dừng, dẫn hướng bằng gậy, giám sát khoảng trống đầu cánh' },
+      ja: '駐機誘導（マーシャリング・ウォッチマン配置）', vi: 'Hướng dẫn máy bay vào bãi đỗ (Marshalling & Watchman)', en: 'Aircraft Marshalling & Wingwalker/Watchman Positioning',
+      detailJa: '停止線確認・パドル誘導・両翼端クリアランス（目測誤差±3m注意）・エンジン外側5m以上離隔', detailVi: 'Canh vạch dừng, dẫn hướng chuẩn, canh đầu cánh (sai số mắt ±3m) & đứng cách vỏ ngoài động cơ ≥5m', detailEn: 'Verify stop bar, standard wand signals, wingtip clearance (±3m pilot visual error) & stay ≥5m outside engines' },
     { id: 'chock', duration: 2, req: ['marshal'], outdoor: true,
-      ja: '輪止め設置（チョックオン）', vi: 'Chèn bánh máy bay (Chock On)',
-      detailJa: 'エンジン停止・衝突防止灯（ビーコン）消灯確認後に前輪・主輪へ設置', detailVi: 'Đợi tắt đèn beacon & động cơ dừng hẳn mới tiếp cận chèn bánh mũi và bánh chính' },
+      ja: '輪止め設置（チョックオン）＆ コーン配置', vi: 'Chèn bánh máy bay (Chock On) & Đặt cọc tiêu', en: 'Wheel Chocks Inserted & Safety Cones Placed',
+      detailJa: 'エンジン停止・衝突防止灯（赤色ビーコン）消灯確認後に前輪・主輪へ輪止め、機首・翼端・エンジン前へコーン設置', detailVi: 'Đợi tắt đèn beacon đỏ & động cơ dừng hẳn mới chèn bánh mũi/chính và đặt cọc tiêu mũi, đầu cánh, động cơ', detailEn: 'Wait for engine spool-down & red beacon OFF before inserting nose/main chocks and placing safety cones' },
     { id: 'arrcheck', duration: 2, req: ['chock'], outdoor: true,
-      ja: '到着安全確認・指差呼称', vi: 'Kiểm tra an toàn đến & Chỉ tay hô xác nhận (指差呼称)',
-      detailJa: '機体損傷・FOD（異物）・コーン配置を指差呼称で確認', detailVi: 'Kiểm tra thân vỏ, FOD, đặt cọc tiêu an toàn bằng động tác 指差呼称' },
+      ja: '到着外部点検・FOD確認・指差呼称', vi: 'Kiểm tra ngoại quan đến, FOD & Chỉ tay hô xác nhận (指差呼称)', en: 'Arrival Walkaround, FOD Check & Point-and-Call',
+      detailJa: '機体損傷・油漏れ・FOD（異物）有無を指差呼称で確認（機体接近車両は5m手前で一旦停止・10km/h以下）', detailVi: 'Kiểm tra thân vỏ, rò dầu, FOD bằng 指差呼称 (xe GSE dừng hẳn cách tàu 5m, tiến vào ≤10 km/h)', detailEn: 'Check fuselage damage, leaks & FOD via Point-and-Call (GSE brake-check stop at 5m, approach ≤10 km/h)' },
     { id: 'gpu', duration: 2, req: ['chock', 'arrcheck'], outdoor: true,
-      ja: 'GPU接続（地上電源供給）', vi: 'Kết nối nguồn điện mặt đất (GPU)',
-      detailJa: 'プラグ異常点検後に接続、供給ランプ点灯確認', detailVi: 'Kiểm tra đầu cắm, kết nối GPU và xác nhận đèn cấp nguồn ổn định' },
+      ja: 'GPU / eGPU 接続（AC 115V / 400Hz 地上電源）', vi: 'Kết nối nguồn điện mặt đất GPU / eGPU (AC 115V / 400Hz)', en: 'Connect GPU / eGPU Ground Power (AC 115V / 400Hz)',
+      detailJa: 'プラグ・ケーブル損傷点検後に右舷機首レセプタクルへ接続し、AC 115V / 400Hz 供給ランプを確認', detailVi: 'Kiểm tra đầu cắm, nối ổ điện mũi phải cấp nguồn chuẩn AC 115V / 400Hz và xác nhận đèn báo ổn định', detailEn: 'Inspect plug/cable, connect to starboard nose receptacle (AC 115V / 400Hz), and verify power-on indicator' },
     { id: 'unload', duration: 8, req: ['chock', 'arrcheck'], outdoor: true,
-      ja: '降機 ＆ 手荷物・貨物取卸し', vi: 'Khách xuống máy bay & Bốc dỡ hành lý/hàng hóa',
-      detailJa: 'PBB接続・ドアオープン確認、ベルトローダー・ハイリフト操作', detailVi: 'Kết nối ống lồng PBB, mở cửa hầm và dỡ hành lý/ULD an toàn' },
+      ja: '降機（PBB/ステップ）＆ 手荷物・ULD取卸し', vi: 'Khách xuống (PBB/Xe thang) & Dỡ hành lý/ULD', en: 'Passenger Deplaning & Baggage / ULD Offloading',
+      detailJa: 'ドアモード解除確認後に開扉、ハイリフトローダー（ULD）/ ベルトローダー（バルク間隔50cm）で取卸し', detailVi: 'Xác nhận Disarm cửa trước khi mở; dùng High-Lift Loader dỡ ULD và Belt Loader dỡ hàng rời (cách 50cm)', detailEn: 'Confirm slide disarmed before door open; offload ULDs via High-Lift Loader & bulk bags at 50cm spacing' },
     { id: 'fuel', duration: 10, req: ['chock', 'arrcheck'], outdoor: true,
-      ja: '給油作業（Fueling）', vi: 'Tra nạp nhiên liệu (給油)',
-      detailJa: 'アース接続・消火器待機・給油安全ゾーン確保（雷警報時は即時中断）', detailVi: 'Tiếp địa (bonding), bình chữa cháy trực sẵn, dừng ngay khi có sét/gió mạnh' },
+      ja: '給油作業（ハイドラント・サービサー / 30kL給油車）', vi: 'Tra nạp nhiên liệu Jet A-1 (Hydrant Servicer / Xe bồn ≤30kL)', en: 'Jet A-1 Refueling (Hydrant Servicer / ≤30kL Refueler)',
+      detailJa: '乙種第4類有資格者管理・ボンディング/アース接続（赤ピット）・消火器待機・給油車両前方の退避経路確保', detailVi: 'Chứng chỉ 乙種第4類, kẹp dây tiếp địa (hố đỏ), bình chữa cháy sẵn sàng & giữ trống lối thoát phía trước xe dầu', detailEn: 'HazMat Class 4 cert, bonding/grounding wire (red pit), fire extinguishers ready & clear forward escape path' },
     { id: 'lav', duration: 6, req: ['chock', 'arrcheck'], outdoor: true,
-      ja: 'ラバトリー作業（汚水処理）', vi: 'Dịch vụ vệ sinh bồn thải (ラバトリー)',
-      detailJa: '飲料水作業と衛生分離を維持すること', detailVi: 'Xử lý nước thải — tuyệt đối tách biệt vệ sinh với quy trình cấp nước sạch' },
+      ja: 'ラバトリー汚水処理（2,000L汚水＋2,000L洗浄水）', vi: 'Xử lý vệ sinh bồn thải Lavatory (2.000L thải + 2.000L rửa)', en: 'Lavatory Servicing (2,000L Waste + 2,000L Flush)',
+      detailJa: '防護具着用・ダンプバルブ確実閉鎖・飲料水補給車との衛生分離を厳守', detailVi: 'Đeo đồ bảo hộ, đóng chặt van xả chống rò rỉ đóng băng trên cao, tách biệt tuyệt đối với xe nước sạch', detailEn: 'Wear PPE, verify dump valve lock/seal to prevent blue-ice leaks, and maintain strict separation from potable water' },
     { id: 'water', duration: 5, req: ['chock', 'arrcheck'], outdoor: true,
-      ja: '飲料水補給（Potable Water）', vi: 'Cấp nước sạch sinh hoạt (飲料補給)',
-      detailJa: 'ホース先端の清潔保持・ラバトリーとの同時近接作業回避', detailVi: 'Giữ vệ sinh đầu vòi, tránh thao tác đồng thời sát cạnh xe lavatory' },
+      ja: '飲料水補給（最大4,000L・水圧3.0kg/cm²・当日水）', vi: 'Cấp nước sạch sinh hoạt (Bồn 4.000L · Áp lực 3,0kg/cm²)', en: 'Potable Water Service (4,000L Tank · 3.0 kg/cm²)',
+      detailJa: 'タンク内に1日以上保管した水は使用禁止！ホース先端消毒・衛生管理を徹底', detailVi: 'Cấm dùng nước lưu trong bồn xe quá 1 ngày! Giữ sạch đầu vòi cấp nước theo Luật Vệ sinh Thực phẩm', detailEn: 'Never use water stored ≥1 day in tank! Maintain sanitary nozzle handling at 3.0 kg/cm² pump pressure' },
     { id: 'clean', duration: 8, req: ['unload'], outdoor: false,
-      ja: '機内清掃・保安確認', vi: 'Vệ sinh khoang khách & Kiểm tra an ninh cabin',
-      detailJa: '降機完了後に座席清掃・忘れ物・不審物確認を実施', detailVi: 'Thực hiện sau khi khách xuống hết: dọn cabin, kiểm tra đồ bỏ quên & an ninh' },
+      ja: '機内清掃・ケータリング搭載（床面-19cm・アウトリガー）', vi: 'Vệ sinh cabin & Nạp suất ăn (Sàn thấp hơn 19cm · Chân chống)', en: 'Cabin Cleaning & Catering Load (-19cm Floor · Outriggers)',
+      detailJa: 'フードローダーはアウトリガー（安定脚）張出、機内床より約19cm低くセットして接触防止（走行8km/h以下）', detailVi: 'Xe suất ăn bắt buộc hạ chân chống (Outriggers), căn sàn thấp hơn sàn tàu ~19cm chống cạ cửa (chạy ≤8km/h)', detailEn: 'Deploy catering truck outriggers, set van floor ~19cm below cabin sill, and observe ≤8 km/h high-CG speed' },
     { id: 'load', duration: 10, req: ['unload'], outdoor: true,
-      ja: '手荷物・貨物搭載（LIR照合）', vi: 'Xếp hành lý & hàng hóa theo LIR',
-      detailJa: 'LIR（搭載指示書）と現物タグを照合しネット・ロック確認', detailVi: 'Đối chiếu thực tế với LIR, khóa chốt ULD và kiểm tra lưới chặn' },
+      ja: '手荷物・ULD搭載（LIR照合・コンター＆ロック確認）', vi: 'Xếp hành lý & ULD theo LIR (Kiểm tra Contour & Khóa sàn)', en: 'Baggage & ULD Loading (LIR Match, Contour & Sill Locks)',
+      detailJa: 'LIR位置とULDタグ照合、偏荷重・コンター異常なし確認、重量パレット手押し移動は必ず2名以上で実施', detailVi: 'Đối chiếu thẻ ULD với LIR, không lệch trọng tâm/vượt contour, đẩy tay pallet nặng bắt buộc ≥2 người, gạt đủ chốt khóa', detailEn: 'Match ULD tags to LIR positions, verify contour/CG, use ≥2 crew for manual heavy pallet transfer & raise all locks' },
     { id: 'board', duration: 10, req: ['clean'], outdoor: false,
-      ja: '乗客搭乗（Boarding）', vi: 'Hành khách lên máy bay (搭乗)',
-      detailJa: '清掃完了・搭乗券照合・PRM優先搭乗確認（給油中搭乗時は安全監視必須）', detailVi: 'Chỉ bắt đầu sau khi vệ sinh xong; ưu tiên PRM, giám sát an toàn nếu đang tra dầu' },
+      ja: '乗客搭乗（PRM優先・機内持込手荷物＆PPBM確認）', vi: 'Hành khách lên tàu (Ưu tiên PRM · Kiểm tra xách tay & PPBM)', en: 'Passenger Boarding (PRM Priority, Carry-on & PPBM)',
+      detailJa: 'WCHC/WCHS/WCHR優先案内、ゲート預け切り替え時は予備リチウム電池を必ず取り出し確認', detailVi: 'Hỗ trợ khách xe lăn lên trước; nếu chuyển vali xuống hầm tại gate bắt buộc lấy sạc dự phòng/pin lithium ra', detailEn: 'Board PRM first; remove all spare lithium batteries/power banks before gate-checking any carry-on bag' },
     { id: 'pushback', duration: 4, req: ['gpu', 'fuel', 'lav', 'water', 'load', 'board'], outdoor: true,
-      ja: 'ドア閉鎖・最終指差呼称・プッシュバック', vi: 'Đóng cửa, 指差呼称 cuối, tháo GPU/Chock & Pushback',
-      detailJa: '全貨物室ドア閉鎖・GPU切離し・輪止め撤去・周囲安全を指差呼称しオフブロック', detailVi: 'Đóng cửa hầm/cabin, ngắt GPU, rút chock, 指差呼称 toàn vòng rồi mới pushback' }
+      ja: '全ドア閉鎖・GSE退避・バイパスピン確認・プッシュバック', vi: 'Đóng cửa, rút GSE khỏi ERA, rút Bypass Pin & Pushback', en: 'Doors Closed, ERA Clear, Bypass Pin & Pushback',
+      detailJa: '全扉閉鎖・PBB/GSEがERA外へ完全退避・ウォークアラウンド・バイパスピン抜去左前方提示・お見送り', detailVi: 'Đóng kín cửa, rút hết GSE ra ngoài vạch đỏ ERA, kiểm tra vòng cuối, đẩy lùi, giơ cờ Bypass Pin bên trái & vẫy chào', detailEn: 'Verify all doors closed, GSE clear of ERA, walkaround complete, pushback, show bypass pin on left & wave off' }
   ];
 
   // Các sự kiện ngẫu nhiên trong Turnaround
@@ -256,26 +266,177 @@ export const PAX_SCENARIOS = [
   ];
 
 export const ULD_CATALOG = [
-    { code: 'AKE (LD3)', tare: 82, maxGross: 1588, ac: 'Wide-body (B787/B777/A350)', noteJa: '最も一般的なハーフサイズコンテナ（下部片側カット）', noteVi: 'Container nửa khoang phổ biến nhất cho tàu bay thân rộng' },
-    { code: 'AKH (LD3-45)', tare: 85, maxGross: 1588, ac: 'Narrow-body (A320 family)', noteJa: 'A320系専用コンテナ（低床設計）', noteVi: 'Container chuyên dụng chiều cao thấp cho dòng A320' },
-    { code: 'PMC (P6P)', tare: 120, maxGross: 4626, ac: 'Wide-body Lower/Main Deck', noteJa: '大型フラットパレット（ネット固定・重量貨物向け）', noteVi: 'Pallet phẳng cỡ lớn cố định bằng lưới cho hàng nặng/cồng kềnh' },
-    { code: 'PAG (P1P)', tare: 110, maxGross: 4626, ac: 'Wide-body Lower/Main Deck', noteJa: '標準88×125インチパレット', noteVi: 'Pallet tiêu chuẩn 88×125 inch' }
+    {
+      code: 'AKE (LD-3)',
+      type: 'container',
+      dimsCm: '156 × 153 × 163 cm (上幅 200 cm)',
+      dimsIn: '61.5 × 60.4 × 64 in (Top 79 in)',
+      volM3: 4.4,
+      tare: 71,
+      maxGross: 1587,
+      ac: 'B777 / B787 / B767 / A350 / A380',
+      noteJa: '最も標準的なロアデッキ・ハーフサイズコンテナ（下部片側斜めカット）。フォークリフト用穴付きAKNは自重120kg。',
+      noteVi: 'Container nửa khoang bụng phổ biến nhất cho tàu thân rộng (vát chéo 1 góc đáy). Bản có lỗ càng nâng AKN nặng 120 kg.',
+      noteEn: 'Standard widebody lower-deck half-width LD-3 container with outboard lower bevel (forkliftable AKN tare: 120 kg).'
+    },
+    {
+      code: 'AKH (LD-3-46 / LD3-45W)',
+      type: 'container',
+      dimsCm: '156 × 153 × 114 cm (上幅 241 cm)',
+      dimsIn: '61.5 × 60.4 × 45 in (Top 95 in)',
+      volM3: 3.3,
+      tare: 95,
+      maxGross: 1134,
+      ac: 'A320 (Max 7) / A321 (Max 10) / B777 / B787 / B767※',
+      noteJa: 'A320・A321対応の低床両側カットコンテナ（高さ114cm、最大総重量1,134kg＝2,500lbs）。※B767搭載時は機内固縛が必要。',
+      noteVi: 'Container thấp 114 cm vát hai bên chuyên dụng cho dòng A320/A321 (Max Gross 1.134 kg / 2.500 lbs; xếp lên B767 cần chằng buộc).',
+      noteEn: 'Low-profile 114 cm (45 in) bilateral-bevel container for A320/A321 narrowbodies (Max Gross 1,134 kg / 2,500 lbs).'
+    },
+    {
+      code: 'DQP (LD-4)',
+      type: 'container',
+      dimsCm: '244 × 153 × 163 cm',
+      dimsIn: '96 × 60.4 × 64 in',
+      volM3: 5.5,
+      tare: 120,
+      maxGross: 2449,
+      ac: 'B777 / B767 / B787 (横積み2,449kg・縦積み1,587kg)',
+      noteJa: '長方形フル幅ロアデッキコンテナ（A350搭載不可）。長尺物の収納に適する。',
+      noteVi: 'Container chữ nhật toàn chiều ngang hầm dưới (244×153×163 cm, Max 2.449 kg; không xếp trên A350).',
+      noteEn: 'Full-width rectangular LD-4 lower-deck container (96×60.4×64 in, Max Gross 2,449 kg; not compatible with A350).'
+    },
+    {
+      code: 'AMF (LD-36)',
+      type: 'container',
+      dimsCm: '318 × 244 × 163 cm (上幅 396 cm)',
+      dimsIn: '125 × 96 × 64 in (Top 156 in)',
+      volM3: 12.5,
+      tare: 280,
+      maxGross: 5102,
+      ac: 'B777 / B787 / B767ER / A350',
+      noteJa: '大型ロアデッキ・フルサイズコンテナ（両端スロープ形状、最大5,102kg）。',
+      noteVi: 'Container cỡ lớn khoang bụng thân rộng vát hai đầu (12,5 m³, Max Gross 5.102 kg).',
+      noteEn: 'Large lower-deck full-span contoured container (12.5 m³, Max Gross 5,102 kg / 11,250 lbs).'
+    },
+    {
+      code: 'RKN (LD-3 保冷・定温)',
+      type: 'container',
+      dimsCm: '156 × 153 × 163 cm',
+      dimsIn: '61.5 × 60.4 × 64 in',
+      volM3: 2.9,
+      tare: 265,
+      maxGross: 1587,
+      ac: 'B777 / B787 / B767 / A350',
+      noteJa: 'ドライアイス＋バッテリー温度制御コンテナ（-20℃〜+20℃）。医薬品・半導体・生鮮品向け（大型版はRAP：最大5,102kg）。',
+      noteVi: 'Container kiểm soát nhiệt độ (-20°C đến +20°C) dùng đá khô & ắc quy cho dược phẩm, bán dẫn (bản lớn là RAP).',
+      noteEn: 'Active temperature-controlled LD-3 container (-20°C to +20°C) for pharma & perishables (large pallet-sized version: RAP).'
+    },
+    {
+      code: 'PMC (96-inch Pallet)',
+      type: 'pallet',
+      dimsCm: '318 × 244 cm（内寸 302 × 228 cm・LD高163 / MD高244 cm）',
+      dimsIn: '125 × 96 in (Lower 64 in / Main 96 in)',
+      volM3: 11.2,
+      tare: 110,
+      maxGross: 5102,
+      maxGrossMain: 6803,
+      ac: 'Lower: B777/B787/B767ER/A350 (5,102kg) · Main: B767F/B777F (6,803kg)',
+      noteJa: '最も汎用的な96×125インチ大型アルミパレット。ロアデッキ最大5,102kg（11,250lbs）、貨物機メインデッキ最大6,803kg（15,000lbs）。',
+      noteVi: 'Mâm Pallet 96×125 inch chủ lực nhất: hầm dưới tối đa 5.102 kg (cao 163 cm), khoang chính tàu hàng tối đa 6.803 kg (cao 244 cm).',
+      noteEn: 'Primary 96×125 in aircraft pallet: Lower Deck max 5,102 kg (H 163 cm beveled), Freighter Main Deck max 6,803 kg (H 244 cm).'
+    },
+    {
+      code: 'PAG / PAJ (88-inch Pallet)',
+      type: 'pallet',
+      dimsCm: '318 × 224 cm（内寸 302 × 208 cm・高163 cm）',
+      dimsIn: '125 × 88 in (H 64 in)',
+      volM3: 10.3,
+      tare: 100,
+      maxGross: 4676,
+      maxGrossMain: 6803,
+      ac: 'B777 / B787 (4,676kg) · B767ER (5,102kg) · Freighter MD (6,803kg)',
+      noteJa: '標準88×125インチパレット（自重100kg、B777/B787ロアデッキ最大4,676kg）。ネット掛け・補強板を併用。',
+      noteVi: 'Mâm Pallet tiêu chuẩn 88×125 inch (nặng 100 kg, hầm dưới B777/B787 tối đa 4.676 kg).',
+      noteEn: 'Standard 88×125 in pallet (Tare 100 kg, B777/B787 Lower Deck max 4,676 kg / 10,310 lbs).'
+    },
+    {
+      code: 'PLA (Half Pallet)',
+      type: 'pallet',
+      dimsCm: '318 × 153 × 163 cm（内寸 300 × 139 cm）',
+      dimsIn: '125 × 60.4 × 64 in',
+      volM3: 6.8,
+      tare: 100,
+      maxGross: 3175,
+      ac: 'B787 / A380 (3,175kg) · B777 (2,449kg)',
+      noteJa: 'ハーフ幅（60.4×125インチ）パレット。LD-3区画を横断して長尺・中重量物を搭載可能（最大3,175kg / B777は2,449kg）。',
+      noteVi: 'Mâm Pallet nửa bề rộng (153×318 cm, Tare 100 kg), tối đa 3.175 kg trên B787/A380 (2.449 kg trên B777).',
+      noteEn: 'Half-width 60.4×125 in lower-deck pallet (Tare 100 kg; Max Gross 3,175 kg on B787/A380, 2,449 kg on B777).'
+    },
+    {
+      code: 'PRA (16-ft Pallet)',
+      type: 'pallet',
+      dimsCm: '498 × 244 × 244 cm（内寸 481 × 228 cm）',
+      dimsIn: '196 × 96 × 96 in (16 ft)',
+      volM3: 26.8,
+      tare: 469,
+      maxGross: 11339,
+      ac: 'Freighter Main Deck: B777F (11,339kg) / B767F (10,437kg)',
+      noteJa: '貨物専用機メインデッキ用16フィート大型パレット（長尺機械・パイプ・大型装置向け）。',
+      noteVi: 'Mâm Pallet 16-ft chuyên dụng khoang chính tàu chở hàng (498×244×244 cm, Max Gross 11.339 kg trên B777F).',
+      noteEn: '16-ft freighter main-deck pallet (196×96×96 in, Tare 469 kg, Max Gross 11,339 kg on B777F).'
+    },
+    {
+      code: 'PGA (20-ft Main Deck Pallet)',
+      type: 'pallet',
+      dimsCm: '606 × 244 × 299 cm（内寸 580 × 228 cm・上部テーパー）',
+      dimsIn: '238.5 × 96 × 118 in (20 ft)',
+      volM3: 33.5,
+      tare: 500,
+      maxGross: 11339,
+      ac: 'Freighter Main Deck: B777F / B747F (最大 11,339 kg = 25,000 lbs)',
+      noteJa: '超大型20フィート（606×244cm）パレット。高さ195cmから上部胴体曲面に沿って299cmまで絞るコンター制限厳守！',
+      noteVi: 'Siêu Pallet 20-ft (606×244 cm, Tare 500 kg, Max 11.339 kg) khoang chính tàu hàng; từ cao 195 cm phải thu vát theo vòm trần tới 299 cm.',
+      noteEn: '20-ft heavy main-deck pallet (606×244 cm, Tare 500 kg, Max 11,339 kg); upper fuselage contour tapers from 195 cm to 299 cm.'
+    },
+    {
+      code: '防水パン / ツナパン / バイクスキッド',
+      type: 'special',
+      dimsCm: 'LD3防水パン 135×127×38cm (25kg) · ツナパン 184×149×65cm (150kg)',
+      dimsIn: 'Waterproof Pan / Tuna Pan / Motorbike Skid (220×74cm)',
+      volM3: 1.8,
+      tare: 150,
+      maxGross: 1587,
+      ac: 'Wet Cargo (WET) / Fresh Tuna / Motorcycles',
+      noteJa: '機体腐食を防ぐ塩水・水漏れ防止パン（防水パン・ツナパン）および二輪車固定用バイクスキッド（180kg）。',
+      noteVi: 'Khay chống thấm (防水パン), khay cá ngừ tươi (ツナパン, 150kg) ngăn nước muối ăn mòn khung tàu & khung cố định mô-tô (180kg).',
+      noteEn: 'Leak-proof Waterproof Pans, Tuna Pans (prevents salt-water fuselage corrosion), and Motorbike Skids (180 kg).'
+    }
   ];
 
   export const EXPORT_STEPS = [
-    { ja: '1. 貨物搬入・受託（Acceptance）', vi: '1. Tiếp nhận hàng xuất (Acceptance)', descJa: 'AWB・個数・重量・梱包状態・危険物有無を確認', descVi: 'Kiểm tra AWB, số kiện, trọng lượng, tình trạng bao bì và sàng lọc hàng nguy hiểm' },
-    { ja: '2. 保安検査（Security Screening）', vi: '2. Kiểm tra an ninh (Security Screening)', descJa: 'X線検査・爆発物痕跡検知（ETD）等で不審物排除', descVi: 'Soi chiếu X-ray, quét vết nổ ETD đảm bảo an ninh hàng không' },
-    { ja: '3. 輸出通関（Export Customs）', vi: '3. Thông quan xuất khẩu (輸出通関)', descJa: 'NACCS申告・税関検査を経て輸出許可を取得', descVi: 'Khai báo hải quan (NACCS) và nhận giấy phép thông quan xuất khẩu' },
-    { ja: '4. ビルドアップ（ULD Build-up）', vi: '4. Đóng hàng vào ULD (Build-up)', descJa: '重量配分・コンター確認・ネット固縛・ULDタグ貼付', descVi: 'Phân bổ trọng lượng, kiểm tra biên dạng contour, chằng lưới và gắn thẻ ULD' },
-    { ja: '5. ランプ搬送・搭載（Ramp & Loading）', vi: '5. Kéo ra sân đỗ & Xếp lên tàu bay', descJa: 'LIR照合・ドーリー牽引・ハイリフトローダーで所定位置へ固定ロック', descVi: 'Đối chiếu LIR, kéo bằng dolly, nâng bằng High-Lift Loader và khóa chốt định vị' }
+    { ja: '1. 貨物搬入・受託点検（Acceptance & Care Marks）', vi: '1. Tiếp nhận & Kiểm tra kiện hàng xuất (Acceptance)', en: '1. Cargo Acceptance & Care Mark Check',
+      descJa: 'AWB（8桁目Mod-7）・個数・実重量/容積重量・外装ダメージ・ケアマーク（天地無用/取扱注意/水濡れ厳禁）・危険物有無を確認', descVi: 'Kiểm tra AWB (Mod-7), số kiện, cân nặng/thể tích, tình trạng bao bì, nhãn Care Marks và sàng lọc hàng nguy hiểm', descEn: 'Verify AWB (Mod-7 check digit), piece count, gross/volume weight, packaging integrity, care marks & hidden DG' },
+    { ja: '2. 保安検査・爆発物検査（Security Screening）', vi: '2. Kiểm tra an ninh soi chiếu (Security Screening)', en: '2. Aviation Security Screening (X-Ray / ETD)',
+      descJa: 'X線検査・爆発物痕跡検知（ETD）等で未申告危険物（ガス缶・予備リチウム電池等）や不審物を排除', descVi: 'Soi chiếu X-ray, quét vết nổ ETD phát hiện hàng nguy hiểm ẩn (bình gas, pin lithium rời) và vật cấm', descEn: 'Screen via X-ray and ETD to intercept undeclared dangerous goods (gas canisters, loose lithium batteries) & threats' },
+    { ja: '3. 輸出通関・保税管理（NACCS Export Customs）', vi: '3. Thông quan xuất khẩu điện tử (NACCS)', en: '3. Export Customs Clearance (NACCS)',
+      descJa: '保税蔵置場へ搬入し、NACCS申告・税関審査/検査を経て輸出許可書を取得（国際乗継は仮陸揚げ・保税運送）', descVi: 'Đưa vào kho ngoại quan, khai báo NACCS và nhận giấy phép xuất khẩu (hàng quá cảnh làm thủ tục 仮陸揚げ / 保税運送)', descEn: 'Process in bonded warehouse via Japan NACCS customs system to obtain export permit (or bonded transit for connections)' },
+    { ja: '4. ULDビルドアップ（手積み / フォークリフト・コンター確認）', vi: '4. Đóng hàng ULD Buildup (Xếp tay / Forklift & Contour)', en: '4. ULD Build-up (Hand / Forklift, Shoring & Contour)',
+      descJa: '重下軽上・2梱包またぎ積み（荷崩れ防止）、重量物はパレット/スキッド＋補強板（スプレッダー）で床面荷重分散、防水シート・タイダウン・ネット掛け・コンターゲージ確認', descVi: 'Nặng dưới nhẹ trên, xếp gối chồng lên 2 kiện chống đổ; hàng nặng kê Pallet/Skid + ván 補強板 phân tải sàn, phủ bạt chống nước, chằng dây/lưới & đo khung Contour', descEn: 'Heavy-bottom/light-top, interlocking brick stack across 2 boxes, pallet/skid + spreader planks for heavy cargo, waterproof sheet, tie-down/net & contour check' },
+    { ja: '5. 計量・LIR照合・ランプ搬送・機体ロック固定', vi: '5. Cân ULD, đối chiếu LIR & Xếp khóa lên tàu bay', en: '5. ULD Weighing, LIR Match & Aircraft Lock-in',
+      descJa: 'ULDタグ記載重量・偏荷重なきことを確認し、ドーリー牽引（15km/h以下）→ハイリフトローダー搭載→クローズ・アンド・ロック確認', descVi: 'Gắn thẻ ULD, kiểm tra không lệch tâm, kéo dolly (≤15 km/h), nâng bằng High-Lift Loader và khóa chặt chốt sàn (Close & Lock)', descEn: 'Verify ULD tag weight & balanced CG, tow via dolly (≤15 km/h), load with High-Lift Loader & engage all floor locks' }
   ];
 
   export const IMPORT_STEPS = [
-    { ja: '1. 取卸し・上屋搬入（Unloading & Transfer）', vi: '1. Dỡ ULD & Chuyển vào kho nhập', descJa: '到着機からULD取卸し、損傷有無確認のうえ保税蔵置場へ搬入', descVi: 'Dỡ hàng từ tàu bay, kiểm tra nguyên vẹn và đưa vào kho ngoại quan' },
-    { ja: '2. ブレイクダウン（ULD Breakdown）', vi: '2. Dỡ hàng khỏi ULD (Breakdown)', descJa: 'AWB単位で仕分け、過不足・破損（Cargo Irregularity）を記録', descVi: 'Phân loại theo từng AWB, ghi nhận thiếu/thừa hoặc hư hỏng nếu có' },
-    { ja: '3. 到着案内（Arrival Notice）', vi: '3. Thông báo hàng đến (Arrival Notice)', descJa: '荷受人・フォワーダーへ貨物到着と必要書類を通知', descVi: 'Thông báo cho người nhận/forwarder đến làm thủ tục nhận hàng' },
-    { ja: '4. 輸入通関（Import Customs）', vi: '4. Thông quan nhập khẩu (輸入通関)', descJa: '関税納付・検疫（動植物等）・輸入許可取得', descVi: 'Khai báo nhập khẩu, kiểm dịch (nếu cần), nộp thuế và nhận thông quan' },
-    { ja: '5. 貨物引渡し（Delivery）', vi: '5. Giao hàng (Delivery)', descJa: '荷渡指図書（D/O）照合・本人確認・受領サイン取得', descVi: 'Đối chiếu lệnh giao hàng (D/O), xác nhận danh tính và ký nhận bàn giao' }
+    { ja: '1. 取卸し・保税上屋搬入（Offloading & Bonded Transfer）', vi: '1. Dỡ ULD & Đưa vào kho ngoại quan (保税蔵置場)', en: '1. Offloading & Bonded Warehouse Transfer',
+      descJa: '到着機からULD取卸し、外装ダメージ・濡れ・封印異常を確認して保税蔵置場へ搬入（乗継便は機移し SHIP TO SHIP）', descVi: 'Dỡ ULD từ tàu đến, kiểm tra hư hỏng/ướt/niêm phong và chuyển vào kho ngoại quan (hàng nối chuyến chuyển tàu SHIP TO SHIP)', descEn: 'Offload ULDs, inspect for damage/wetness/seal integrity, and transfer to bonded warehouse (or Ship-to-Ship transfer)' },
+    { ja: '2. ブレイクダウン・貨物照合（ULD Breakdown）', vi: '2. Dỡ hàng khỏi ULD & Kiểm đếm (Breakdown)', en: '2. ULD Breakdown & Irregularity Check',
+      descJa: 'ネット・ビニールの順序で丁寧に解体し、AWB単位で仕分け。過不足・破損（ダメージレポート）を即時記録（バール直接床使用厳禁）', descVi: 'Tháo lưới/bạt cẩn thận, phân loại theo AWB, lập biên bản bất thường nếu thiếu/vỡ (cấm dùng xà beng nậy trực tiếp xuống sàn)', descEn: 'Remove nets/sheeting carefully, sort by AWB, log any damage/shortage immediately (never pry directly against floor with crowbar)' },
+    { ja: '3. 到着案内（Arrival Notice）', vi: '3. Thông báo hàng đến (Arrival Notice)', en: '3. Consignee / Forwarder Arrival Notice',
+      descJa: '荷受人・通関業者（フォワーダー）へ貨物到着とAWB関係書類を通知し、生鮮・保冷品は定温庫へ格納', descVi: 'Thông báo cho người nhận/forwarder kèm chứng từ AWB; đưa ngay hàng tươi sống/dược phẩm vào kho lạnh', descEn: 'Notify consignee/customs broker of arrival documents and store perishables/pharma in temperature-controlled rooms' },
+    { ja: '4. 検疫・輸入通関（Quarantine & NACCS Import）', vi: '4. Kiểm dịch & Thông quan nhập khẩu (NACCS)', en: '4. Quarantine & Import Customs Clearance (NACCS)',
+      descJa: '動植物検疫・食品検査（必要な場合）およびNACCS輸入申告・関税納付を経て輸入許可書を取得', descVi: 'Kiểm dịch động thực vật/thực phẩm (nếu có), khai NACCS, nộp thuế và nhận giấy phép thông quan nhập khẩu', descEn: 'Complete animal/plant/food quarantine where applicable, file NACCS import declaration, pay duties & obtain import permit' },
+    { ja: '5. 貨物引渡し（Delivery & Release）', vi: '5. Bàn giao hàng nhập (Delivery)', en: '5. Cargo Release & Delivery',
+      descJa: '輸入許可書・荷渡指図書（D/O）・本人確認書類・個数を指差呼称で照合し、受領サインを得て引き渡す', descVi: 'Đối chiếu giấy phép nhập khẩu, lệnh giao hàng (D/O), giấy tờ tùy thân và số kiện bằng 指差呼称 trước khi ký giao', descEn: 'Verify import permit, Delivery Order (D/O), ID & piece count via Point-and-Call before obtaining release signature' }
   ];
 
   export const DGR_CASES = [
@@ -347,7 +508,25 @@ export const ULD_CATALOG = [
         { ok: false, ja: 'バルク室の奥に積めば旅客室と離れているので搭載してよい', vi: 'Xếp sâu vào hầm Bulk cho xa khoang khách là bay được' }
       ],
       expJa: 'CAOラベルは「旅客機搭載厳禁・貨物専用機のみ」を意味します。いかなる貨物室であっても旅客便には搭載できません。',
-      expVi: 'Nhãn CAO (Cargo Aircraft Only) cấm tuyệt đối xếp lên máy bay chở hành khách dưới mọi hình thức.'
+      expVi: 'Nhãn CAO (Cargo Aircraft Only) cấm tuyệt đối xếp lên máy bay chở hành khách dưới mọi hình thức.',
+      expEn: 'CAO (Cargo Aircraft Only) packages are strictly forbidden on passenger flights regardless of hold location.'
+    },
+    {
+      id: 'D6',
+      labelType: 'class7_ti',
+      titleJa: 'DGR-6: 放射性物質（Class 7）の輸送指数（TI: Transport Index）上限確認',
+      titleVi: 'DGR-6: Kiểm tra tổng Chỉ số Vận chuyển (TI) của Chất phóng xạ (Class 7) trên tàu chở khách',
+      titleEn: 'DGR-6: Radioactive Material (Class 7) Total Transport Index (TI) Limit on Passenger Aircraft',
+      descJa: '医療用アイソトープ（Class 7 黄色ラベル）複数口を旅客便（B787）へ搭載予定。1機あたりの合計「輸送指数（TI）」が 54.0 となっています。',
+      descVi: 'Lô đồng vị phóng xạ y tế (Class 7 nhãn vàng) dự kiến xếp lên chuyến chở khách B787 có tổng Chỉ số vận chuyển (TI) toàn tàu là 54,0.',
+      descEn: 'Multiple medical radioactive packages (Class 7 Yellow label) planned for a passenger B787 total a combined Transport Index (TI) of 54.0.',
+      options: [
+        { ok: true, ja: 'そのまま全量は搭載不可 — 旅客機1機あたりの合計TI上限は「50以下」のため、50以下に減らすか別便へ分割手配する', vi: 'KHÔNG ĐƯỢC xếp toàn bộ — Tổng chỉ số TI tối đa cho phép trên 1 máy bay chở khách là ≤ 50 (phải tách bớt sang chuyến khác)', en: 'HOLD / SPLIT — Passenger aircraft total TI limit is 50.0 max; split excess packages onto another flight' },
+        { ok: false, ja: 'TIは100まで旅客機に積めるので全量そのまま搭載する', vi: 'Máy bay chở khách được xếp tới TI 100 nên cứ chất hết lên', en: 'Load all packages since passenger aircraft allow up to TI 100' }
+      ],
+      expJa: '特定技能2号教材（航空法・IATA DGR）：旅客機1機あたりの放射性物質の合計輸送指数（TI）は「50以下」と定められています（不法な危険物輸送には50万円以下の罰金）。',
+      expVi: 'Theo giáo trình 特定技能 2号 & Luật Hàng không Nhật Bản: tổng Chỉ số vận chuyển (TI) chất phóng xạ trên tàu chở khách không được vượt quá 50 (vận chuyển trái phép DGR bị phạt tiền tới 50 vạn Yên).',
+      expEn: 'Per Japan Civil Aeronautics Act & SSW-II textbook: total Radioactive Transport Index (TI) on a passenger aircraft must not exceed 50 (illegal DG transport carries up to ¥500,000 fine).'
     }
   ];
 
@@ -363,6 +542,15 @@ export const ULD_CATALOG = [
       </svg>`;
     if (type === 'class2') return diamond('#D92D20', '#FFF', '2', 'FLAMMABLE', 'GAS');
     if (type === 'class3') return diamond('#D92D20', '#FFF', '3', 'FLAMMABLE', 'LIQUID');
+    if (type === 'class7_ti') return `
+      <svg width="74" height="74" viewBox="0 0 80 80" style="flex-shrink:0;">
+        <polygon points="40,4 76,40 40,76 4,40" fill="#FFF" stroke="#111" stroke-width="2.5"/>
+        <polygon points="40,4 76,40 4,40" fill="#FACC15" stroke="#111" stroke-width="1.5"/>
+        <circle cx="40" cy="26" r="6" fill="#111"/>
+        <text x="40" y="51" text-anchor="middle" font-size="7.8" font-weight="900" fill="#111">RADIOACTIVE</text>
+        <text x="40" y="60" text-anchor="middle" font-size="7.5" font-weight="800" fill="#B91C1C">TI MAX ≤ 50</text>
+        <text x="40" y="71" text-anchor="middle" font-size="11" font-weight="900" fill="#111">7</text>
+      </svg>`;
     if (type === 'class9_dryice') return `
       <svg width="74" height="74" viewBox="0 0 80 80" style="flex-shrink:0;">
         <polygon points="40,4 76,40 40,76 4,40" fill="#FFF" stroke="#111" stroke-width="2.5"/>
@@ -392,43 +580,47 @@ export const ULD_CATALOG = [
 
 export const SAFETY_CHECKLIST_GROUPS = [
     {
-      groupJa: '1. ランプ安全・保護具 (Ramp Safety & PPE)',
-      groupVi: '1. An toàn sân đỗ & Bảo hộ lao động (PPE)',
+      groupJa: '1. ランプ安全・保護具・高所作業 (Ramp PPE, Engine & Elevated Work)',
+      groupVi: '1. An toàn sân đỗ, Động cơ & Làm việc trên cao (≥2m / 10m)',
+      groupEn: '1. Ramp PPE, Engine Hazard & Elevated Work (≥2m / 10m)',
       items: [
-        { id: 's1', ja: '高視認性安全ベスト・安全靴・イヤーマフ（聴覚保護具）を常時着用している', vi: 'Luôn mặc áo phản quang, giày bảo hộ và bịt tai chống ồn (earmuffs)' },
-        { id: 's2', ja: '衝突防止灯（赤色ビーコン）点灯中・エンジン稼働中は航空機へ絶対接近しない', vi: 'Tuyệt đối không tiếp cận máy bay khi đèn beacon đỏ đang nháy / động cơ còn chạy' },
-        { id: 's3', ja: 'エンジン吸込危険区域（インテーク前方）および後方ジェットブラスト区域を避ける', vi: 'Tránh xa vùng hút phía trước động cơ và vùng luồng phản lực (jet blast) phía sau' },
-        { id: 's4', ja: '雷・強風警報時は指示に従い直ちに屋外作業・給油・高所作業を中断する', vi: 'Dừng ngay thao tác ngoài trời, tra dầu và trên cao khi có cảnh báo sét/gió mạnh' }
+        { id: 's1', ja: '高視認性ベスト・安全靴・ヘルメット・防音保護具（耳栓/イヤーマフ）を着用している', vi: 'Luôn mặc áo phản quang, giày bảo hộ, mũ bảo hiểm và nút/chụp tai chống ồn', en: 'Wear high-vis vest, safety shoes, helmet, and hearing protection at all times' },
+        { id: 's2', ja: '衝突防止灯（赤ビーコン）点灯中は絶対接近せず、エンジン監視員はエンジン外側から5m以上離れている', vi: 'Không tiếp cận khi đèn Beacon đỏ còn nháy; Watchman luôn đứng cách vỏ ngoài động cơ ≥ 5 m', en: 'Never approach while red beacon is ON; engine watchman stays ≥5 m outside nacelle' },
+        { id: 's3', ja: '吸込危険区域（B777アイドル前方4.6m/吸引力140kg）と後方ブラスト（53.4m）を回避している', vi: 'Tránh xa vùng hút trước động cơ (4,6 m / lực hút 140 kg) và luồng Jet Blast phía sau (53,4 m)', en: 'Stay clear of engine intake suction (4.6 m / 140 kg at idle) and aft jet blast (53.4 m)' },
+        { id: 's4', ja: '高さ2m以上の高所作業では手すり作業床またはフルハーネスを使用し、雷警報時は即時退避する', vi: 'Làm việc trên cao ≥ 2 m bắt buộc có lan can hoặc dây đai toàn thân (フルハーネス); sét đánh dừng ngay', en: 'Use guardrails or full-body harness at heights ≥2 m, and evacuate immediately upon lightning alert' }
       ]
     },
     {
-      groupJa: '2. FOD対策（異物管理 / Foreign Object Debris）',
-      groupVi: '2. Phòng chống vật thể lạ FOD (異物管理)',
+      groupJa: '2. FOD対策・エプロンピット・SMS報告 (FOD, Utility Pits & SMS)',
+      groupVi: '2. Phòng chống FOD, Hố ngầm Sân đỗ & Văn hóa SMS (1:29:300)',
+      groupEn: '2. FOD Control, Apron Utility Pits & SMS Just Culture',
       items: [
-        { id: 's5', ja: '航空機到着前・出発前にスポット内のFOD（ボルト・プラスチック片・手荷物タグ屑）を点検回収した', vi: 'Kiểm tra và nhặt sạch FOD (ốc vít, mảnh nhựa, dây tag hành lý) trước khi máy bay vào/ra bãi' },
-        { id: 's6', ja: 'ポケット内の小銭・ペン・スマホ等が落下しないよう管理し、FOD専用回収箱へ廃棄している', vi: 'Không để đồ rơi từ túi áo/quần; bỏ rác đúng thùng thu gom FOD chuyên dụng' },
-        { id: 's7', ja: '金属片や機体部品と思われるFODを発見した場合は直ちに整備士・運航管理へ報告する', vi: 'Nếu nhặt được mảnh kim loại/ốc nghi thuộc máy bay, báo ngay cho bảo dưỡng (整備士)' },
-        { id: 's8', ja: '強風時に軽量資材・シート・空コンテナが飛ばされないよう固縛・ブレーキ固定した', vi: 'Chằng buộc vật nhẹ và khóa phanh xe/dolly chống gió thổi bay gây FOD' }
+        { id: 's5', ja: '到着前・出発前にスポット内のFOD（ボルト・タグ屑・木片）を点検回収し専用箱へ廃棄した', vi: 'Kiểm tra và nhặt sạch FOD (ốc vít, dây tag, mảnh gỗ pallet) bỏ vào thùng FOD trước giờ tàu vào/ra', en: 'Sweep spot for FOD (bolts, tag scraps, wood splinters) before arrival and departure' },
+        { id: 's6', ja: 'エプロン地下ピット（白＝燃料・青＝空調・赤＝電力/アース・黄＝避雷）上に車両を駐停車させていない', vi: 'Không đỗ xe đè lên nắp hố ngầm sân đỗ (Trắng=Xăng, Xanh=Điều hòa, Đỏ=Điện/Tiếp địa, Vàng=Chống sét)', en: 'Never park over utility pits (White=Fuel, Blue=PC-Air, Red=Power/Earth, Yellow=Lightning)' },
+        { id: 's7', ja: '機体部品と思われる金属片や損傷発見時は隠さず直ちに整備士・スーパーバイザーへ報告する', vi: 'Phát hiện mảnh kim loại nghi của máy bay hoặc vết trầy móp phải báo ngay cho Bảo dưỡng (整備士)', en: 'Immediately report any suspected aircraft part or skin damage to Maintenance without concealment' },
+        { id: 's8', ja: 'ハインリッヒの法則（1:29:300）・SHELLモデルに基づき、ヒヤリハットを積極的に共有している', vi: 'Chủ động báo cáo sự cố suýt xảy ra (ヒヤリハット) theo quy luật Heinrich 1:29:300 & mô hình SHELL', en: 'Actively report near-misses under Heinrich\'s 1:29:300 law and ICAO SHELL human factors' }
       ]
     },
     {
-      groupJa: '3. 制限区域内 車両走行規則 (Apron Driving Rules)',
-      groupVi: '3. Quy tắc lái xe trong khu vực hạn chế sân đỗ',
+      groupJa: '3. 制限区域車両・フォークリフト安全 (GSE & Forklift Rules)',
+      groupVi: '3. Quy tắc lái xe GSE & Xe nâng Forklift (40/30/15/10/5 km/h)',
+      groupEn: '3. Airside GSE & Forklift Safety Rules (40/30/15/10/5 km/h)',
       items: [
-        { id: 's9', ja: '常に航空機最優先（Yield to Aircraft）— 誘導路・タキシー中の航空機の前を横切らない', vi: 'Luôn nhường đường tuyệt đối cho tàu bay — không cắt ngang đầu máy bay đang lăn' },
-        { id: 's10', ja: '場内制限速度（例: 構内30km/h・スポット内15km/h・機体付近は徐行）と一時停止線を厳守', vi: 'Tuân thủ giới hạn tốc độ sân đỗ (khu vực máy bay đi cực chậm) và dừng hẳn tại vạch Stop' },
-        { id: 's11', ja: '機体翼下・胴体下を無断で走行せず、機体へ後退接近時は必ずガイドマン（誘導員）を配置する', vi: 'Không lái xe luồn dưới cánh; khi lùi xe tiếp cận tàu bay bắt buộc có người xi-nhan (guideman)' },
-        { id: 's12', ja: '車両離席時はパーキングブレーキ・ギア固定・必要に応じ輪止めを実施した', vi: 'Khi rời ghế lái GSE luôn kéo phanh tay, về số an toàn và chèn bánh nếu cần' }
+        { id: 's9', ja: '航空機最優先（自走機の前方40m以内横断禁止、コックピット前方死角15m・翼端±3mに注意）', vi: 'Nhường tuyệt đối tàu bay (cấm cắt ngang trong 40 m trước mũi tàu tự lăn; nhớ điểm mù 15 m & đầu cánh ±3 m)', en: 'Yield to aircraft (never cross within 40 m ahead; respect 15 m nose blind spot & ±3 m wingtip error)' },
+        { id: 's10', ja: '速度厳守（場周40・車両通路30・30m内/牽引15・接近10・高重心8・機側TT 5km/h以下）と5m手前一旦停止', vi: 'Tuân thủ tốc độ (chu vi 40, đường xe 30, trong 30m/kéo 15, tiếp cận 10, xe cao 8, TT sát tàu ≤5 km/h) & dừng thử phanh ở 5 m', en: 'Obey speed limits (40/30/15/10/8/≤5 km/h) and execute full brake-check stop 5 m from aircraft' },
+        { id: 's11', ja: '機体接近後退時はガイドマンホイッスル合図（ピッピッ＝誘導／ピーッ＝停止）に従う', vi: 'Khi lùi tiếp cận tàu bay bắt buộc có Guideman thổi còi (Pi-pi = di chuyển / Piii dài = DỪNG NGAY)', en: 'Follow guideman whistle signals (short beeps = move slowly / long blast = STOP) when backing near aircraft' },
+        { id: 's12', ja: 'フォークリフトは視界不良時「後進基本」、稼働爪から1.5m以上離隔、降車時はPブレーキ＆輪止め実施', vi: 'Forklift bị hàng che mắt phải đi LÙI, người đứng cách càng >1,5 m; rời xe kéo phanh tay & chèn bánh', en: 'Drive forklifts in reverse when view blocked, stay >1.5 m from moving forks, and set brake + chocks when parking' }
       ]
     },
     {
-      groupJa: '4. 離陸前 重量重心最終確認 (Pre-Takeoff W&B Verification)',
-      groupVi: '4. Kiểm tra trọng lượng & trọng tâm cuối trước cất cánh',
+      groupJa: '4. ULDビルドアップ・W&B・危険物最終確認 (ULD, W&B & DGR)',
+      groupVi: '4. Kiểm tra Đóng hàng ULD, Cân bằng tải W&B & Hàng nguy hiểm',
+      groupEn: '4. ULD Build-up, W&B & Dangerous Goods Final Check',
       items: [
-        { id: 's13', ja: 'LIR（搭載指示書）の貨物室別重量・ULD位置と実搭載結果が完全に一致している', vi: 'Xác nhận tải trọng từng hầm và vị trí ULD thực tế khớp 100% với LIR' },
-        { id: 's14', ja: '直前変更（LMC: 遅着手荷物・ノーショー降ろし等）はロードコントロールへ報告し反映済', vi: 'Mọi thay đổi giờ chót (LMC) đều đã báo Load Control và cập nhật vào Load Sheet' },
-        { id: 's15', ja: 'ZFW・TOW・LWおよび各CG(%MAC)がすべてエンベロープ制限値内であることを確認した', vi: 'Đảm bảo ZFW, TOW, LW và %MAC đều nằm trong giới hạn cấu trúc và CG envelope' },
-        { id: 's16', ja: '危険物（DGR）・特殊貨物搭載時はNOTOC（機長宛通知書）が機長へ確実に手交された', vi: 'Khi có hàng nguy hiểm/đặc biệt đã giao đủ NOTOC cho cơ trưởng xác nhận' }
+        { id: 's13', ja: 'ULDビルドアップで重下軽上・レンガ積み・重量物への補強板（スプレッダー）・コンター逸脱ゼロを確認した', vi: 'Đóng ULD đúng Nặng dưới-Nhẹ trên, xếp gạch khóa kiện, lót ván Spreader cho hàng nặng & không vượt Contour', en: 'Verified heavy-bottom brick stacking, spreader planks under heavy cargo, and zero contour overhang' },
+        { id: 's14', ja: 'LIRと現物ULDタグ・搭載位置が一致し、全フロアロック（クローズ・アンド・ロック）を施錠した', vi: 'Đối chiếu thẻ ULD khớp 100% vị trí LIR và đã gạt khóa chặt toàn bộ chốt sàn (Close & Lock)', en: 'Matched physical ULD tags to LIR positions and engaged all cargo floor locks (Close & Lock)' },
+        { id: 's15', ja: '直前変更（LMC）反映後のZFW・TOW・LWおよび%MACがすべて許容範囲内である', vi: 'Đã cập nhật mọi thay đổi giờ chót (LMC); ZFW, TOW, LW và %MAC đều nằm trong Envelope an toàn', en: 'Confirmed ZFW, TOW, LW, and %MAC remain inside envelope after all Last Minute Changes (LMC)' },
+        { id: 's16', ja: '危険物（CAO禁止・旅客機放射性TI合計≤50）を照合し、NOTOCを機長へ確実に手交した', vi: 'Kiểm tra kỹ DGR (không lẫn hàng CAO lên tàu khách, tổng TI phóng xạ ≤ 50) và đã giao NOTOC cho Cơ trưởng', en: 'Verified DGR rules (no CAO on pax aircraft, total radioactive TI ≤50) and delivered signed NOTOC to Captain' }
       ]
     }
   ];

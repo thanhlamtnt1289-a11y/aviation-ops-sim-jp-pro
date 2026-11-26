@@ -7,6 +7,7 @@ import {
 } from '../data/airports.js';
 import { AIRPORT_GEO_DATA } from '../data/airport_geo_data.js';
 import { AIRCRAFT_3D_SPECS, AIRLINE_LIVERIES } from '../three3d/aircraft_3d_models.js';
+import { renderUldBuildupUI, stopUldBuildup3D } from './uldBuildupModule.js';
 import { appState, saveState, updateProgressBadges, t, bi } from '../core/state.js';
 
 // ============================================================
@@ -459,27 +460,47 @@ export function renderPaxModule() {
 }
 
 // ============================================================
-// MODULE C: CARGO, ULD & IATA DGR
+// MODULE C: CARGO, REALISTIC 3D ULD BUILDUP GAME & IATA DGR
 // ============================================================
-const cargoState = { tab: 'dgr', dgrIdx: 0, dgrPicked: {} };
+export const cargoState = { tab: 'buildup', dgrIdx: 0, dgrPicked: {} };
+
+export function openCargoSubtab(tabId = 'buildup') {
+  cargoState.tab = tabId;
+  renderCargoModule();
+}
+
+export function stopCargo3D() {
+  stopUldBuildup3D();
+}
 
 export function renderCargoModule() {
   const mount = document.getElementById('cargo-mount');
   if (!mount) return;
 
+  if (cargoState.tab !== 'buildup') {
+    stopUldBuildup3D();
+  }
+
   let content = '';
-  if (cargoState.tab === 'uld') {
+  if (cargoState.tab === 'buildup') {
+    content = `<div id="uld-buildup-host"></div>`;
+  } else if (cargoState.tab === 'uld') {
     content = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:12px;">
         ${ULD_CATALOG.map(u => `
           <div class="card" style="padding:14px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <strong style="font-family:var(--font-mono);font-size:15px;color:var(--accent);">${u.code}</strong>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+              <strong style="font-family:var(--font-mono);font-size:14.5px;color:var(--accent);">${u.code}</strong>
               <span class="badge badge-neutral">Tare: ${u.tare} kg</span>
             </div>
-            <div style="font-size:12.5px;color:var(--text-primary);font-weight:700;margin-top:6px;">Max Gross: ${u.maxGross} kg</div>
-            <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">✈ ${u.ac}</div>
-            <div class="ja" style="font-size:12px;margin-top:6px;color:var(--text-secondary);">${bi(u.noteJa, u.noteVi)}</div>
+            <div style="font-size:12px;font-family:var(--font-mono);color:var(--text-primary);margin-top:5px;">
+              📏 ${u.dimsCm || ''}
+            </div>
+            <div style="font-size:12.5px;color:var(--ok);font-weight:700;margin-top:4px;">
+              Max Gross: ${u.maxGross.toLocaleString()} kg ${u.maxGrossMain ? `(Main Deck: ${u.maxGrossMain.toLocaleString()} kg)` : ''}
+            </div>
+            <div style="font-size:11.5px;color:var(--text-secondary);margin-top:3px;">✈ ${u.ac}</div>
+            <div class="ja" style="font-size:12px;margin-top:6px;color:var(--text-secondary);">${bi(u.noteJa, u.noteVi, u.noteEn)}</div>
           </div>
         `).join('')}
       </div>
@@ -488,15 +509,15 @@ export function renderCargoModule() {
     content = `
       <div class="workspace-grid">
         <div class="card">
-          <div class="card-title"><span class="ja">🛫 ${t('輸出貨物フロー (Export AWB → Ramp)', 'Quy trình Hàng Xuất khẩu (Export)')}</span></div>
+          <div class="card-title"><span class="ja">🛫 ${t('輸出貨物フロー (Export AWB → NACCS → ULD Build-up → Ramp)', 'Quy trình Hàng Xuất khẩu (Export → NACCS → Đóng ULD → Sân đỗ)', 'Export Cargo Flow (Acceptance → NACCS → ULD Build-up → Ramp)')}</span></div>
           <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
-            ${EXPORT_STEPS.map(s => `<div style="padding:8px 10px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);"><strong class="ja">${bi(s.ja, s.vi)}</strong><div class="ja" style="font-size:12px;color:var(--text-secondary);margin-top:2px;">${t(s.descJa, s.descVi)}</div></div>`).join('')}
+            ${EXPORT_STEPS.map(s => `<div style="padding:8px 10px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);"><strong class="ja">${bi(s.ja, s.vi, s.en)}</strong><div class="ja" style="font-size:12px;color:var(--text-secondary);margin-top:2px;">${t(s.descJa, s.descVi, s.descEn)}</div></div>`).join('')}
           </div>
         </div>
         <div class="card">
-          <div class="card-title"><span class="ja">🛬 ${t('輸入貨物フロー (Ramp → Customs → Delivery)', 'Quy trình Hàng Nhập khẩu (Import)')}</span></div>
+          <div class="card-title"><span class="ja">🛬 ${t('輸入貨物フロー (Ramp → 保税蔵置場 → Breakdown → 通関 → 引渡し)', 'Quy trình Hàng Nhập khẩu (Dỡ tàu → Kho ngoại quan → Breakdown → Giao hàng)', 'Import Cargo Flow (Offload → Bonded Shed → Breakdown → Customs → Delivery)')}</span></div>
           <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
-            ${IMPORT_STEPS.map(s => `<div style="padding:8px 10px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);"><strong class="ja">${bi(s.ja, s.vi)}</strong><div class="ja" style="font-size:12px;color:var(--text-secondary);margin-top:2px;">${t(s.descJa, s.descVi)}</div></div>`).join('')}
+            ${IMPORT_STEPS.map(s => `<div style="padding:8px 10px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);"><strong class="ja">${bi(s.ja, s.vi, s.en)}</strong><div class="ja" style="font-size:12px;color:var(--text-secondary);margin-top:2px;">${t(s.descJa, s.descVi, s.descEn)}</div></div>`).join('')}
           </div>
         </div>
       </div>
@@ -513,10 +534,10 @@ export function renderCargoModule() {
         `).join('')}
       </div>
       <div class="card">
-        <div class="card-title"><span class="ja">☢ ${bi(c.titleJa, c.titleVi)}</span><span class="badge badge-danger">IATA DGR</span></div>
+        <div class="card-title"><span class="ja">☢ ${bi(c.titleJa, c.titleVi, c.titleEn)}</span><span class="badge badge-danger">IATA DGR</span></div>
         <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
           <div style="flex-shrink:0;">${renderDgrSvg(c.labelType)}</div>
-          <div style="flex:1;min-width:220px;" class="ja">${bi(c.descJa, c.descVi)}</div>
+          <div style="flex:1;min-width:220px;" class="ja">${bi(c.descJa, c.descVi, c.descEn)}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;">
           ${c.options.map((ch, ci) => {
@@ -525,7 +546,7 @@ export function renderCargoModule() {
             const bg = pick !== undefined ? (ch.ok ? 'var(--ok-soft)' : (isPicked ? 'var(--danger-soft)' : 'var(--surface-2)')) : 'var(--surface-2)';
             return `
               <button data-dgr-c="${ci}" style="text-align:left;padding:10px 14px;border-radius:8px;border:1.5px solid ${border};background:${bg};cursor:pointer;color:var(--text-primary);font-size:13.5px;">
-                <span class="ja">${bi(ch.ja, ch.vi)}</span>
+                <span class="ja">${bi(ch.ja, ch.vi, ch.en)}</span>
               </button>
             `;
           }).join('')}
@@ -533,7 +554,7 @@ export function renderCargoModule() {
         ${pick !== undefined ? `
           <div class="alert ${c.options[pick].ok ? 'alert-ok' : 'alert-danger'}" style="margin-top:12px;margin-bottom:0;">
             <strong>${c.options[pick].ok ? t('✓ 正解です！', '✓ CHÍNH XÁC!', '✓ CORRECT!') : t('✗ 不正解（DGR規定違反）', '✗ CHƯA ĐÚNG (Sai quy định DGR)', '✗ INCORRECT (DGR Violation)')}</strong>
-            <div class="ja" style="margin-top:4px;font-size:13px;">${t(c.expJa, c.expVi, c.expVi)}</div>
+            <div class="ja" style="margin-top:4px;font-size:13px;">${t(c.expJa, c.expVi, c.expEn || c.expVi)}</div>
           </div>
         ` : ''}
       </div>
@@ -542,12 +563,17 @@ export function renderCargoModule() {
 
   mount.innerHTML = `
     <div class="seg-tabs" style="margin-bottom:12px;">
-      <button class="seg-tab ${cargoState.tab === 'dgr' ? 'active' : ''}" data-ctab="dgr">☢ ${t('IATA 危険物 (DGR) 実践ケース', 'Hàng nguy hiểm IATA DGR (5 Case)')}</button>
-      <button class="seg-tab ${cargoState.tab === 'uld' ? 'active' : ''}" data-ctab="uld">📦 ${t('ULDコンテナ・パレット図鑑', 'Danh mục Container & Pallet ULD')}</button>
-      <button class="seg-tab ${cargoState.tab === 'flow' ? 'active' : ''}" data-ctab="flow">🔄 ${t('輸出入・AWB業務フロー', 'Quy trình Xuất/Nhập khẩu & AWB')}</button>
+      <button class="seg-tab ${cargoState.tab === 'buildup' ? 'active' : ''}" data-ctab="buildup">🏗 ${t('3D ULDビルドアップ実技ゲーム', 'Trò chơi Đóng hàng ULD 3D thực tế', '3D ULD Build-up Simulator')}</button>
+      <button class="seg-tab ${cargoState.tab === 'uld' ? 'active' : ''}" data-ctab="uld">📦 ${t('ULD規格図鑑 (ANA/JEAE 11種)', 'Danh mục chuẩn ULD (PMC/PLA/PGA/AKE/AKH)', 'ULD Specs Guide (11 Types)')}</button>
+      <button class="seg-tab ${cargoState.tab === 'dgr' ? 'active' : ''}" data-ctab="dgr">☢ ${t('IATA 危険物 (DGR / TI) 実践', 'Hàng nguy hiểm IATA DGR & TI (6 Case)', 'IATA DGR & TI Cases (6)')}</button>
+      <button class="seg-tab ${cargoState.tab === 'flow' ? 'active' : ''}" data-ctab="flow">🔄 ${t('輸出入・NACCS業務フロー', 'Quy trình Xuất/Nhập khẩu & NACCS', 'Export/Import & NACCS Flow')}</button>
     </div>
     ${content}
   `;
+
+  if (cargoState.tab === 'buildup') {
+    renderUldBuildupUI();
+  }
 
   mount.querySelectorAll('[data-ctab]').forEach(b => { b.onclick = () => { cargoState.tab = b.dataset.ctab; renderCargoModule(); }; });
   mount.querySelectorAll('[data-dgr-i]').forEach(b => { b.onclick = () => { cargoState.dgrIdx = Number(b.dataset.dgrI); renderCargoModule(); }; });
