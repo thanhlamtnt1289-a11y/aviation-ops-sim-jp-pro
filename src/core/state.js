@@ -23,7 +23,12 @@ export const DEFAULT_STATE = {
   opsBestMarshal: 0,
   opsBestLightGun: 0,
   opsPushbackDone: false,
-  exam3dBest: null
+  exam3dBest: null,
+  userLevel: 'basic', // 'basic' (Người mới: giao diện gọn) | 'pro' (đầy đủ công cụ)
+  activeStage: 'tg1', // current roadmap stage: 'tg1' | 'gse' | 'cargo' | 'tg2'
+  navItem: null,
+  stageOpen: {},
+  marshalDrillPassed: false
 };
 
 function clone(obj) {

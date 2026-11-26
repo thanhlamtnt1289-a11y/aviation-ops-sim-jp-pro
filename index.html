@@ -36,60 +36,8 @@
       </div>
     </div>
 
-    <div class="nav-scroll">
-      <div class="nav-group-label" data-i18n="grpHub">COMMAND HUB</div>
-      <button class="nav-btn active" data-module="dashboard">
-        <span class="nav-code">00</span>
-        <span data-i18n="navDashboard">Flight Ops Hub</span>
-        <span class="nav-badge" id="badge-dashboard">0%</span>
-      </button>
-
-      <div class="nav-group-label" data-i18n="grpSim">FLIGHT &amp; 3D SIMULATION</div>
-      <button class="nav-btn" data-module="wb">
-        <span class="nav-code">D</span>
-        <span data-i18n="navWb">Weight &amp; Balance (10)</span>
-        <span class="nav-badge" id="badge-wb">0/14</span>
-      </button>
-      <button class="nav-btn" data-module="airport3d">
-        <span class="nav-code">G</span>
-        <span data-i18n="navAirport3d">3D Airport &amp; NGO Driving</span>
-        <span class="nav-badge" id="badge-airport3d">0/4</span>
-      </button>
-
-      <div class="nav-group-label" data-i18n="grpOps">RAMP, PAX &amp; CARGO OPS</div>
-      <button class="nav-btn" data-module="turnaround">
-        <span class="nav-code">A</span>
-        <span data-i18n="navTurnaround">Turnaround (5 JP)</span>
-        <span class="nav-badge" id="badge-turnaround">—</span>
-      </button>
-      <button class="nav-btn" data-module="pax">
-        <span class="nav-code">B</span>
-        <span data-i18n="navPax">Passenger &amp; PRM</span>
-        <span class="nav-badge" id="badge-pax">0/5</span>
-      </button>
-      <button class="nav-btn" data-module="cargo">
-        <span class="nav-code">C</span>
-        <span data-i18n="navCargo">3D ULD Buildup, Cargo &amp; DGR</span>
-        <span class="nav-badge" id="badge-cargo">0/11</span>
-      </button>
-      <button class="nav-btn" data-module="safety">
-        <span class="nav-code">E</span>
-        <span data-i18n="navSafety">Safety, FOD &amp; SMS</span>
-        <span class="nav-badge" id="badge-safety">0/16</span>
-      </button>
-
-      <div class="nav-group-label" data-i18n="grpExam">EXAM &amp; FIELD DRILLS</div>
-      <button class="nav-btn" data-module="quiz">
-        <span class="nav-code">F</span>
-        <span data-i18n="navQuiz">SSW &amp; NGO Exams</span>
-        <span class="nav-badge" id="badge-quiz">0Q</span>
-      </button>
-      <button class="nav-btn" data-module="ops">
-        <span class="nav-code">H</span>
-        <span data-i18n="navOps">Signals, Light Gun &amp; Dict</span>
-        <span class="nav-badge" id="badge-ops">128</span>
-      </button>
-    </div>
+    <!-- Learning roadmap (rendered by src/core/roadmap.js): ① 特定技能1号 → ② GSE運転 → ③ 搭載・ULD → ④ 特定技能2号 -->
+    <div class="nav-scroll" id="nav-roadmap"></div>
 
     <div class="sidebar-footer">
       <div style="display:flex;justify-content:space-between;font-size:11px;color:#94A3B8;margin-bottom:4px;">

@@ -1,9 +1,10 @@
 // 00. Flight Ops Hub Dashboard — Pure Trilingual JA / VI / EN · Readiness Score, NGO Centrair Shortcuts & Quick Launch
+import { ROADMAP, stageProgress, isPro } from '../core/roadmap.js';
 import { AIRCRAFT_PROFILES, WB_SCENARIOS } from '../data/aircraft.js';
 import { QUIZ_BANK } from '../data/quizBank.js';
 import { NGO_DRIVING_QUIZ, NGO_EXTRA_DICTIONARY } from '../data/centrairNgo.js';
 import { OPS_DICTIONARY } from '../data/dictionary.js';
-import { appState, computeOverallProgress, t } from '../core/state.js';
+import { appState, computeOverallProgress, saveState, t } from '../core/state.js';
 
 export function renderDashboard(actions) {
   const mount = document.getElementById('dashboard-mount');
@@ -45,7 +46,7 @@ export function renderDashboard(actions) {
           <div style="font-family:var(--font-mono);font-size:10px;color:#93C5FD;">${t('総合習熟度', 'MỨC ĐỘ SẴN SÀNG', 'READINESS')}</div>
           <div style="font-family:var(--font-mono);font-size:26px;font-weight:800;color:#38BDF8;">${overall}%</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="pro-only" style="display:flex;flex-direction:column;gap:6px;">
           <button class="efb-btn active" id="dash-go-uld-sim">🏗 ${t('3D ULDビルドアップ実習へ', 'Chơi Đóng hàng ULD 3D thực tế', 'Open 3D ULD Buildup Game')}</button>
           <button class="efb-btn" id="dash-go-ngo-exam">🚗 ${t('NGO車両運転 50問試験へ', 'Thi Bằng lái Sân đỗ NGO (50 câu)', 'NGO Airside Driving Exam (50Q)')}</button>
           <button class="efb-btn" id="dash-go-3d">🛫 ${t('3D空港 (Three.js) を開く', 'Mở Sân bay 3D Three.js', 'Open Three.js 3D Airport')}</button>
@@ -54,6 +55,34 @@ export function renderDashboard(actions) {
       </div>
     </div>
 
+    <div class="roadmap-head">
+      <h3 class="ja">🧭 ${t('受験ロードマップ：1号 → GSE運転 → 搭載 → 2号', 'Lộ trình thi: Số 1 → Bằng lái GSE → Xếp hàng → Số 2', 'Certification path: SSW (i) → GSE permit → Loading → SSW (ii)')}</h3>
+      <span class="badge badge-neutral" style="font-family:var(--font-sans);">${isPro() ? 'Pro' : t('初心者モード', 'Chế độ Người mới', 'Beginner mode')}</span>
+    </div>
+    <div class="roadmap-grid">
+      ${ROADMAP.map(st => {
+        const pct = stageProgress(st.id);
+        const isCur = (appState.activeStage || 'tg1') === st.id;
+        const items = st.items.filter(it => isPro() || !it.pro);
+        return `
+          <div class="roadmap-card ${isCur ? 'current' : ''} ${pct >= 100 ? 'done' : ''}">
+            <div class="roadmap-card-top">
+              <span class="stage-no">${pct >= 100 ? '✓' : st.no}</span>
+              <div style="min-width:0;">
+                <div class="ja" style="font-weight:800;font-size:14px;">${t(st.ja, st.vi, st.en)}</div>
+                <div class="ja" style="font-size:11.5px;color:var(--text-muted);">${t(st.subJa, st.subVi, st.subEn)}</div>
+              </div>
+            </div>
+            <div class="stage-bar" style="margin:10px 0 8px;border-radius:3px;"><i style="width:${pct}%"></i></div>
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);margin-bottom:8px;">${pct}% ${t('完了', 'hoàn thành', 'complete')}</div>
+            <div class="roadmap-items">
+              ${items.map(it => `<button class="roadmap-item ${it.exam ? 'exam' : ''}" data-rm="${it.id}"><span>${it.icon}</span><span>${t(it.ja, it.vi, it.en)}</span></button>`).join('')}
+            </div>
+          </div>`;
+      }).join('')}
+    </div>
+
+    <div class="pro-only">
     <div class="dash-grid">
       <button class="dash-tile" data-nav="wb">
         <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -127,9 +156,18 @@ export function renderDashboard(actions) {
         </ul>
       </div>
     </div>
+    </div>
   `;
 
   mount.querySelectorAll('[data-nav]').forEach(el => { el.onclick = () => actions.go(el.dataset.nav); });
+  mount.querySelectorAll('[data-rm]').forEach(el => {
+    el.onclick = () => {
+      for (const st of ROADMAP) {
+        const it = st.items.find(x => x.id === el.dataset.rm);
+        if (it) { appState.navItem = it.id; appState.activeStage = st.id; saveState(); actions.goRoadmap(it); return; }
+      }
+    };
+  });
   const bUld = document.getElementById('dash-go-uld-sim');
   if (bUld) bUld.onclick = () => actions.openUldBuildup();
   const bNgo = document.getElementById('dash-go-ngo-exam');

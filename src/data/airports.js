@@ -1460,6 +1460,117 @@ export const A3D_FLIGHT_PHASES = [
   ];
 
   // PURE FUNCTION: 1:1 NGO 3,500m RUNWAY & APRON 3D FLIGHT POSE GENERATOR (JA / VI / EN CREW CALLOUTS)
+  // ===================================================================================
+  // REALISTIC GROUND MOVEMENT: taxi routes on the real taxiway network with filleted turns
+  // and physically plausible speed profiles (ICAO/airline SOP typical values):
+  //   runway exit ≤ 30kt · straight taxi ≈ 18kt (9 m/s) · turns ≈ 10kt (5 m/s) ·
+  //   apron taxilane ≈ 10kt · marshaller lead-in ≤ walking pace, stop at the stop line ·
+  //   pushback ≈ 3–5 km/h (1.2 m/s). Phase durations are derived from these profiles (1x = real time).
+  // ===================================================================================
+  function buildTaxiPath(points, radius = 30) {
+    const out = [];
+    const push = (x, z, turn) => {
+      const last = out[out.length - 1];
+      if (last && Math.hypot(x - last.x, z - last.z) < 0.25) return;
+      out.push({ x, z, turn });
+    };
+    push(points[0][0], points[0][1], false);
+    for (let i = 1; i < points.length; i++) {
+      const B = points[i];
+      if (i === points.length - 1) { push(B[0], B[1], false); break; }
+      const A = points[i - 1], C = points[i + 1];
+      const l1 = Math.hypot(B[0] - A[0], B[1] - A[1]), l2 = Math.hypot(C[0] - B[0], C[1] - B[1]);
+      const d1 = [(B[0] - A[0]) / l1, (B[1] - A[1]) / l1], d2 = [(C[0] - B[0]) / l2, (C[1] - B[1]) / l2];
+      const theta = Math.acos(Math.max(-1, Math.min(1, d1[0] * d2[0] + d1[1] * d2[1])));
+      const tl = Math.min(radius * Math.tan(theta / 2), l1 * 0.48, l2 * 0.48);
+      const P1 = [B[0] - d1[0] * tl, B[1] - d1[1] * tl], P2 = [B[0] + d2[0] * tl, B[1] + d2[1] * tl];
+      push(P1[0], P1[1], false);
+      const n = Math.max(6, Math.ceil(theta * 14));
+      for (let k = 1; k <= n; k++) {
+        const u = k / n;
+        push((1 - u) * (1 - u) * P1[0] + 2 * (1 - u) * u * B[0] + u * u * P2[0],
+             (1 - u) * (1 - u) * P1[1] + 2 * (1 - u) * u * B[1] + u * u * P2[1], theta > 0.05);
+      }
+    }
+    // Resample at ~1m with cumulative distance & heading (heading: forward = (cos h, sin h) in x/z)
+    const res = [];
+    let acc = 0;
+    for (let i = 0; i < out.length - 1; i++) {
+      const a = out[i], b = out[i + 1];
+      const len = Math.hypot(b.x - a.x, b.z - a.z);
+      const h = Math.atan2(b.z - a.z, b.x - a.x);
+      const n = Math.max(1, Math.round(len));
+      for (let k = 0; k < n; k++) {
+        const u = k / n;
+        res.push({ x: a.x + (b.x - a.x) * u, z: a.z + (b.z - a.z) * u, h, s: acc + len * u, turn: a.turn || b.turn });
+      }
+      acc += len;
+    }
+    const lastPt = out[out.length - 1];
+    res.push({ x: lastPt.x, z: lastPt.z, h: res.length ? res[res.length - 1].h : 0, s: acc, turn: false });
+    return res;
+  }
+
+  function buildMotion(points, o) {
+    const path = buildTaxiPath(points, o.radius || 30);
+    const n = path.length;
+    const L = path[n - 1].s;
+    const v = path.map(pt => {
+      let lim = pt.turn ? o.vTurn : o.vMax;
+      if (o.zones) o.zones.forEach(zn => { if (pt.s >= zn.from && pt.s <= zn.to) lim = Math.min(lim, zn.v); });
+      const toEnd = L - pt.s;
+      if (o.leadIn && toEnd < o.leadIn) lim = Math.min(lim, o.vLeadEnd + (o.vLeadIn - o.vLeadEnd) * (toEnd / o.leadIn));
+      return lim;
+    });
+    v[0] = Math.min(v[0], o.vStart ?? 0.5);
+    v[n - 1] = Math.min(v[n - 1], o.vEnd ?? 0.3);
+    for (let i = 1; i < n; i++) { const ds = path[i].s - path[i - 1].s; v[i] = Math.min(v[i], Math.sqrt(v[i - 1] * v[i - 1] + 2 * o.accel * ds)); }
+    for (let i = n - 2; i >= 0; i--) { const ds = path[i + 1].s - path[i].s; v[i] = Math.min(v[i], Math.sqrt(v[i + 1] * v[i + 1] + 2 * o.decel * ds)); }
+    const t = [0];
+    for (let i = 1; i < n; i++) {
+      const ds = path[i].s - path[i - 1].s;
+      t.push(t[i - 1] + ds / Math.max(0.15, (v[i] + v[i - 1]) * 0.5));
+    }
+    const hold = o.holdStart || 0;
+    const T = t[n - 1] + hold;
+    const sampleAt = time => {
+      const tt = Math.max(0, time - hold);
+      let lo = 0, hi = n - 1;
+      while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (t[mid] <= tt) lo = mid; else hi = mid; }
+      const u = t[hi] > t[lo] ? Math.min(1, (tt - t[lo]) / (t[hi] - t[lo])) : 0;
+      const a = path[lo], b = path[hi];
+      let dh = b.h - a.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
+      return { x: a.x + (b.x - a.x) * u, z: a.z + (b.z - a.z) * u, h: a.h + dh * u, gs: time < hold ? 0 : v[lo] + (v[hi] - v[lo]) * u, s: a.s + (b.s - a.s) * u, L };
+    };
+    return { T, L, sampleAt };
+  }
+
+  // Taxi-in: RWY 36 exit A6 (high-speed) → crossover x=255 → C-TWY southbound → apron link x=0 → Spot 7 lead-in
+  export const NGO_MOTION = {
+    taxiIn: buildMotion([[180, -580], [255, -415], [255, -235], [0, -235], [0, 10]], {
+      radius: 40, vMax: 9.0, vTurn: 5.0, accel: 0.5, decel: 0.7, vStart: 14, vEnd: 0.0, 
+      zones: [{ from: 0, to: 120, v: 14 }],                       // still decelerating on the exit
+      leadIn: 70, vLeadIn: 2.6, vLeadEnd: 0.5                     // marshaller lead-in: walking pace, creep to the stop line
+    }),
+    // Pushback (tail first) from Spot 7 onto the inner taxilane, nose ends pointing south (-X)
+    push: buildMotion([[0, 10], [0, -62], [30, -62]], { radius: 26, vMax: 1.3, vTurn: 1.0, accel: 0.15, decel: 0.2, vStart: 0, vEnd: 0 }),
+    // Taxi-out: wave-off hold → taxilane → crossover x=-108 → A-TWY southbound → RWY 36 threshold (A1 area)
+    taxiOut: buildMotion([[30, -62], [-108, -62], [-108, -415], [-1680, -415], [-1680, -580], [-1650, -580]], {
+      radius: 40, vMax: 9.5, vTurn: 5.0, accel: 0.45, decel: 0.7, vStart: 0, vEnd: 0, holdStart: 14,
+      zones: [{ from: 0, to: 150, v: 5.0 }]                       // apron taxilane ≤ 10kt
+    })
+  };
+  // Landing: 3° approach at Vref ≈ 140kt (70 m/s), touchdown x=-1450, decel 1.43 m/s² to 15 m/s at exit A6 (x=180)
+  const LANDING = { vRef: 70, xStart: -2350, xTd: -1450, yStart: 112, xExit: 180, vExit: 15 };
+  LANDING.tApp = (LANDING.xTd - LANDING.xStart) / LANDING.vRef;
+  LANDING.decel = (LANDING.vRef ** 2 - LANDING.vExit ** 2) / (2 * (LANDING.xExit - LANDING.xTd));
+  LANDING.tRoll = (LANDING.vRef - LANDING.vExit) / LANDING.decel;
+  LANDING.T = LANDING.tApp + LANDING.tRoll;
+  // Takeoff: line-up at x=-1650, accel 2.0 m/s² to Vr 75 m/s (~1,400m roll), rotate, climb 80 m/s / 8 m/s
+  const TAKEOFF = { x0: -1650, a: 2.0, vr: 75, climbT: 26 };
+  TAKEOFF.tRoll = TAKEOFF.vr / TAKEOFF.a;
+  TAKEOFF.T = TAKEOFF.tRoll + TAKEOFF.climbT;
+
   export function computeFlightCyclePose(phaseIdx, pRaw) {
     const p = Math.max(0, Math.min(1, pRaw));
     const lerp = (a, b, tVal) => a + (b - a) * Math.max(0, Math.min(1, tVal));
@@ -1472,49 +1583,33 @@ export const A3D_FLIGHT_PHASES = [
     const gse = [];
 
     if (phaseIdx === 0) {
-      // 1. Final Approach & Touchdown on 1:1 3,500m Runway 36 (z = -580, South -1750m -> North +1750m)
+      // 1. Final approach (Vref 70 m/s, 3° path) & rollout on RWY 36 — real-time kinematics
       ac.beaconOn = true;
       ac.heading = 0;
       ac.z = -580;
-      if (p < 0.42) {
-        const u = p / 0.42;
-        ac.x = lerp(-2350, -1450, u);
-        ac.y = lerp(112, 0, u * u * 0.35 + u * 0.65);
-        ac.pitch = u > 0.78 ? 0.08 : -0.05;
+      const tm = p * LANDING.T;
+      if (tm < LANDING.tApp) {
+        const u = tm / LANDING.tApp;
+        ac.x = LANDING.xStart + LANDING.vRef * tm;
+        ac.y = LANDING.yStart * (1 - u);
+        ac.pitch = u > 0.85 ? 0.08 : 0.03;
+        ac.gs = LANDING.vRef;
       } else {
-        const u = (p - 0.42) / 0.58;
-        const decel = 1 - Math.pow(1 - u, 1.65);
-        ac.x = lerp(-1450, 180, decel);
+        const tr = tm - LANDING.tApp;
+        ac.gs = Math.max(LANDING.vExit, LANDING.vRef - LANDING.decel * tr);
+        ac.x = LANDING.xTd + LANDING.vRef * tr - 0.5 * LANDING.decel * tr * tr;
         ac.y = 0;
-        ac.pitch = u < 0.12 ? 0.06 * (1 - u / 0.12) : 0;
-        smoke = u < 0.14;
+        ac.pitch = tr < 3 ? 0.06 * (1 - tr / 3) : 0;
+        smoke = tr < 1.2;
       }
       crew.push({ x: -16, z: 38, labelJa: 'ランプ員 (ERA外待機・FOD確認済)', labelVi: 'Đội sân đỗ (Chờ ngoài ERA)', labelEn: 'Ramp Crew (Holding Outside ERA)', vest: [190, 242, 100], waving: false });
       gse.push({ kind: 'gpu', x: -18, z: 40, heading: 0 });
     } else if (phaseIdx === 1) {
-      // 2. Vacate via Rapid Exit A6 -> A-TWY (-415) -> C-TWY (-235) -> Past 300m Center Pier Tip -> Spot 7 (0, 10)
+      // 2. Vacate A6 → crossover → C-TWY → apron link x=0 → marshaller lead-in to Spot 7 stop line (real speeds)
       ac.beaconOn = true;
-      if (p < 0.24) {
-        const u = p / 0.24;
-        ac.x = lerp(180, 255, u);
-        ac.z = lerp(-580, -235, u);
-        ac.heading = Math.atan2(345, 75);
-      } else if (p < 0.54) {
-        const u = (p - 0.24) / 0.30;
-        ac.x = lerp(255, 0, u);
-        ac.z = -235;
-        ac.heading = Math.PI;
-      } else if (p < 0.76) {
-        const u = (p - 0.54) / 0.22;
-        ac.x = 0;
-        ac.z = lerp(-235, -62, u);
-        ac.heading = Math.PI / 2;
-      } else {
-        const u = (p - 0.76) / 0.24;
-        ac.x = 0;
-        ac.z = lerp(-62, 10, u);
-        ac.heading = Math.PI / 2;
-      }
+      const m = NGO_MOTION.taxiIn.sampleAt(p * NGO_MOTION.taxiIn.T);
+      ac.x = m.x; ac.z = m.z; ac.heading = m.h; ac.gs = m.gs;
+      ac.toStopM = m.L - m.s;
       crew.push({ x: 0, z: 33.5, labelJa: 'マーシャラー (駐機誘導)', labelVi: 'Marshaller (Dẫn tàu)', labelEn: 'Marshaller (Lead-in Signals)', vest: [249, 115, 22], waving: true });
       crew.push({ x: -22.5, z: 8, labelJa: 'ウォッチマン右 (≥5m)', labelVi: 'Canh cánh phải (≥5m)', labelEn: 'Starboard Watchman (≥5m)', vest: [190, 242, 100], waving: true });
       crew.push({ x: 22.5, z: 8, labelJa: 'ウォッチマン左 (≥5m)', labelVi: 'Canh cánh trái (≥5m)', labelEn: 'Port Watchman (≥5m)', vest: [190, 242, 100], waving: true });
@@ -1565,61 +1660,40 @@ export const A3D_FLIGHT_PHASES = [
       const ang = p * Math.PI * 1.4;
       crew.push({ x: -Math.cos(ang) * 6.5, z: 14 + Math.sin(ang) * 14, labelJa: 'ヘッドセットマン (最終指差呼称)', labelVi: 'Headset Man (Walkaround 指差呼称)', labelEn: 'Headset Man (360° Walkaround)', vest: [249, 115, 22], waving: false });
     } else if (phaseIdx === 7) {
-      // 8. Pushback onto Inner Taxilane D5 (z = -62) & Engine Start
+      // 8. Pushback (tail first, ≈4 km/h) onto the inner taxilane & engine start
       ac.beaconOn = true;
-      if (p < 0.55) {
-        const u = p / 0.55;
-        ac.x = 0;
-        ac.z = lerp(10, -50, u);
-        ac.heading = Math.PI / 2;
-      } else {
-        const u = (p - 0.55) / 0.45;
-        ac.x = lerp(0, -10, u);
-        ac.z = lerp(-50, -62, u);
-        ac.heading = lerp(Math.PI / 2, Math.PI, u);
-      }
+      const m = NGO_MOTION.push.sampleAt(p * NGO_MOTION.push.T);
+      ac.x = m.x; ac.z = m.z; ac.heading = m.h + Math.PI; ac.gs = m.gs;
       const noseX = ac.x + Math.cos(ac.heading) * 19.5;
       const noseZ = ac.z + Math.sin(ac.heading) * 19.5;
       const portDX = -Math.sin(ac.heading), portDZ = Math.cos(ac.heading);
       crew.push({ x: noseX + portDX * 5.2, z: noseZ + portDZ * 5.2, labelJa: 'ヘッドセットマン (並走)', labelVi: 'Headset Man (Đi kèm mũi)', labelEn: 'Headset Man (Nose Escort)', vest: [249, 115, 22], waving: false });
       crew.push({ x: ac.x + portDX * 21.5, z: ac.z + portDZ * 21.5, labelJa: 'ウイングウォーカー', labelVi: 'Canh đầu cánh', labelEn: 'Wingwalker Escort', vest: [190, 242, 100], waving: true });
     } else if (phaseIdx === 8) {
-      // 9. Bypass Pin Wave-Off & Full-Scale Taxi-Out via C-TWY/A-TWY to RWY 36 Threshold (x = -1680, z = -580)
+      // 9. Bypass-pin show & wave-off hold, then taxi-out via taxilane → x=-108 → A-TWY → RWY 36 threshold
       ac.beaconOn = true;
-      if (p < 0.28) {
-        ac.x = -10; ac.z = -62; ac.heading = Math.PI;
+      const m = NGO_MOTION.taxiOut.sampleAt(p * NGO_MOTION.taxiOut.T);
+      ac.x = m.x; ac.z = m.z; ac.heading = m.h; ac.gs = m.gs;
         crew.push({ x: -29.0, z: -53.0, labelJa: 'バイパスピン左前方提示・お見送り', labelVi: 'Giơ cờ đỏ Bypass Pin bên trái & Tiễn bay', labelEn: 'Bypass Pin Shown on Left & Wave-Off!', vest: [56, 189, 248], waving: true, pin: true });
-      } else if (p < 0.45) {
-        const u = (p - 0.28) / 0.17;
-        ac.x = lerp(-10, -108, u); ac.z = -62; ac.heading = Math.PI;
         crew.push({ x: -19.0, z: -40.5, labelJa: 'ランプチーム お見送り', labelVi: 'Đội sân đỗ vẫy chào (お見送り)', labelEn: 'Ramp Team Wave-Off (Omiokuri)', vest: [190, 242, 100], waving: true });
-      } else if (p < 0.62) {
-        const u = (p - 0.45) / 0.17;
-        ac.x = -108; ac.z = lerp(-62, -415, u); ac.heading = -Math.PI / 2;
-      } else if (p < 0.86) {
-        const u = (p - 0.62) / 0.24;
-        ac.x = lerp(-108, -1680, u); ac.z = -415; ac.heading = Math.PI;
-      } else {
-        const u = (p - 0.86) / 0.14;
-        ac.x = -1680; ac.z = lerp(-415, -580, u); ac.heading = lerp(-Math.PI / 2, 0, Math.max(0, (u - 0.55) / 0.45));
-      }
     } else {
-      // 10. Full-Scale Takeoff Roll (~2,030m) & Climb-out on 3,500m NGO RWY 36!
+      // 10. Takeoff roll (2.0 m/s² to Vr 75 m/s ≈ 1,400m) & initial climb on RWY 36
       ac.beaconOn = true;
       ac.z = -580;
       ac.heading = 0;
-      if (p < 0.56) {
-        const u = p / 0.56;
-        ac.x = lerp(-1680, 350, u * u);
+      const tm = p * TAKEOFF.T;
+      if (tm < TAKEOFF.tRoll) {
+        ac.x = TAKEOFF.x0 + 0.5 * TAKEOFF.a * tm * tm;
         ac.y = 0;
-        ac.pitch = u > 0.84 ? lerp(0, 0.17, (u - 0.84) / 0.16) : 0;
+        ac.gs = TAKEOFF.a * tm;
+        ac.pitch = tm > TAKEOFF.tRoll - 3 ? 0.17 * (1 - (TAKEOFF.tRoll - tm) / 3) : 0;
       } else {
-        const u = (p - 0.56) / 0.44;
-        ac.x = lerp(350, 2150, u);
-        ac.y = lerp(0, 235, Math.pow(u, 1.12));
-        ac.pitch = 0.20;
+        const tc = tm - TAKEOFF.tRoll;
+        ac.x = TAKEOFF.x0 + 0.5 * TAKEOFF.a * TAKEOFF.tRoll ** 2 + 80 * tc;
+        ac.y = 8 * tc;
+        ac.gs = 80;
+        ac.pitch = 0.2;
       }
-      crew.push({ x: -16, z: 38, labelJa: 'ランプ員 (次便受入準備)', labelVi: 'Đội sân đỗ (Chuẩn bị chuyến kế)', labelEn: 'Ramp Crew (Next Flight Prep)', vest: [190, 242, 100], waving: false });
     }
 
     return { ac, pbbExt, conesOn, chocksOn, smoke, crew, gse };
@@ -1630,10 +1704,10 @@ export const A3D_RADIO_COMMS = [
       ja: 'Centrair Tower: "All Nippon 102, wind 360 at 10kt, Runway 36 (3,500m), cleared to land."（中部滑走路36着陸許可）',
       vi: 'Centrair Tower 118.85: "ANA 102, gió 360/10kt, Đường băng 36 (3.500m), cho phép hạ cánh."',
       en: 'Centrair Tower 118.85: "All Nippon 102, wind 360 at 10kt, Runway 36 (3,500m), cleared to land."' },
-    { ch: 'NGO GND 121.7',
-      ja: 'Chubu Ground: "NH102, vacate A6, taxi via A-TWY and C-TWY to Spot 7."（A6離脱→誘導路A・C経由スポット7へ）',
-      vi: 'Chubu Ground 121.7: "NH102, rời đường băng qua A6, lăn theo A-TWY và C-TWY vào Spot 7."',
-      en: 'Chubu Ground 121.7: "NH102, vacate via A6, taxi via A-TWY and C-TWY to Spot 7. Follow marshaller."' },
+    { ch: 'NGO GND 121.8',
+      ja: 'Centrair Ground 121.8: "NH102, vacate A6, taxi via A-TWY and C-TWY to Spot 7."（A6離脱→誘導路A・C経由スポット7へ）',
+      vi: 'Centrair Ground 121.8: "NH102, rời đường băng qua A6, lăn theo A-TWY và C-TWY vào Spot 7."',
+      en: 'Centrair Ground 121.8: "NH102, vacate via A6, taxi via A-TWY and C-TWY to Spot 7. Follow marshaller."' },
     { ch: 'RAMP INT',
       ja: 'Ramp: "オンブロック！赤ビーコン消灯よし！輪止め装着・右舷GPU接続・左舷L1へPBB装着開始！"',
       vi: 'Ramp Intercom: "On-block! Beacon đỏ OFF! Chèn bánh, cắm GPU mũi phải & nối PBB ngang vào cửa L1!"',
@@ -1654,7 +1728,7 @@ export const A3D_RADIO_COMMS = [
       ja: 'Headset: "全ドア閉鎖・PBB収納・全GSEがERA赤線外へ退避完了！バイパスピン挿入・ブレーキSET確認！"',
       vi: 'Headset Man: "Đóng kín mọi cửa, thu PBB, rút sạch GSE ngoài vạch đỏ ERA! Đã cắm Bypass Pin & xác nhận phanh SET!"',
       en: 'Headset Man: "All doors closed, PBB retracted, all GSE clear of red ERA! Bypass pin inserted, confirm brakes SET!"' },
-    { ch: 'NGO GND 121.7',
+    { ch: 'NGO GND 121.8',
       ja: 'Headset: "プッシュバック承認取得！ブレーキ解除願います。周囲クリア、エンジン2・1始動どうぞ！"',
       vi: 'Headset Man: "Đã có phép Pushback! Mời nhả phanh đỗ. Xung quanh trống an toàn, mời nổ máy số 2 & số 1!"',
       en: 'Headset Man: "Pushback approved! Release parking brake. Area clear, clear to start Engines 2 and 1!"' },
@@ -1723,6 +1797,10 @@ export const A3D_VIEWPOINTS = [
       descJa: 'トレーラー牽引バック車庫入れ専用カメラ：TT頭・ヒッチ折れ角・荷台後端とBAY 01枠線を一望',
       descVi: 'Góc nhìn chuyên dụng lùi rơ-moóc vào chuồng như xe đầu kéo: thấy rõ góc gập moóc và vạch BAY 01',
       descEn: 'Dedicated semi-trailer reverse bay-parking camera showing tractor, hitch angle, trailer tail, and BAY 01' },
+    { id: 'marshal_rear', key: 'M', ja: '🧍 マーシャラー後方', vi: '🧍 Sau lưng Marshaller', en: '🧍 Behind Marshaller',
+      descJa: 'マーシャラーの背後から：腕・パドルの動きと、合図に反応する航空機を同時に確認',
+      descVi: 'Đứng sau lưng Marshaller: thấy rõ động tác tay/gậy và máy bay phản ứng theo từng tín hiệu',
+      descEn: 'From behind the marshaller: see the arm/wand signals and how the aircraft responds to each one' },
     { id: 'orbit', key: '9', ja: '🔄 3D自由回転', vi: '🔄 Xoay 3D tự do', en: '🔄 Free 3D Orbit',
       descJa: 'マウスドラッグで360度回転・ホイールで最大3,800mまでズームできる自由観察カメラ',
       descVi: 'Kéo chuột xoay 360° & cuộn bánh xe zoom mượt từ cận cảnh 18m tới toàn đảo 3.800m',
@@ -1764,6 +1842,16 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
     if (camMode === 'marshaller') {
       const eye = crewEye(crew.marshaller, [0, 1.68, (extra && extra.noseZ ? extra.noseZ : 29) + 6]);
       return { pos: eye, target: acCockpit, fov: 55, povKind: 'marshaller' };
+    }
+    if (camMode === 'marshal_rear') {
+      // Over-the-shoulder: behind & slightly left of the marshaller, so the trainee sees his arm signals AND the aircraft reacting
+      const mp = crew.marshaller || [0, (extra && extra.noseZ ? extra.noseZ : 29) + 6];
+      const dx = mp[0] - ac.x, dz = mp[1] - ac.z;
+      const d = Math.max(1, Math.hypot(dx, dz));
+      const ux = dx / d, uz = dz / d;
+      const pos = [mp[0] + ux * 9.5 - uz * 2.6, 2.5, mp[1] + uz * 9.5 + ux * 2.6];
+      const tgt = [mp[0] * 0.3 + acCockpit[0] * 0.7, 3.2, mp[1] * 0.3 + acCockpit[2] * 0.7];
+      return { pos, target: tgt, fov: 58, povKind: 'marshal_rear' };
     }
     if (camMode === 'headset') {
       const eye = crewEye(crew.headset, acLocalToW(3.5, 1.68, acInfo.halfL - 4));
@@ -1848,3 +1936,13 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
       povKind: 'flight_follow'
     };
   }
+
+// Phase durations follow the real-time kinematics above (1x = real time)
+(() => {
+  const set = (id, T) => { const ph = A3D_FLIGHT_PHASES.find(x => x.id === id); if (ph) ph.duration = Math.round(T * 10) / 10; };
+  set('landing', LANDING.T);
+  set('taxi_in', NGO_MOTION.taxiIn.T);
+  set('pushback', NGO_MOTION.push.T);
+  set('waveoff_taxiout', NGO_MOTION.taxiOut.T);
+  set('takeoff', TAKEOFF.T);
+})();
