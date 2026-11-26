@@ -912,7 +912,31 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
         };
       }
 
-      if (x >= sp.era.x1 && x <= sp.era.x2 && z >= sp.era.z1 && z <= sp.era.z2) {
+      // Authentic Wing-Hugging Open-Back ERA Contour Check (matches 3D Bright-Red ERA Line — excludes outer ESA Staging Bays!)
+      const halfSpan = sp.wingHalf || 18;
+      const halfL = halfSpan > 20 ? 23.0 : 18.5;
+      const bodyW = halfSpan > 20 ? 9.6 : 8.4;
+      const wingW = halfSpan + 3.8;
+      const absX = Math.abs(dx);
+      let inEraContour = false;
+      if (dz >= -(halfL + 4.0) && dz <= halfL + 6.5 && absX <= wingW) {
+        if (dz > halfL + 1.5) {
+          // Pointed Nose Diamond Chevron (︿)
+          const t = (dz - (halfL + 1.5)) / 5.0;
+          inEraContour = absX <= bodyW * (1 - t * 0.95);
+        } else if (dz > 4.5) {
+          // Forward Fuselage Corridor
+          inEraContour = absX <= bodyW;
+        } else if (dz >= -9.5) {
+          // Swept Wing Envelope
+          inEraContour = absX <= wingW;
+        } else {
+          // Aft Fuselage Corridor (tucked inward behind swept wings — outer corners are safe ESA staging bays!)
+          inEraContour = absX <= bodyW;
+        }
+      }
+
+      if (inEraContour) {
         if (beaconOn) {
           return {
             zone: 'ERA_BEACON_ON',
@@ -1344,16 +1368,16 @@ export const A3D_FLIGHT_PHASES = [
     } else if (phaseIdx === 8) {
       // 9. Disconnect, Bypass Pin Wave-Off & Taxi-out to RWY 36
       ac.beaconOn = true;
-      if (p < 0.25) {
-        const u = p / 0.25;
+      if (p < 0.32) {
+        const u = p / 0.32;
         ac.x = -8; ac.z = -55; ac.heading = Math.PI;
-        gse.push({ kind: 'tug', x: lerp(-29, -30, u), z: lerp(-55, -36, u), heading: Math.PI / 2 });
-        crew.push({ x: -24, z: -46, labelJa: 'バイパスピン提示・お見送り', labelVi: 'Giơ cờ đỏ & Tiễn bay (お見送り)', vest: [249, 115, 22], waving: true, pin: true });
+        gse.push({ kind: 'tug', x: lerp(-29, -32, u), z: lerp(-55, -37, u), heading: Math.PI / 2 });
+        crew.push({ x: -29.0, z: -46.5, labelJa: 'バイパスピン左前方提示・お見送り', labelVi: 'Giơ cờ đỏ Bypass Pin bên trái & Tiễn bay (お見送り)', vest: [56, 189, 248], waving: true, pin: true });
       } else if (p < 0.65) {
-        const u = (p - 0.25) / 0.40;
+        const u = (p - 0.32) / 0.33;
         ac.x = lerp(-8, -95, u); ac.z = -55; ac.heading = Math.PI;
-        gse.push({ kind: 'tug', x: -30, z: -36, heading: Math.PI / 2 });
-        crew.push({ x: -24, z: -38, labelJa: 'お見送り完了', labelVi: 'Tiễn bay hoàn tất', vest: [249, 115, 22], waving: false });
+        gse.push({ kind: 'tug', x: -32, z: -37, heading: Math.PI / 2 });
+        crew.push({ x: -22, z: -39, labelJa: 'ランプチーム お見送り', labelVi: 'Đội sân đỗ vẫy chào tiễn bay (お見送り)', vest: [190, 242, 100], waving: true });
       } else if (p < 0.88) {
         const u = (p - 0.65) / 0.23;
         ac.x = -95; ac.z = lerp(-55, -97, u); ac.heading = -Math.PI / 2;

@@ -1,5 +1,5 @@
-// Articulated 3D Airport Ground Crew (Authentic ICAO/JCAB Marshaller Signals + Warning Spotters)
-// & Realistic Japanese Airport Open-Cab Baggage Towing Tractor (TT Mui Trần) w/ Turning Wheels & Towed Carts
+// Articulated 3D Airport Ground Crew (Authentic ICAO/JCAB/JEAE Marshaller, Watchman, Guideman, Loadmaster & Headset Kinematics)
+// & Realistic Japanese Airport Open-Cab Baggage Towing Tractor ("TT Mui Trần") w/ Turning Wheels & Towed Dollies
 import * as THREE from 'three';
 
 // =========================================================================
@@ -26,31 +26,25 @@ export function createOpenCabTowingTractor3D() {
     return m;
   };
 
-  // Heavy lower chassis & side steps (length along +Z = forward!)
   addPart(new THREE.BoxGeometry(1.62, 0.38, 3.35), matChassisDark, 0, 0.54, 0);
-  // Front sloped engine hood (classic low-profile Japanese airport TT)
   addPart(new THREE.BoxGeometry(1.52, 0.56, 1.48), matBodyWhite, 0, 0.96, 0.88);
   addPart(new THREE.BoxGeometry(1.56, 0.14, 1.50), matAccentYellow, 0, 0.78, 0.88);
-  // Sloped hood grille
   addPart(new THREE.BoxGeometry(1.24, 0.34, 0.10), matChassisDark, 0, 0.96, 1.62);
-  // Rear counterweight deck (open flatbed rear w/ yellow safety stripe)
   addPart(new THREE.BoxGeometry(1.58, 0.52, 1.05), matBodyWhite, 0, 0.94, -1.12);
   addPart(new THREE.BoxGeometry(1.60, 0.15, 1.08), matAccentYellow, 0, 0.78, -1.12);
-  // Front & rear heavy rubber bumpers + rear tow hitch coupler
   addPart(new THREE.BoxGeometry(1.68, 0.24, 0.20), matRubber, 0, 0.56, 1.72);
   addPart(new THREE.BoxGeometry(1.68, 0.24, 0.18), matRubber, 0, 0.56, -1.70);
   addPart(new THREE.CylinderGeometry(0.06, 0.06, 0.32, 8), matRim, 0, 0.62, -1.86);
 
-  // Open-Cab ("Mui trần") Side Cowls + Low Windshield Frame (NO enclosed roof!)
+  // Open-Cab ("Mui trần") Side Cowls + Low Windshield Frame
   addPart(new THREE.BoxGeometry(0.12, 0.52, 1.05), matBodyWhite, -0.75, 0.92, -0.15);
   addPart(new THREE.BoxGeometry(0.12, 0.52, 1.05), matBodyWhite, 0.75, 0.92, -0.15);
-  // Low angled windscreen posts + glass
   addPart(new THREE.BoxGeometry(0.07, 0.68, 0.07), matChassisDark, -0.72, 1.48, 0.36, -0.22);
   addPart(new THREE.BoxGeometry(0.07, 0.68, 0.07), matChassisDark, 0.72, 1.48, 0.36, -0.22);
   addPart(new THREE.BoxGeometry(1.50, 0.06, 0.07), matChassisDark, 0, 1.80, 0.28);
   addPart(new THREE.BoxGeometry(1.38, 0.58, 0.04), matGlass, 0, 1.50, 0.35, -0.22);
 
-  // Rear safety roll-bar hoop (classic open-cab airport TT safety frame) + Rotating Yellow Beacon!
+  // Rear safety roll-bar hoop + Rotating Yellow Beacon
   addPart(new THREE.CylinderGeometry(0.045, 0.045, 1.15, 8), matChassisDark, -0.70, 1.56, -0.72);
   addPart(new THREE.CylinderGeometry(0.045, 0.045, 1.15, 8), matChassisDark, 0.70, 1.56, -0.72);
   addPart(new THREE.CylinderGeometry(0.045, 0.045, 1.44, 8), matChassisDark, 0, 2.12, -0.72, 0, 0, Math.PI / 2);
@@ -64,28 +58,24 @@ export function createOpenCabTowingTractor3D() {
   beaconHalo.position.set(0, 2.28, -0.72);
   g.add(beaconHalo);
 
-  // Open Cockpit Interior: Steering Column, Steering Wheel, Dual Seats & Live Driver!
   addPart(new THREE.CylinderGeometry(0.045, 0.055, 0.62, 8), matChassisDark, 0.34, 1.24, 0.16, -0.52);
   const steerWheel = addPart(new THREE.TorusGeometry(0.20, 0.032, 8, 16), matRubber, 0.34, 1.48, 0.02, 1.05);
-  // Driver seat (Right-hand drive for Japan!) + Passenger/Escort seat (Left)
   addPart(new THREE.BoxGeometry(0.52, 0.14, 0.52), matSeat, 0.34, 0.90, -0.34);
   addPart(new THREE.BoxGeometry(0.52, 0.58, 0.12), matSeat, 0.34, 1.20, -0.56);
   addPart(new THREE.BoxGeometry(0.50, 0.14, 0.50), matSeat, -0.34, 0.90, -0.34);
   addPart(new THREE.BoxGeometry(0.50, 0.54, 0.12), matSeat, -0.34, 1.18, -0.56);
 
-  // Driver character inside open cab (High-vis yellow vest + white helmet + arms on wheel)
+  // Driver inside open cab
   const driverGroup = new THREE.Group();
   driverGroup.position.set(0.34, 0.98, -0.34);
   addPart(new THREE.BoxGeometry(0.42, 0.52, 0.24), new THREE.MeshStandardMaterial({ color: 0x84cc16, roughness: 0.5 }), 0, 0.32, 0, 0, 0, 0, driverGroup);
   addPart(new THREE.BoxGeometry(0.44, 0.08, 0.26), new THREE.MeshBasicMaterial({ color: 0xe2e8f0 }), 0, 0.26, 0, 0, 0, 0, driverGroup);
   addPart(new THREE.SphereGeometry(0.15, 12, 10), new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.6 }), 0, 0.72, 0.02, 0, 0, 0, driverGroup);
   addPart(new THREE.SphereGeometry(0.165, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.58), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 }), 0, 0.75, 0.02, 0, 0, 0, driverGroup);
-  // Driver arms reaching forward to steering wheel
   addPart(new THREE.CylinderGeometry(0.055, 0.05, 0.44, 8), new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.6 }), -0.22, 0.45, 0.18, Math.PI / 2.4, 0.18, 0, driverGroup);
   addPart(new THREE.CylinderGeometry(0.055, 0.05, 0.44, 8), new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.6 }), 0.22, 0.45, 0.18, Math.PI / 2.4, -0.18, 0, driverGroup);
   g.add(driverGroup);
 
-  // Headlights (Low-beam downward cones per NGO J02 rule!) & Tail/Brake Lights
   const headMat = new THREE.MeshBasicMaterial({ color: 0xfef9c3 });
   addPart(new THREE.BoxGeometry(0.24, 0.14, 0.06), headMat, -0.52, 0.96, 1.63);
   addPart(new THREE.BoxGeometry(0.24, 0.14, 0.06), headMat, 0.52, 0.96, 1.63);
@@ -93,7 +83,7 @@ export function createOpenCabTowingTractor3D() {
   const beamMat = new THREE.MeshBasicMaterial({ color: 0xfef9c3, transparent: true, opacity: 0.10, side: THREE.DoubleSide, depthWrite: false });
   const beamL = new THREE.Mesh(beamGeo, beamMat);
   beamL.position.set(-0.48, 0.55, 4.1);
-  beamL.rotation.x = -Math.PI / 2 - 0.16; // Pointed DOWNWARD (low beam)
+  beamL.rotation.x = -Math.PI / 2 - 0.16;
   const beamR = beamL.clone();
   beamR.position.x = 0.48;
   g.add(beamL, beamR);
@@ -102,7 +92,6 @@ export function createOpenCabTowingTractor3D() {
   addPart(new THREE.BoxGeometry(0.22, 0.12, 0.06), tailMat, -0.56, 0.96, -1.66);
   addPart(new THREE.BoxGeometry(0.22, 0.12, 0.06), tailMat, 0.56, 0.96, -1.66);
 
-  // 4 Turning/Spinning Wheels (Front pivot groups for realistic steering!)
   const makeWheel = (r, w) => {
     const wg = new THREE.Group();
     const tire = new THREE.Mesh(new THREE.CylinderGeometry(r, r, w, 16), matRubber);
@@ -131,22 +120,13 @@ export function createOpenCabTowingTractor3D() {
     allWheels.push(wh);
   });
 
-  // High-Vehicle (>3.8m) Removable Scissor-Mast Cage Visual (shown when user picks 'high38' mode!)
   const highMast = new THREE.Group();
   highMast.visible = false;
   addPart(new THREE.BoxGeometry(1.55, 2.85, 2.2), new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.4 }), 0, 2.75, -0.35, 0, 0, 0, highMast);
   addPart(new THREE.BoxGeometry(1.62, 0.28, 2.26), matAccentYellow, 0, 4.18, -0.35, 0, 0, 0, highMast);
   g.add(highMast);
 
-  g.userData = {
-    frontPivots,
-    allWheels,
-    steerWheel,
-    beaconBulb,
-    beaconHalo,
-    beams: [beamL, beamR],
-    highMast
-  };
+  g.userData = { frontPivots, allWheels, steerWheel, beaconBulb, beaconHalo, beams: [beamL, beamR], highMast };
   return g;
 }
 
@@ -155,7 +135,7 @@ export function createBaggageCart3D(idx = 0) {
   const g = new THREE.Group();
   const matFrame = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.4 });
   const matDeck = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.55, metalness: 0.35 });
-  const matBag = new THREE.MeshStandardMaterial({ color: idx % 2 === 0 ? 0x2563eb : 0xd97706, roughness: 0.5 });
+  const matBag = new THREE.MeshStandardMaterial({ color: idx % 2 === 0 ? 0xdbe4ef : 0x2563eb, roughness: 0.38, metalness: idx % 2 === 0 ? 0.5 : 0.2 });
   const matRubber = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
 
   const add = (geo, mat, x, y, z) => {
@@ -165,15 +145,12 @@ export function createBaggageCart3D(idx = 0) {
     m.receiveShadow = true;
     g.add(m);
   };
-  add(new THREE.BoxGeometry(1.52, 0.16, 2.45), matDeck, 0, 0.44, 0);
-  // Tow bar tongue pointing forward (+Z)
+  add(new THREE.BoxGeometry(1.62, 0.16, 2.45), matDeck, 0, 0.44, 0);
   add(new THREE.BoxGeometry(0.10, 0.08, 0.95), matFrame, 0, 0.44, 1.65);
-  // Side safety rails + luggage/AKH box
-  add(new THREE.BoxGeometry(0.06, 0.55, 2.4), matFrame, -0.74, 0.76, 0);
-  add(new THREE.BoxGeometry(0.06, 0.55, 2.4), matFrame, 0.74, 0.76, 0);
-  add(new THREE.BoxGeometry(1.30, 0.86, 1.95), matBag, 0, 0.95, 0);
-  // 4 dolly wheels
-  [[-0.72, 0.24, 0.85], [0.72, 0.24, 0.85], [-0.72, 0.24, -0.85], [0.72, 0.24, -0.85]].forEach(([wx, wy, wz]) => {
+  add(new THREE.BoxGeometry(0.08, 0.22, 2.4), new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 }), -0.78, 0.58, 0);
+  add(new THREE.BoxGeometry(0.08, 0.22, 2.4), new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 }), 0.78, 0.58, 0);
+  add(new THREE.BoxGeometry(1.48, 1.38, 1.92), matBag, 0, 1.21, 0);
+  [[-0.74, 0.24, 0.85], [0.74, 0.24, 0.85], [-0.74, 0.24, -0.85], [0.74, 0.24, -0.85]].forEach(([wx, wy, wz]) => {
     const w = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.16, 12), matRubber);
     w.rotation.z = Math.PI / 2;
     w.position.set(wx, wy, wz);
@@ -183,14 +160,37 @@ export function createBaggageCart3D(idx = 0) {
 }
 
 // =========================================================================
-// 2. ARTICULATED 3D AIRPORT GROUND STAFF (Marshaller / Spotter / Wing Walker / Headset)
+// 2. ARTICULATED 3D AIRPORT GROUND STAFF
+//    Roles: 'marshaller' | 'watchman' | 'guideman' | 'headset' | 'loadmaster' | 'fueler' | 'ramp' | 'spotter'
 // =========================================================================
 export function createArticulatedCrew3D(role = 'marshaller') {
   const root = new THREE.Group();
 
-  const vestCol = role === 'spotter' ? 0xf97316 : (role === 'headset' ? 0x38bdf8 : 0x84cc16);
-  const helmetCol = role === 'spotter' ? 0xfacc15 : (role === 'headset' ? 0x0f172a : 0xf8fafc);
+  const vestMap = {
+    marshaller: 0xf97316, // High-vis Blaze Orange
+    watchman:   0x84cc16, // High-vis Lime Yellow
+    guideman:   0x84cc16,
+    headset:    0x38bdf8, // Mechanic / Headset Blue-vest
+    loadmaster: 0xfacc15, // Supervisor / Loadmaster Gold-vest
+    fueler:     0xef4444, // HazMat Class 4 Fuel Operator Red-accent vest
+    ramp:       0x84cc16,
+    spotter:    0xf97316
+  };
+  const helmetMap = {
+    marshaller: 0xf8fafc,
+    watchman:   0xf8fafc,
+    guideman:   0xfacc15,
+    headset:    0x0f172a,
+    loadmaster: 0xfacc15,
+    fueler:     0xfef08a,
+    ramp:       0xf8fafc,
+    spotter:    0xfacc15
+  };
+
+  const vestCol = vestMap[role] || 0x84cc16;
+  const helmetCol = helmetMap[role] || 0xf8fafc;
   const wandCol = role === 'spotter' ? 0xef4444 : 0xff5a1f;
+  const hasWands = role === 'marshaller' || role === 'watchman' || role === 'spotter' || role === 'guideman';
 
   const matPants = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.75 });
   const matVest = new THREE.MeshStandardMaterial({ color: vestCol, roughness: 0.45 });
@@ -201,9 +201,8 @@ export function createArticulatedCrew3D(role = 'marshaller') {
   const matWand = new THREE.MeshBasicMaterial({ color: wandCol });
   const matGrip = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
 
-  // Scale slightly up (~1.25x real human = 2.15m tall) so arm signals are unmistakably clear in 3D view!
   const scaleWrap = new THREE.Group();
-  scaleWrap.scale.setScalar(1.22);
+  scaleWrap.scale.setScalar(1.20);
   root.add(scaleWrap);
 
   // Boots + Legs
@@ -222,13 +221,12 @@ export function createArticulatedCrew3D(role = 'marshaller') {
   const leftLeg = makeLeg(-0.14);
   const rightLeg = makeLeg(0.14);
 
-  // Torso with High-Visibility Safety Vest & Reflective Strips
+  // Torso + Reflective Safety Vest
   const torso = new THREE.Group();
   torso.position.set(0, 1.18, 0);
   const chest = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.64, 0.25), matVest);
   chest.castShadow = true;
   torso.add(chest);
-  // Horizontal & vertical reflective vest bands
   const band1 = new THREE.Mesh(new THREE.BoxGeometry(0.475, 0.07, 0.265), matReflect);
   band1.position.y = -0.14;
   const band2 = new THREE.Mesh(new THREE.BoxGeometry(0.475, 0.07, 0.265), matReflect);
@@ -236,7 +234,7 @@ export function createArticulatedCrew3D(role = 'marshaller') {
   torso.add(band1, band2);
   scaleWrap.add(torso);
 
-  // Head + Helmet + Hearing Protection Earmuffs!
+  // Head + Helmet + Hearing Protection Earmuffs (+ Boom Mic for Headset Man!)
   const headGroup = new THREE.Group();
   headGroup.position.set(0, 1.66, 0);
   const skull = new THREE.Mesh(new THREE.SphereGeometry(0.155, 14, 12), matSkin);
@@ -245,16 +243,22 @@ export function createArticulatedCrew3D(role = 'marshaller') {
   helmet.position.y = 0.03;
   const brim = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.025, 0.14), matHelmet);
   brim.position.set(0, 0.06, 0.15);
-  // Yellow/Black Earmuffs
-  const earL = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.05, 10), new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 }));
+  const earCol = role === 'headset' ? 0x38bdf8 : 0xfacc15;
+  const earL = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.068, 0.055, 10), new THREE.MeshStandardMaterial({ color: earCol, roughness: 0.4 }));
   earL.rotation.z = Math.PI / 2; earL.position.set(-0.17, 0, 0);
   const earR = earL.clone(); earR.position.x = 0.17;
   headGroup.add(skull, helmet, brim, earL, earR);
+
+  if (role === 'headset') {
+    const mic = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.20, 6), matGrip);
+    mic.rotation.x = Math.PI / 2;
+    mic.position.set(-0.13, -0.05, 0.10);
+    headGroup.add(mic);
+  }
   scaleWrap.add(headGroup);
 
-  // Articulated Shoulder -> Upper Arm -> Elbow -> Forearm -> Glowing Marshalling Wand!
+  // Articulated Arms + Optional Wands / Red Bypass Pin Streamer / LIR Clipboard
   const buildArm = side => {
-    // side: -1 = viewer's left (character's right if facing +Z), +1 = character's left
     const shoulder = new THREE.Group();
     shoulder.position.set(side * 0.29, 1.44, 0);
 
@@ -272,48 +276,80 @@ export function createArticulatedCrew3D(role = 'marshaller') {
     foreArm.castShadow = true;
     elbow.add(foreArm);
 
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), matSkin);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.6 })); // White safety gloves!
     hand.position.y = -0.32;
     elbow.add(hand);
 
-    // Glowing ICAO Orange/Red Marshalling Wand (48cm baton extending along forearm!)
+    // Marshalling / Watchman Illuminated Wand
     const wandGroup = new THREE.Group();
     wandGroup.position.set(0, -0.35, 0);
     const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.14, 8), matGrip);
     grip.position.y = -0.06;
-    const baton = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.030, 0.50, 10), matWand);
-    baton.position.y = -0.36;
+    const baton = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.030, 0.48, 10), matWand);
+    baton.position.y = -0.34;
     const glowHalo = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.062, 0.054, 0.52, 8),
-      new THREE.MeshBasicMaterial({ color: wandCol, transparent: true, opacity: 0.32 })
+      new THREE.CylinderGeometry(0.062, 0.054, 0.50, 8),
+      new THREE.MeshBasicMaterial({ color: wandCol, transparent: true, opacity: 0.30 })
     );
-    glowHalo.position.y = -0.36;
+    glowHalo.position.y = -0.34;
     wandGroup.add(grip, baton, glowHalo);
-    if (role === 'headset') wandGroup.visible = false;
+    wandGroup.visible = hasWands;
     elbow.add(wandGroup);
 
+    // Red "REMOVE BEFORE FLIGHT" Nose-Gear Steering Bypass Pin Streamer (on Left Arm `side === 1`)
+    let pinStreamer = null;
+    if (side === 1) {
+      pinStreamer = new THREE.Group();
+      pinStreamer.position.set(0, -0.34, 0);
+      const pinRod = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.022, 0.022, 0.22, 8),
+        new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.85, roughness: 0.2 })
+      );
+      pinRod.rotation.z = Math.PI / 2;
+      const ribbon = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.22, 0.92),
+        new THREE.MeshBasicMaterial({ color: 0xef4444, side: THREE.DoubleSide })
+      );
+      ribbon.position.set(0.06, -0.46, 0.05);
+      const stripe = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.05, 0.80),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })
+      );
+      stripe.position.set(0.06, -0.46, 0.055);
+      pinStreamer.add(pinRod, ribbon, stripe);
+      pinStreamer.userData = { ribbon, stripe };
+      pinStreamer.visible = false;
+      elbow.add(pinStreamer);
+    }
+
+    // LIR Load Instruction Report Clipboard (on Left Arm for Loadmaster)
+    let clipboard = null;
+    if (side === 1 && role === 'loadmaster') {
+      clipboard = new THREE.Group();
+      clipboard.position.set(0, -0.32, 0.10);
+      const board = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.36, 0.025), new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.7 }));
+      const paper = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.31, 0.03), new THREE.MeshBasicMaterial({ color: 0xf8fafc }));
+      clipboard.add(board, paper);
+      elbow.add(clipboard);
+    }
+
     scaleWrap.add(shoulder);
-    return { shoulder, elbow, wandGroup };
+    return { shoulder, elbow, wandGroup, pinStreamer, clipboard };
   };
 
-  // Character faces +Z in local space: character's LEFT arm is at +X, RIGHT arm is at -X
   const armLeft = buildArm(1);
   const armRight = buildArm(-1);
 
-  root.userData = { role, torso, headGroup, leftLeg, rightLeg, armLeft, armRight };
+  root.userData = { role, hasWands, torso, headGroup, leftLeg, rightLeg, armLeft, armRight };
   return root;
 }
 
 // =========================================================================
-// 3. AUTHENTIC ICAO / JCAB MARSHALLER ARM KINEMATICS (ALL 8 OFFICIAL SIGNALS!)
-// Character faces +Z (towards oncoming pilot/driver):
-//   armLeft is at +X (character's left), armRight is at -X (character's right)
-//   shoulder.rotation.z > 0 lifts armLeft outward/upward; < 0 lifts armRight outward/upward
-//   shoulder.rotation.x < 0 lifts arm forward (+Z)
+// 3. AUTHENTIC ICAO / JCAB / JEAE CREW ARM & WALKING KINEMATICS
 // =========================================================================
 export function animateCrewSignal(crew, signalId, tSec) {
   if (!crew || !crew.userData || !crew.userData.armLeft) return;
-  const { armLeft, armRight, torso, headGroup } = crew.userData;
+  const { armLeft, armRight, torso, headGroup, leftLeg, rightLeg, hasWands } = crew.userData;
   const sL = armLeft.shoulder.rotation;
   const eL = armLeft.elbow.rotation;
   const sR = armRight.shoulder.rotation;
@@ -322,8 +358,14 @@ export function animateCrewSignal(crew, signalId, tSec) {
   // Reset neutral stance
   sL.set(0, 0, 0.14); eL.set(0, 0, 0);
   sR.set(0, 0, -0.14); eR.set(0, 0, 0);
+  leftLeg.rotation.set(0, 0, 0);
+  rightLeg.rotation.set(0, 0, 0);
   torso.rotation.set(0, 0, 0);
   headGroup.rotation.set(0, 0, 0);
+
+  if (armLeft.pinStreamer) armLeft.pinStreamer.visible = false;
+  armLeft.wandGroup.visible = Boolean(hasWands && signalId !== 'bypass_pin_salute' && signalId !== 'wave_off' && signalId !== 'point_and_call');
+  armRight.wandGroup.visible = Boolean(hasWands && signalId !== 'bypass_pin_salute' && signalId !== 'wave_off' && signalId !== 'point_and_call');
 
   if (signalId === 'm_straight') {
     // 1. STRAIGHT AHEAD (直進): Arms out to sides, elbows bent, wands sweeping upward & backward repeatedly
@@ -333,14 +375,14 @@ export function animateCrewSignal(crew, signalId, tSec) {
     sR.set(-0.35, 0, -1.48);
     eR.set(-1.35 + wave * 0.52, 0, -0.35);
   } else if (signalId === 'm_left') {
-    // 2. TURN LEFT (pilot's left = marshaller's right): Right arm points straight out, Left arm beckons repeatedly
+    // 2. TURN LEFT: Right arm points straight out, Left arm beckons repeatedly
     const wave = Math.sin(tSec * 5.6);
     sR.set(0, 0, -1.58);
     eR.set(0, 0, 0);
     sL.set(-0.30, 0, 1.45);
     eL.set(-1.45 + wave * 0.58, 0, 0.35);
   } else if (signalId === 'm_right') {
-    // 3. TURN RIGHT (pilot's right = marshaller's left): Left arm points straight out, Right arm beckons repeatedly
+    // 3. TURN RIGHT: Left arm points straight out, Right arm beckons repeatedly
     const wave = Math.sin(tSec * 5.6);
     sL.set(0, 0, 1.58);
     eL.set(0, 0, 0);
@@ -354,13 +396,13 @@ export function animateCrewSignal(crew, signalId, tSec) {
     sR.set(-0.25, 0, -1.02 - pat);
     eR.set(-0.22, 0, 0);
   } else if (signalId === 'm_stop') {
-    // 5. NORMAL STOP (停止): Smoothly raise arms overhead crossing wands in an X!
+    // 5. NORMAL STOP (停止): Cross wands overhead in crisp X!
     sL.set(-0.25, 0, 2.75);
     eL.set(0, 0, 0.52);
     sR.set(-0.25, 0, -2.75);
     eR.set(0, 0, -0.52);
   } else if (signalId === 'm_emerg_stop' || signalId === 'spotter_stop') {
-    // 6. EMERGENCY STOP / SPOTTER DANGER ALERT: Rapid high X-cross + urgent pulsing wave!
+    // 6. EMERGENCY STOP / SPOTTER DANGER ALERT: Rapid high X-cross + urgent wave!
     const pulse = Math.sin(tSec * 12.0) * 0.22;
     sL.set(-0.35, 0, 2.68 + pulse);
     eL.set(0, 0, 0.58);
@@ -375,18 +417,89 @@ export function animateCrewSignal(crew, signalId, tSec) {
     sR.set(-0.65, 0, -0.58 + swing * 0.42);
     eR.set(-0.45, 0, 0);
   } else if (signalId === 'm_allclear' || signalId === 'm_start') {
-    // 8. ALL CLEAR / START ENGINE / DEPARTURE OK: Right arm raised in crisp salute / thumbs-up, Left at side
+    // 8. ALL CLEAR / DEPARTURE OK: Right arm raised in crisp salute, Left at side
     sR.set(-0.20, 0, -2.55);
     eR.set(-0.45, 0, 0.72);
     sL.set(0, 0, 0.16);
     eL.set(0, 0, 0);
-  } else if (signalId === 'wing_watch') {
-    // Wing Walker holding clear-to-proceed wand steady at 45° while scanning wingtip
-    sL.set(-0.2, 0, 2.25);
-    sR.set(0, 0, -0.35);
-    headGroup.rotation.y = Math.sin(tSec * 1.4) * 0.45;
+  } else if (signalId === 'watchman_clear' || signalId === 'wing_watch') {
+    // 9. TEXTBOOK WATCHMAN "通過よし" (GHtext_1 p.8 & sws_ii_GH p.29 図2-13):
+    //    Left arm held straight vertical overhead (180°), Right arm sweeping from horizontal to vertical!
+    const sweep = (Math.sin(tSec * 4.2) + 1) * 0.5;
+    sL.set(-0.12, 0, 2.98);
+    eL.set(0, 0, 0.05);
+    sR.set(-0.22, 0, -1.55 - sweep * 1.25);
+    eR.set(-0.15, 0, 0);
+    headGroup.rotation.y = Math.sin(tSec * 1.6) * 0.32;
+  } else if (signalId === 'guideman_beckon') {
+    // 10. GSE VEHICLE GUIDEMAN BECKON ("ピッ・ピッ" — GHtext_1 p.15):
+    //     Both arms raised forward, elbows bending repeatedly inward guiding reversing/approaching GSE slowly
+    const beck = (Math.sin(tSec * 5.8) + 1) * 0.5;
+    sL.set(-1.35, 0, 0.35);
+    eL.set(-0.55 - beck * 0.95, 0, 0.15);
+    sR.set(-1.35, 0, -0.35);
+    eR.set(-0.55 - beck * 0.95, 0, -0.15);
+    headGroup.rotation.y = Math.sin(tSec * 2.2) * 0.28;
+  } else if (signalId === 'guideman_hold') {
+    // 11. GSE 5m BRAKE-CHECK FULL STOP ("5m手前一旦停止 — ピー！"): Both arms raised straight vertical overhead!
+    sL.set(-0.18, 0, 2.95);
+    sR.set(-0.18, 0, -2.95);
+  } else if (signalId === 'point_and_call') {
+    // 12. JAPANESE SHISA KOSHO ("指差呼称 — ヨシ！"): Right arm pointing crisply straight ahead + nod!
+    const cyc = (tSec * 0.85) % 1.0;
+    const raise = cyc < 0.72 ? 1.0 : Math.max(0, 1 - (cyc - 0.72) / 0.28);
+    sR.set(-1.52 * raise, 0, -0.10);
+    eR.set(0, 0, 0);
+    if (crew.userData.armLeft.clipboard) {
+      sL.set(-0.75, 0, 0.35);
+      eL.set(-0.85, 0, -0.35);
+    }
+    headGroup.rotation.x = (cyc > 0.42 && cyc < 0.68) ? 0.22 : 0;
+  } else if (signalId === 'bypass_pin_salute') {
+    // 13. BYPASS PIN DISPLAY ("バイパスピン左前方提示" — NGO 02-2 p.4 & sws_ii_GH p.28):
+    //     Left arm held high displaying fluttering RED Bypass Pin Streamer + Right arm crisp OK salute!
+    sL.set(-0.35, 0, 2.65);
+    eL.set(-0.18, 0, -0.12);
+    if (armLeft.pinStreamer) {
+      armLeft.pinStreamer.visible = true;
+      // Keep red streamer hanging vertically downward & fluttering in propwash/breeze!
+      armLeft.pinStreamer.rotation.z = -2.53 + Math.sin(tSec * 8.5) * 0.16;
+    }
+    const wave = Math.sin(tSec * 4.5) * 0.24;
+    sR.set(-0.25, 0, -2.55 + wave);
+    eR.set(-0.35, 0, 0.45);
+  } else if (signalId === 'wave_off') {
+    // 14. JAPANESE RAMP WAVE-OFF ("お見送り"): Respectful bow + warm synchronized wave to departing flight!
+    const phase = tSec % 5.0;
+    if (phase < 1.3) {
+      const bow = Math.sin((phase / 1.3) * Math.PI);
+      torso.rotation.x = bow * 0.36;
+      headGroup.rotation.x = bow * 0.25;
+      sL.set(0, 0, 0.10);
+      sR.set(0, 0, -0.10);
+    } else {
+      const w = Math.sin(tSec * 5.2) * 0.32;
+      sR.set(-0.28, 0, -2.58 + w);
+      eR.set(-0.25, 0, 0.15 + w * 0.4);
+      sL.set(-0.28, 0, 2.58 + w);
+      eL.set(-0.25, 0, -0.15 + w * 0.4);
+    }
+  } else if (signalId === 'walk_escort') {
+    // 15. WALKING ESCORT (Headset Man / Wingwalker walking alongside pushback at ~4 km/h)
+    const stride = Math.sin(tSec * 5.6);
+    leftLeg.rotation.x = stride * 0.48;
+    rightLeg.rotation.x = -stride * 0.48;
+    sL.set(-stride * 0.38, 0, 0.18);
+    eL.set(-0.25, 0, 0);
+    if (hasWands) {
+      sR.set(-0.25, 0, -2.25);
+      eR.set(-0.2, 0, 0);
+    } else {
+      sR.set(stride * 0.38, 0, -0.18);
+      eR.set(-0.25, 0, 0);
+    }
+    headGroup.rotation.y = Math.sin(tSec * 1.8) * 0.26;
   } else if (signalId === 'spotter_clear') {
-    // Ground Spotter waving vehicle through safely
     const wave = Math.sin(tSec * 4.5);
     sR.set(-0.4, 0, -1.6 + wave * 0.45);
     eR.set(-0.8 + wave * 0.35, 0, 0);

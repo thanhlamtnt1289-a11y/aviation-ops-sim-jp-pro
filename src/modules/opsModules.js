@@ -210,15 +210,19 @@ function renderTurnaroundControlsAndChecklist() {
   const attEl = document.getElementById('ta-attach-strip');
   if (attEl) {
     const apPts = spec.attachPoints;
+    const spotObj = geo.spots.find(s => s.id === taState.spotId) || geo.spots[0];
+    const paxTag = spotObj.hasPbb !== false
+      ? t('左舷L1: PBB搭乗橋', 'Cửa trái L1: Ống lồng PBB', 'Port L1: PBB Bridge')
+      : t('左舷L1: ステップ車', 'Cửa trái L1: Xe thang', 'Port L1: Pax Stairs');
     const loaderTag = spec.gseCargoType === 'highloader'
-      ? t('ハイリフトローダー (LD3/ULD)', 'Xe nâng High-Loader (Container LD3)', 'High-Lift Loader (LD3)')
-      : t('ベルトローダー (Bulk)', 'Xe băng chuyền Belt Loader', 'Belt Loader (Bulk)');
+      ? t(`ハイリフト (${spec.uldCode}) ＋ 後部ベルト`, `High-Loader (${spec.uldCode}) + Belt hầm Bulk`, `High-Loader (${spec.uldCode}) + Bulk Belt`)
+      : t('ベルトローダー専用 (Bulk)', 'Chỉ dùng Belt Loader (Bulk)', 'Belt Loader Only (Bulk)');
     attEl.innerHTML = `
-      <span><strong>${t('GSE接続座標 (機首基準)', 'Tọa độ GSE Attach Points (từ mũi tàu bay)', 'GSE Attach Points (from Nose)')}:</strong></span>
-      <span class="badge badge-neutral">L1: ${apPts.doorL1.metersFromNose}m (H:${apPts.doorL1.y}m)</span>
-      <span class="badge badge-neutral">Cargo Fwd/Aft: ${apPts.cargoFwd.metersFromNose}m / ${apPts.cargoAft.metersFromNose}m</span>
-      <span class="badge badge-neutral">Fuel: ${apPts.fuelPort.metersFromNose}m</span>
-      <span class="badge badge-neutral">Nose Gear: ${apPts.noseGear.metersFromNose}m</span>
+      <span><strong>${t('実機GSE配置・接続座標', 'Vị trí GSE chuẩn giáo trình (từ mũi tàu)', 'Textbook GSE Stations (from Nose)')}:</strong></span>
+      <span class="badge badge-neutral">${paxTag} (${apPts.doorL1.metersFromNose}m)</span>
+      <span class="badge badge-neutral">R1 Catering: ${apPts.doorR1.metersFromNose}m (-19cm)</span>
+      <span class="badge badge-neutral">Cargo Fwd/Aft/Bulk: ${apPts.cargoFwd.metersFromNose}m / ${apPts.cargoAft.metersFromNose}m / ${apPts.bulkDoor.metersFromNose}m</span>
+      <span class="badge badge-neutral">Hydrant Fuel: ${apPts.fuelPort.metersFromNose}m</span>
       <span class="badge badge-accent">${loaderTag}</span>
     `;
   }
