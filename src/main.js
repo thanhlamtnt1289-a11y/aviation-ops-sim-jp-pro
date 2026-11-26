@@ -5,6 +5,7 @@ import {
 } from './core/state.js';
 import { initCommandPalette } from './core/commandPalette.js';
 import { initJaPhraseWrap } from './core/jaPhraseWrap.js';
+import { renderRoadmapNav, applyLevelClass, isPro } from './core/roadmap.js';
 import { renderDashboard } from './modules/dashboard.js';
 import {
   wbState, initWbModule, selectWbAircraft, loadWbScenario,
@@ -12,12 +13,13 @@ import {
 } from './modules/wbModule.js';
 import {
   a3d, initAirport3dModule, renderAirport3dUI,
-  startAirport3dLoop, stopAirport3dLoop, setA3dViewpoint
+  startAirport3dLoop, stopAirport3dLoop, setA3dViewpoint,
+  openA3dSubtab, startMarshalDrill
 } from './modules/airport3dModule.js';
 import {
   renderFieldDrillsModule, openDictionaryQuery, openFieldSubtab
 } from './modules/fieldDrillsModule.js';
-import { renderQuizModule, openNgoExamMode, stopQuizTimer } from './modules/quizModule.js';
+import { renderQuizModule, openNgoExamMode, stopQuizTimer, openQuizTopic, openQuizExam } from './modules/quizModule.js';
 import {
   taState, renderTurnaroundModule, stopTurnaround3D, setTurnaroundNavCallback,
   renderPaxModule, renderCargoModule, openCargoSubtab, stopCargo3D, renderSafetyModule
@@ -40,6 +42,7 @@ const MODULE_TITLES = {
 const VALID_MODULES = new Set(Object.keys(MODULE_TITLES));
 
 const navActions = {
+  goRoadmap: item => goRoadmap(item),
   go: mod => switchModule(mod),
   openWbWithSplit3D: () => {
     wbState.split3dOpen = true;
@@ -128,9 +131,7 @@ export function switchModule(mod, skipHash = false) {
   document.querySelectorAll('.module-screen').forEach(sec => {
     sec.classList.toggle('active', sec.id === `screen-${mod}`);
   });
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.module === mod);
-  });
+  renderRoadmapNav(goRoadmap);
 
   const titleEl = document.getElementById('topbar-title');
   if (titleEl && MODULE_TITLES[mod]) {
@@ -143,6 +144,39 @@ export function switchModule(mod, skipHash = false) {
   if (!skipHash) setHash(`#${mod === 'airport3d' ? '3d' : mod}`);
   renderActiveModule();
 }
+
+// Open a roadmap item: module + sub-tab / quiz topic / 3D drill
+function goRoadmap(item, opts = {}) {
+  if (opts.levelChanged) {
+    a3d.ui.map = isPro();
+    renderRoadmapNav(goRoadmap);
+    renderActiveModule();
+    return;
+  }
+  if (!item) return;
+  if (item.mod === 'dashboard') {
+    appState.navItem = null;
+    saveState();
+    switchModule('dashboard');
+    return;
+  }
+  switchModule(item.mod);
+  if (item.mod === 'ops' && item.sub) {
+    if (item.sub === 'dict') openDictionaryQuery('');
+    else openFieldSubtab(item.sub);
+    setHash(`#ops/${item.sub}`);
+  } else if (item.mod === 'cargo' && item.sub) {
+    openCargoSubtab(item.sub);
+    setHash(`#cargo/${item.sub}`);
+  } else if (item.mod === 'airport3d') {
+    openA3dSubtab(item.sub || 'flight');
+    if (item.action === 'drill') { startMarshalDrill(); renderAirport3dUI(); }
+  } else if (item.mod === 'quiz') {
+    if (item.mode === 'exam') openQuizExam();
+    else openQuizTopic(item.topic || 'all');
+  }
+}
+export { goRoadmap };
 
 function renderActiveModule() {
   updateProgressBadges();
@@ -203,6 +237,7 @@ function updateLangToggleUI() {
   });
   applyStaticI18n();
   applyTheme();
+  renderRoadmapNav(goRoadmap);
   const titleEl = document.getElementById('topbar-title');
   const pair = MODULE_TITLES[appState.activeModule];
   if (titleEl && pair) titleEl.textContent = t(pair[0], pair[1], pair[2]);
@@ -218,9 +253,9 @@ function bootstrap() {
   applyTheme();
   updateLangToggleUI();
 
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.onclick = () => switchModule(btn.dataset.module);
-  });
+  applyLevelClass();
+  if (!isPro()) a3d.ui.map = false; // beginners start with the 3D mini-map hidden
+  renderRoadmapNav(goRoadmap);
 
   const menuBtn = document.getElementById('btn-mobile-menu');
   const sidebar = document.getElementById('sidebar');

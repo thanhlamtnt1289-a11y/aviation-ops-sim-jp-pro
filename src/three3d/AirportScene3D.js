@@ -699,10 +699,17 @@ export class AirportScene3D {
         addBox(0.32, 0.04, 2.0, 0xf8fafc, xCenter + 6.6, 0.105, sz);
         addBox(0.32, 0.04, 2.0, 0xf8fafc, xCenter + 5.9, 0.105, sz + 1.9);
       }
-      addDecal(texPriority, 9.5, 9.5, xCenter, 0.115, Math.max(zStart, zEnd) + 4.8);
     };
-    [-31, -155, 148, -520, 520].forEach(sx => addServiceLane(sx, -76, -42));
-    [-108, 148, -520, 520].forEach(sx => addServiceLane(sx, -256, -208));
+    // One 前方優先道路 marking + stop bar PER DIRECTION, placed on the lane just before the taxiway edge
+    // (the texture carries its own white stop bar along one edge; rot π puts that bar on the -Z side).
+    const addPriorityStops = (xCenter, zTwy, twyHalfW) => {
+      const stopA = zTwy + twyHalfW + 0.5;   // vehicles heading -Z stop here
+      const stopB = zTwy - twyHalfW - 0.5;   // vehicles heading +Z stop here
+      addDecal(texPriority, 8, 8, xCenter, 0.115, stopA + 4.2, Math.PI);
+      addDecal(texPriority, 8, 8, xCenter, 0.115, stopB - 4.2, 0);
+    };
+    [-31, -155, 148, -520, 520].forEach(sx => { addServiceLane(sx, -82, -42); addPriorityStops(sx, -62, 11); });
+    [-108, 148, -520, 520].forEach(sx => { addServiceLane(sx, -256, -208); addPriorityStops(sx, -235, 12.5); });
 
     // 8.5km Airport Perimeter Road (場周道路: West Seawall z = -685, South x = -2060, North x = +2130; Max 40 km/h)
     addBox(4204, 0.06, 15, 0x3b4554, 35, 0.05, -685, { roughness: 0.76 });
@@ -918,9 +925,11 @@ export class AirportScene3D {
     addPortPier(21, 21.5, null);
     addPortPier(122, 23.5, 13.5);
 
-    [[-34, -38], [20, -38], [-145, -38], [-570, 42]].forEach(([ex, ez]) => {
-      addDecal(texPriority, 7.2, 7.2, ex, 0.11, ez);
-    });
+    // Center-Pier loop roads cross the inner taxilane (z = -62): give way before the taxilane edge.
+    // (The old duplicates at (-34,-38) / (-145,-38) sat on top of the service-lane markings — removed.)
+    addPriorityStops(20.5, -62, 11);
+    addPriorityStops(71.5, -62, 11);
+    addDecal(texPriority, 7.2, 7.2, -570, 0.11, 42);
 
     // 9C. 86.75m Centrair ATC Tower — NORTH-EAST of T1 (Wikipedia: 第1ターミナルの北東) [318..342, 163..187], center (330, 175)
     //     Camera POV sits at [330, 82.5, 172]; FrontSide glass cylinder (r=6.8) lets camera look out unobstructed!
@@ -1637,6 +1646,20 @@ export class AirportScene3D {
     L.tugStandby = { x: r + 12.5, z: noseZ + 8 };
     this.spot7Layout = L;
 
+    // Type-specific nose-wheel stop bar (yellow "T") on the Spot 7 lead-in line — the marshaller drill target
+    if (!this.spot7StopBar) {
+      const m = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+      const g = new THREE.Group();
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.05, 0.45), m);
+      const stem = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.05, 2.2), m);
+      stem.position.z = -1.1;
+      g.add(bar, stem);
+      g.position.y = 0.13;
+      this.dynamicGroup.add(g);
+      this.spot7StopBar = g;
+    }
+    this.spot7StopBar.position.set(0, 0.13, L.noseGearZ);
+
     // Chocks: nose gear fore/aft + both main gears
     if (this.chocksGroup) {
       const ch = this.chocksGroup.children;
@@ -2207,6 +2230,11 @@ export class AirportScene3D {
     const isFlight = state.subtab === 'flight';
     const isOps3d = state.subtab === 'ops3d';
     const flightPose = isFlight ? computeFlightCyclePose(state.flightPhaseIdx, state.flightProgress) : null;
+    // Marshaller drill: the aircraft is driven by the trainee's hand signals (physics in airport3dModule)
+    if (flightPose && state.marshalDrill && state.marshalDrill.active) {
+      const md = state.marshalDrill;
+      Object.assign(flightPose.ac, { x: md.x, z: md.z, heading: md.heading, y: 0, pitch: 0, beaconOn: true, gs: md.v });
+    }
     const tSec = (now || 0) * 0.001;
     this.radarBar.rotation.y = tSec * 1.4;
 
@@ -2564,7 +2592,8 @@ export class AirportScene3D {
         drawTag([best.x, 3.2, best.z], `🦺 ${lbl}`, cr.pin ? 'rgba(220,38,38,0.94)' : 'rgba(15,23,42,0.86)', cr.pin ? '#FEF08A' : '#E2E8F0', cr.pin ? 2 : 1);
       });
     }
-    if (povKind !== 'pilot' && povKind !== 'gse_cab') {
+    // Ground-level views (pilot, cab, crew POVs, behind-marshaller) skip far-away landmark tags so nothing covers the aircraft
+    if (!['pilot', 'gse_cab', 'marshaller', 'marshal_rear', 'headset', 'loadmaster'].includes(povKind)) {
       drawTag([0, 4.5, -580], `${ap.id} RWY ${ap.rwy} (3,500m × 60m)`, 'rgba(185,28,28,0.90)', '#FFF', 2);
       drawTag([330, 92, 175], `${ap.twr} (86.75m)`, 'rgba(15,23,42,0.88)', '#FFF', 1);
       drawTag([46, 19.5, -145], '300m CENTER PIER · SKY DECK (#8–#18)', 'rgba(27,79,156,0.90)', '#FFF', 1);

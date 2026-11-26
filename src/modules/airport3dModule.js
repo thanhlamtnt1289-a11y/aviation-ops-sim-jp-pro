@@ -57,6 +57,8 @@ export const a3d = {
   backingStatus: { hitchDeg: 0, latErr: 0, angErr: 0, depthPct: 0, jackknife: false, parked: false, hintJa: '', hintVi: '', hintEn: '' },
   prevHitch: null,
   trailerHeadings: [0, 0, 0, 0, 0, 0],
+  ui: { views: false, settings: false, map: true, panels: {} }, // drawers / collapsible panels (kept across re-renders)
+  marshalDrill: { active: false, x: 0, z: -35, heading: Math.PI / 2, v: 0, moved: false, result: null, t: 0 },
   marshallerDemoSignal: null, // null = auto phase | 'm_straight' | 'm_left' | 'm_right' | 'm_slow' | 'm_stop' | 'm_emerg_stop' | 'm_chocks' | 'm_allclear'
   ilsRedOn: true,
   blastActive: false,
@@ -394,6 +396,23 @@ function stepPhysics(dt, now) {
     return;
   }
 
+  if (a3d.subtab === 'flight' && a3d.marshalDrill.active) {
+    updateMarshalDrill(dt);
+    const md = a3d.marshalDrill;
+    const toStop = STOP_Z - md.z;
+    if (hudZone) { hudZone.textContent = `🚧 ${t('誘導実習', 'Tập dẫn tàu', 'Lead-in drill')}`; hudZone.className = 'hud-pill ok'; }
+    if (hudSpd) hudSpd.textContent = `${(md.v * 3.6).toFixed(1)} km/h`;
+    if (hudScr) hudScr.textContent = `${toStop >= 0 ? '▲' : '▼'} ${Math.abs(toStop).toFixed(1)} m`;
+    const live = document.getElementById('a3d-drill-live');
+    if (live) {
+      const r = md.result;
+      live.innerHTML = r
+        ? `<div class="alert ${r.ok ? 'alert-ok' : 'alert-danger'}" style="margin:0;">${t(r.ja, r.vi, r.en)}<br><span class="mono">${t('停止誤差', 'Sai lệch dừng', 'Stop error')}: ${r.stopErr >= 0 ? '+' : ''}${r.stopErr.toFixed(2)} m · ${t('横ずれ', 'Lệch ngang', 'Lateral')}: ${r.lat.toFixed(2)} m · ${t('機首角', 'Lệch hướng', 'Heading')}: ${r.hdg.toFixed(1)}°</span></div>`
+        : `<div class="drill-gauges"><span>${t('速度', 'Tốc độ', 'Speed')} <b>${(md.v * 3.6).toFixed(1)}</b> km/h</span><span>${t('停止線まで', 'Còn tới vạch', 'To stop bar')} <b>${toStop.toFixed(1)}</b> m</span><span>${t('横ずれ', 'Lệch ngang', 'Lateral')} <b>${md.x >= 0 ? t('左', 'trái', 'L') : t('右', 'phải', 'R')} ${Math.abs(md.x).toFixed(1)}</b> m</span></div>`;
+    }
+    return;
+  }
+
   if (a3d.subtab === 'flight') {
     const ph = A3D_FLIGHT_PHASES[a3d.flightPhaseIdx];
     if (a3d.flightPlaying) {
@@ -407,7 +426,7 @@ function stepPhysics(dt, now) {
     }
     const pose = computeFlightCyclePose(a3d.flightPhaseIdx, a3d.flightProgress);
     if (hudZone) { hudZone.textContent = `${a3d.flightPhaseIdx + 1}/10 · ${t(ph.tagJa, ph.tagVi, ph.tagEn)}`; hudZone.className = `hud-pill ${pose.ac.beaconOn ? 'danger' : 'ok'}`; }
-    if (hudSpd) hudSpd.textContent = `ALT ${Math.round(pose.ac.y)}m | ${pose.ac.beaconOn ? 'BEACON ON' : 'BEACON OFF'}`;
+    if (hudSpd) hudSpd.textContent = `GS ${Math.round((pose.ac.gs || 0) * 1.944)} kt${pose.ac.y > 1 ? ` · ALT ${Math.round(pose.ac.y)} m` : ''} · ${pose.ac.beaconOn ? 'BEACON ON' : 'BEACON OFF'}`;
     if (hudScr) hudScr.textContent = `${Math.round(a3d.flightProgress * 100)}%`;
     const bar = document.getElementById('a3d-flight-prog');
     if (bar) bar.style.width = `${Math.round(a3d.flightProgress * 100)}%`;
@@ -897,7 +916,7 @@ export function initAirport3dModule() {
       if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') a3d.keys.left = true;
       if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') a3d.keys.right = true;
       if (e.key === ' ') a3d.keys.brake = true;
-      const vp = A3D_VIEWPOINTS.find(v => v.key === e.key);
+      const vp = A3D_VIEWPOINTS.find(v => v.key.toLowerCase() === String(e.key).toLowerCase());
       if (vp) setA3dViewpoint(vp.id);
     });
     window.addEventListener('keyup', e => {
@@ -908,6 +927,81 @@ export function initAirport3dModule() {
       if (e.key === ' ') a3d.keys.brake = false;
     });
   }
+  renderAirport3dUI();
+}
+
+// Views shown to beginners (Pro shows every camera)
+const BASIC_VIEWS = ['flight_follow', 'marshal_rear', 'marshaller', 'pilot', 'orbit', 'top', 'gse_cab'];
+
+// Collapsible side panel whose open/closed state survives re-renders
+function panel(id, title, body, defaultOpen = true) {
+  const open = a3d.ui.panels[id] !== undefined ? a3d.ui.panels[id] : defaultOpen;
+  return `<details class="a3d-panel card" data-panel="${id}" ${open ? 'open' : ''}><summary>${title}</summary><div class="a3d-panel-body">${body}</div></details>`;
+}
+
+// ---- Marshaller lead-in drill: the aircraft reacts to the trainee's hand signals ----
+const STOP_Z = 10; // aircraft reference point at the Spot 7 stop bar
+export function startMarshalDrill() {
+  const md = a3d.marshalDrill;
+  md.active = true;
+  md.x = (Math.random() - 0.5) * 3.2;          // starts slightly off the lead-in line
+  md.z = STOP_Z - 45;
+  md.heading = Math.PI / 2 + (Math.random() - 0.5) * 0.1;
+  md.v = 0; md.moved = false; md.result = null; md.t = 0;
+  a3d.subtab = 'flight';
+  a3d.flightPlaying = false;
+  a3d.flightPhaseIdx = 1;
+  a3d.flightProgress = 0.95;
+  a3d.marshallerDemoSignal = null;
+  a3d.camMode = 'marshal_rear';
+}
+export function stopMarshalDrill() {
+  a3d.marshalDrill.active = false;
+  a3d.marshallerDemoSignal = null;
+}
+function updateMarshalDrill(dt) {
+  const md = a3d.marshalDrill;
+  if (!md.active || md.result) return;
+  md.t += dt;
+  const sig = a3d.marshallerDemoSignal;
+  let vT = 0, decel = 0.6, yaw = 0;
+  if (sig === 'm_straight') vT = 2.4;              // ≈ 9 km/h — brisk walking pace
+  else if (sig === 'm_slow') vT = 0.9;
+  else if (sig === 'm_left') { vT = Math.max(1.0, Math.min(md.v, 1.6)); yaw = -1; }  // pilot's left = toward +X (port)
+  else if (sig === 'm_right') { vT = Math.max(1.0, Math.min(md.v, 1.6)); yaw = 1; }
+  else if (sig === 'm_emerg_stop') decel = 2.2;
+  const accel = 0.35;
+  md.v = md.v < vT ? Math.min(vT, md.v + accel * dt) : Math.max(vT, md.v - decel * dt);
+  md.heading += yaw * (md.v / 24) * dt;          // nose-wheel steering, ~24m turn radius
+  md.x += Math.cos(md.heading) * md.v * dt;
+  md.z += Math.sin(md.heading) * md.v * dt;
+  if (md.v > 0.3) md.moved = true;
+  const overshoot = md.z - STOP_Z;
+  const lat = Math.abs(md.x);
+  const finish = (ok, codeJa, codeVi, codeEn) => {
+    md.result = { ok, stopErr: overshoot, lat, hdg: Math.abs((md.heading - Math.PI / 2) * 57.3), ja: codeJa, vi: codeVi, en: codeEn };
+    logA3d(ok ? 'ok' : 'danger', codeJa, codeVi, codeEn);
+    if (ok) { a3dAudio.playChirp(); appState.marshalDrillPassed = true; saveState(); }
+    else a3dAudio.playCrash(0.4);
+    renderAirport3dUI();
+  };
+  if (overshoot > 3.0) return finish(false, '停止線を3m以上超過！PBB・GSEと接触の危険', 'Vượt vạch dừng hơn 3m! Nguy cơ đâm PBB/GSE', 'Overran the stop bar by >3m — PBB/GSE collision risk');
+  if (lat > 4.0) return finish(false, '誘導線から4m以上逸脱！翼端と障害物に注意', 'Lệch vạch dẫn hơn 4m! Nguy cơ đầu cánh va chạm', 'Drifted >4m off the lead-in line — wingtip clearance lost');
+  if (md.moved && md.v < 0.02 && (sig === 'm_stop' || sig === 'm_emerg_stop')) {
+    const good = Math.abs(overshoot) <= 0.5 && lat <= 0.6;
+    const okish = Math.abs(overshoot) <= 1.5 && lat <= 1.2;
+    if (good) finish(true, '完璧！停止線ぴったりに停止', 'Hoàn hảo! Dừng đúng vạch dừng', 'Perfect! Stopped right on the stop bar');
+    else if (okish) finish(true, '合格：停止位置の誤差は許容範囲', 'Đạt: sai lệch vị trí dừng trong giới hạn cho phép', 'Pass: stop position within tolerance');
+    else finish(false, overshoot < 0 ? '手前で停止しすぎ：PBBが届きません' : '停止位置ずれ：再誘導が必要', overshoot < 0 ? 'Dừng quá sớm: PBB không với tới cửa' : 'Dừng lệch vị trí: phải dẫn lại', overshoot < 0 ? 'Stopped too short — the PBB cannot reach' : 'Off position — re-marshal required');
+  }
+}
+
+export function openA3dSubtab(tab = 'flight') {
+  a3d.subtab = ['flight', 'drive', 'ops3d'].includes(tab) ? tab : 'flight';
+  if (a3d.subtab !== 'flight') stopMarshalDrill();
+  if (a3d.subtab === 'ops3d') { a3d.camMode = 'orbit'; a3d.cam = { tx: 0, ty: 3, tz: 12, dist: 46, yaw: -0.55, pitch: 0.42 }; }
+  else if (a3d.subtab === 'drive') a3d.camMode = 'chase';
+  else if (!a3d.marshalDrill.active) a3d.camMode = 'flight_follow';
   renderAirport3dUI();
 }
 
@@ -928,91 +1022,106 @@ export function renderAirport3dUI() {
       <button class="subtab ${isOps3d ? 'active' : ''}" data-st="ops3d">${t(`3. 3D直接クリック実習・実技試験 (${appState.exam3dBest !== null ? appState.exam3dBest + 'pt' : '100pt'})`, `3. Click 3D FOD/PBB/Loader & Thi 3D (${appState.exam3dBest !== null ? appState.exam3dBest + 'đ' : '100đ'})`, `3. Direct 3D Raycast Ops & Exam (${appState.exam3dBest !== null ? appState.exam3dBest + 'pt' : '100pt'})`)}</button>
     </div>
 
-    <div class="workspace-grid wide-left">
+    <div class="workspace-grid wide-left a3d-layout">
       <div>
-        <div class="card" style="padding:14px 16px;">
-          <div class="a3d-deck">
-            <div class="a3d-cluster">
-              <span class="a3d-cluster-lbl">01 · ${t('5空港・気象・時間帯', '5 Sân bay · Thời tiết · Giờ', '5 Airports · Weather · Time')}</span>
-              <div class="a3d-cluster-row">
-                <select id="a3d-airport-sel" style="padding:4px 7px;border:1px solid var(--border-strong);border-radius:4px;font-size:11.5px;font-weight:600;">
-                  ${Object.values(A3D_AIRPORTS).map(ap => `<option value="${ap.id}" ${a3d.airportId === ap.id ? 'selected' : ''}>🛫 ${t(ap.nameJa, ap.nameVi, ap.id + ' (RWY ' + ap.rwy + ')')}</option>`).join('')}
+        <div class="card a3d-main-card">
+          <!-- Compact toolbar: playback / vehicle on the left, view · map · settings drawers on the right -->
+          <div class="a3d-toolbar">
+            <div class="a3d-toolbar-left">
+              ${isFlight ? `
+                <button class="btn btn-sm btn-primary" id="a3d-flight-play" title="${t('再生/一時停止', 'Chạy / Dừng', 'Play / Pause')}">${a3d.flightPlaying ? '⏸' : '▶'}</button>
+                <button class="btn btn-sm" id="a3d-flight-prev" title="${t('前の段階', 'Giai đoạn trước', 'Previous phase')}">⏮</button>
+                <button class="btn btn-sm" id="a3d-flight-next" title="${t('次の段階', 'Giai đoạn sau', 'Next phase')}">⏭</button>
+                <button class="btn btn-sm" id="a3d-flight-spd" title="${t('1x = 実時間', '1x = thời gian thật', '1x = real time')}">${a3d.flightSpeed}x</button>
+                <select id="a3d-fleet-sel" class="a3d-select">
+                  ${Object.values(AIRCRAFT_PROFILES).map(p => `<option value="${p.id}" ${a3d.fleetAircraftId === p.id ? 'selected' : ''}>✈ ${p.id}</option>`).join('')}
                 </select>
-                <select id="a3d-wx-sel" style="padding:4px 7px;border:1px solid var(--border-strong);border-radius:4px;font-size:11.5px;">
-                  <option value="clear" ${a3d.weather === 'clear' ? 'selected' : ''}>☀ ${t('晴天', 'Trời quang', 'Clear')}</option>
-                  <option value="rain" ${a3d.weather === 'rain' ? 'selected' : ''}>🌧 ${t('雨天（湿潤滑走路）', 'Mưa (Đường băng ướt)', 'Rain (Wet RWY)')}</option>
-                  <option value="fog" ${a3d.weather === 'fog' ? 'selected' : ''}>🌫 ${t('濃霧', 'Sương mù', 'Fog')}</option>
-                  <option value="snow" ${a3d.weather === 'snow' ? 'selected' : ''}>❄ ${t('積雪・防除氷', 'Tuyết & De-icing', 'Snow + De-ice')}</option>
+              ` : (isDrive ? `
+                <select id="a3d-ngo-veh-sel" class="a3d-select">
+                  <option value="standard" ${a3d.ngoVehMode === 'standard' ? 'selected' : ''}>🚗 ${t('通常GSE (30km/h)', 'GSE thường (30km/h)', 'Standard GSE (30km/h)')}</option>
+                  <option value="towing" ${a3d.ngoVehMode === 'towing' ? 'selected' : ''}>🚜 ${t('カート牽引 (15km/h)', 'Kéo 6 moóc (15km/h)', 'Towing 6 Carts (15km/h)')}</option>
+                  <option value="backing" ${a3d.ngoVehMode === 'backing' ? 'selected' : ''}>🅿 ${t('牽引バック車庫入れ', 'Lùi rơ-moóc vào chuồng', 'Semi-Trailer Reverse Bay')}</option>
+                  <option value="high38" ${a3d.ngoVehMode === 'high38' ? 'selected' : ''}>🚛 ${t('全高3.8m超', 'Xe cao >3.8m', 'High Vehicle >3.8m')}</option>
                 </select>
-                <button class="btn btn-sm ${a3d.timeOfDay === 'day' ? 'btn-primary' : ''}" data-tod="day">☀</button>
-                <button class="btn btn-sm ${a3d.timeOfDay === 'sunset' ? 'btn-primary' : ''}" data-tod="sunset">🌅</button>
-                <button class="btn btn-sm ${a3d.timeOfDay === 'night' ? 'btn-primary' : ''}" data-tod="night">🌙</button>
-              </div>
-            </div>
-            <div class="a3d-cluster">
-              <span class="a3d-cluster-lbl">02 · ${t('機材・NGO運転設定', 'Đội bay · Chế độ Lái NGO', 'Fleet · NGO Drive Mode')}</span>
-              <div class="a3d-cluster-row">
-                ${isFlight ? `
-                  <select id="a3d-fleet-sel" style="padding:4px 7px;border:1px solid var(--border-strong);border-radius:4px;font-size:11.5px;font-weight:600;max-width:165px;">
-                    ${Object.values(AIRCRAFT_PROFILES).map(p => `<option value="${p.id}" ${a3d.fleetAircraftId === p.id ? 'selected' : ''}>✈ ${p.id}</option>`).join('')}
-                  </select>
-                  <button class="btn btn-sm btn-primary" id="a3d-flight-play">${a3d.flightPlaying ? '⏸' : '▶'}</button>
-                  <button class="btn btn-sm" id="a3d-flight-prev">⏮</button>
-                  <button class="btn btn-sm" id="a3d-flight-next">⏭</button>
-                  <button class="btn btn-sm" id="a3d-flight-spd">${a3d.flightSpeed}x</button>
-                ` : (isDrive ? `
-                  <select id="a3d-ngo-veh-sel" style="padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;font-size:11px;font-weight:600;">
-                    <option value="standard" ${a3d.ngoVehMode === 'standard' ? 'selected' : ''}>🚗 ${t('通常GSE (30km/h)', 'GSE thường (30km/h)', 'Standard GSE (30km/h)')}</option>
-                    <option value="towing" ${a3d.ngoVehMode === 'towing' ? 'selected' : ''}>🚜 ${t('カート牽引 (15km/h)', 'Kéo 6 moóc (15km/h)', 'Towing 6 Carts (15km/h)')}</option>
-                    <option value="backing" ${a3d.ngoVehMode === 'backing' ? 'selected' : ''}>🅿 ${t('牽引バック車庫入れ (長尺ドーリー)', 'Lùi rơ-moóc vào chuồng (Đầu kéo)', 'Semi-Trailer Reverse Bay')}</option>
-                    <option value="high38" ${a3d.ngoVehMode === 'high38' ? 'selected' : ''}>🚛 ${t('全高3.8m超 (固定橋不可)', 'Xe cao >3.8m (Cấm cầu cố định)', 'High Vehicle >3.8m')}</option>
-                  </select>
+                <span class="pro-only" style="display:contents;">
                   <button class="btn btn-sm ${a3d.spot101BeaconOn ? 'btn-danger-outline' : ''}" id="a3d-toggle-beacon">S6:${a3d.spot101BeaconOn ? '🔴' : '⚪'}</button>
                   <button class="btn btn-sm ${a3d.ilsRedOn ? 'btn-danger-outline' : ''}" id="a3d-toggle-ils">ILS:${a3d.ilsRedOn ? '🔴' : '⚪'}</button>
                   <button class="btn btn-sm ${a3d.blastActive ? 'btn-danger-outline' : ''}" id="a3d-toggle-blast">#71:${a3d.blastActive ? '🔥' : '⚪'}</button>
-                ` : `<span class="badge badge-ok">RAYCAST CLICK READY</span>`)}
-              </div>
+                </span>
+              ` : `<span class="badge badge-ok">${t('3Dクリック操作', 'Click trực tiếp trên 3D', 'Click directly in 3D')}</span>`)}
             </div>
-            <div class="a3d-cluster">
-              <span class="a3d-cluster-lbl">03 · HUD · GFX · VIEW</span>
-              <div class="a3d-cluster-row">
-                <select id="a3d-lbl-sel" style="padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;font-size:11px;">
-                  <option value="smart" ${a3d.labelMode === 'smart' ? 'selected' : ''}>HUD: Smart</option>
-                  <option value="all" ${a3d.labelMode === 'all' ? 'selected' : ''}>HUD: All</option>
-                  <option value="min" ${a3d.labelMode === 'min' ? 'selected' : ''}>HUD: Cinema</option>
-                </select>
-                <select id="a3d-gfx-sel" style="padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;font-size:11px;">
-                  <option value="high" ${a3d.gfxQuality === 'high' ? 'selected' : ''}>PBR Ultra</option>
-                  <option value="med" ${a3d.gfxQuality === 'med' ? 'selected' : ''}>PBR Med</option>
-                  <option value="low" ${a3d.gfxQuality === 'low' ? 'selected' : ''}>Fast</option>
-                </select>
-                <button class="btn btn-sm ${a3d.soundOn ? 'btn-primary' : ''}" id="a3d-toggle-sound">${a3d.soundOn ? '🔊' : '🔇'}</button>
-                <button class="btn btn-sm ${a3d.expanded ? 'btn-primary' : ''}" id="a3d-toggle-expand">⛶</button>
-              </div>
+            <div class="a3d-toolbar-right">
+              <button class="btn btn-sm ${a3d.ui.views ? 'btn-primary' : ''}" data-drawer="views">🎥 ${t('視点', 'Góc nhìn', 'Views')} ▾</button>
+              <button class="btn btn-sm ${a3d.ui.map ? 'btn-primary' : ''}" id="a3d-toggle-map">🗺 ${t('地図', 'Bản đồ', 'Map')}</button>
+              <button class="btn btn-sm ${a3d.ui.settings ? 'btn-primary' : ''}" data-drawer="settings">⚙ ${t('設定', 'Cài đặt', 'Settings')} ▾</button>
+              <button class="btn btn-sm ${a3d.expanded ? 'btn-primary' : ''}" id="a3d-toggle-expand" title="${t('拡大', 'Phóng to', 'Expand')}">⛶</button>
             </div>
           </div>
 
-          <div class="pov-bar">
-            <span class="pov-label">${t('視点 (1〜0):', 'Góc nhìn (1-0):', 'POV (1–0):')}</span>
-            ${A3D_VIEWPOINTS.map(vp => `<button class="btn btn-sm ${a3d.camMode === vp.id ? 'btn-primary' : ''}" data-vp="${vp.id}">${t(vp.ja, vp.vi, vp.en)}</button>`).join('')}
+          <div class="a3d-drawer ${a3d.ui.views ? 'open' : ''}" id="a3d-drawer-views">
+            <div class="pov-bar">
+              ${A3D_VIEWPOINTS.map(vp => `<button class="btn btn-sm ${a3d.camMode === vp.id ? 'btn-primary' : ''} ${BASIC_VIEWS.includes(vp.id) ? '' : 'pro-only'}" data-vp="${vp.id}"><span class="kbd-hint">${vp.key}</span> ${t(vp.ja, vp.vi, vp.en)}</button>`).join('')}
+            </div>
+          </div>
+
+          <div class="a3d-drawer ${a3d.ui.settings ? 'open' : ''}" id="a3d-drawer-settings">
+            <div class="a3d-settings-grid">
+              <label class="a3d-set"><span>${t('空港', 'Sân bay', 'Airport')}</span>
+                <select id="a3d-airport-sel" class="a3d-select">
+                  ${Object.values(A3D_AIRPORTS).map(ap => `<option value="${ap.id}" ${a3d.airportId === ap.id ? 'selected' : ''}>${t(ap.nameJa, ap.nameVi, ap.nameEn || ap.id)}</option>`).join('')}
+                </select>
+              </label>
+              <label class="a3d-set"><span>${t('天候', 'Thời tiết', 'Weather')}</span>
+                <select id="a3d-wx-sel" class="a3d-select">
+                  <option value="clear" ${a3d.weather === 'clear' ? 'selected' : ''}>☀ ${t('晴天', 'Trời quang', 'Clear')}</option>
+                  <option value="rain" ${a3d.weather === 'rain' ? 'selected' : ''}>🌧 ${t('雨天', 'Mưa', 'Rain')}</option>
+                  <option value="fog" ${a3d.weather === 'fog' ? 'selected' : ''}>🌫 ${t('濃霧', 'Sương mù', 'Fog')}</option>
+                  <option value="snow" ${a3d.weather === 'snow' ? 'selected' : ''}>❄ ${t('積雪', 'Tuyết', 'Snow')}</option>
+                </select>
+              </label>
+              <div class="a3d-set"><span>${t('時間帯', 'Thời điểm', 'Time')}</span>
+                <div style="display:flex;gap:4px;">
+                  <button class="btn btn-sm ${a3d.timeOfDay === 'day' ? 'btn-primary' : ''}" data-tod="day">☀</button>
+                  <button class="btn btn-sm ${a3d.timeOfDay === 'sunset' ? 'btn-primary' : ''}" data-tod="sunset">🌅</button>
+                  <button class="btn btn-sm ${a3d.timeOfDay === 'night' ? 'btn-primary' : ''}" data-tod="night">🌙</button>
+                </div>
+              </div>
+              <label class="a3d-set pro-only"><span>${t('ラベル表示', 'Nhãn trên 3D', 'Labels')}</span>
+                <select id="a3d-lbl-sel" class="a3d-select">
+                  <option value="smart" ${a3d.labelMode === 'smart' ? 'selected' : ''}>Smart</option>
+                  <option value="all" ${a3d.labelMode === 'all' ? 'selected' : ''}>${t('全部', 'Tất cả', 'All')}</option>
+                  <option value="min" ${a3d.labelMode === 'min' ? 'selected' : ''}>${t('最小', 'Tối giản', 'Minimal')}</option>
+                </select>
+              </label>
+              <label class="a3d-set pro-only"><span>${t('画質', 'Đồ họa', 'Graphics')}</span>
+                <select id="a3d-gfx-sel" class="a3d-select">
+                  <option value="high" ${a3d.gfxQuality === 'high' ? 'selected' : ''}>${t('高', 'Cao', 'High')}</option>
+                  <option value="med" ${a3d.gfxQuality === 'med' ? 'selected' : ''}>${t('中', 'Vừa', 'Medium')}</option>
+                  <option value="low" ${a3d.gfxQuality === 'low' ? 'selected' : ''}>${t('軽量', 'Nhẹ', 'Fast')}</option>
+                </select>
+              </label>
+              <div class="a3d-set"><span>${t('音', 'Âm thanh', 'Sound')}</span>
+                <button class="btn btn-sm ${a3d.soundOn ? 'btn-primary' : ''}" id="a3d-toggle-sound">${a3d.soundOn ? '🔊' : '🔇'}</button>
+              </div>
+            </div>
           </div>
 
           <div class="airport3d-stage ${a3d.expanded ? 'expanded' : ''}" id="a3d-stage-box">
             <canvas id="airport3d-gl"></canvas>
             <canvas id="airport3d-hud2d"></canvas>
-            <div class="a3d-minimap-wrap" style="${(a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing') ? 'display:none;' : ''}" title="NGO Centrair Official Tactical Map">
+            <div class="a3d-minimap-wrap ${a3d.ui.map && !(a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing') ? '' : 'hidden'}" id="a3d-minimap-box" title="NGO Centrair">
               <canvas id="a3d-minimap"></canvas>
             </div>
             <div class="raycast-toast" id="a3d-raycast-toast"></div>
             <div class="hud-top">
-              <div class="hud-pill ok" id="a3d-hud-zone">THREE.JS PBR READY</div>
+              <div class="hud-pill ok" id="a3d-hud-zone">THREE.JS</div>
               <div style="display:flex;gap:6px;">
                 <div class="hud-pill" id="a3d-hud-spd">0 km/h</div>
                 <div class="hud-pill" id="a3d-hud-score">0%</div>
               </div>
             </div>
             <div class="hud-banner">
-              <div class="hud-pill" id="a3d-vp-desc" style="font-family:var(--font-sans);font-size:11.5px;max-width:78%;">
+              <div class="hud-pill pro-only" id="a3d-vp-desc" style="font-family:var(--font-sans);font-size:11.5px;max-width:70%;">
                 [${curVp.key}] ${t(curVp.ja, curVp.vi, curVp.en)} — ${t(curVp.descJa, curVp.descVi, curVp.descEn)}
               </div>
               ${isDrive ? `
@@ -1024,16 +1133,23 @@ export function renderAirport3dUI() {
             </div>
           </div>
 
-          ${isFlight ? `<div class="radio-bar" id="a3d-radio-bar"></div><div class="phase-strip" id="a3d-phase-strip"></div>` : ''}
+          ${isFlight ? `<div class="phase-strip" id="a3d-phase-strip"></div><div class="radio-bar pro-only" id="a3d-radio-bar"></div>` : ''}
         </div>
       </div>
 
-      <div>
+      <div class="a3d-side">
         ${isFlight ? `
-          <div class="card" style="margin-bottom:12px;">
-            <div class="card-title">
-              <span class="ja">🚧 ${t('3Dマーシャラー 標準手信号練習 (8種)', 'Luyện 8 Tín hiệu Tay Marshaller Chuẩn 3D', '3D Marshaller Official Hand Signals (8)')}</span>
-              <button class="btn btn-sm btn-primary" id="a3d-focus-marsh">👁 ${t('近接視点', 'Zoom Marshaller', 'Zoom In')}</button>
+          ${panel('marshal', `🚧 ${t('マーシャリング誘導 実習', 'Tập dẫn tàu bằng tín hiệu tay (Marshaller)', 'Marshalling Lead-in Drill')}`, `
+            <div class="drill-box">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                <button class="btn btn-sm ${a3d.marshalDrill.active ? '' : 'btn-primary'}" id="a3d-drill-start">${a3d.marshalDrill.active ? '↺ ' + t('やり直し', 'Làm lại', 'Restart') : '🎮 ' + t('誘導実習を開始', 'Bắt đầu tập dẫn tàu', 'Start lead-in drill')}</button>
+                ${a3d.marshalDrill.active ? `<button class="btn btn-sm" id="a3d-drill-stop">✕ ${t('終了', 'Thoát', 'Exit')}</button>` : ''}
+                <button class="btn btn-sm ${a3d.camMode === 'marshal_rear' ? 'btn-primary' : ''}" id="a3d-focus-marsh">🧍 ${t('後方視点', 'Nhìn sau lưng', 'Rear view')}</button>
+              </div>
+              <div class="drill-help">${a3d.marshalDrill.active
+                ? t('合図を押すと航空機が反応します。停止線（黄T字）ぴったりに止めましょう。', 'Bấm tín hiệu — máy bay sẽ phản ứng theo. Dừng mũi bánh đúng vạch dừng (chữ T vàng).', 'Press a signal — the aircraft responds. Stop the nose gear exactly on the yellow stop bar.')
+                : t('「開始」で航空機が停止線の約45m手前で待機します。後方視点で腕の動きと機体の反応を確認。', 'Bấm "Bắt đầu": máy bay chờ cách vạch dừng ~45m. Dùng góc "Nhìn sau lưng" để thấy tay Marshaller và máy bay phản ứng.', 'Press Start: the aircraft waits ~45m before the stop bar. Use the rear view to watch the arm signals and the aircraft response.')}</div>
+              <div id="a3d-drill-live" class="drill-live"></div>
             </div>
             <div style="display:flex;gap:5px;flex-wrap:wrap;">
               ${[
@@ -1046,15 +1162,14 @@ export function renderAirport3dUI() {
                 ['m_emerg_stop', t('6. 緊急停止', '6. Dừng khẩn cấp', '6. Emerg Stop')],
                 ['m_chocks', t('7. 輪止め設置', '7. Chèn bánh', '7. Chocks In')],
                 ['m_allclear', t('8. 出発OK', '8. An toàn / OK', '8. All Clear')]
-              ].map(([sid, lbl]) => `<button class="btn btn-sm ${a3d.marshallerDemoSignal === sid ? 'btn-primary' : ''}" data-msig="${sid || ''}">${lbl}</button>`).join('')}
+              ].map(([sid, lbl]) => `<button class="btn btn-sm sig-btn ${a3d.marshallerDemoSignal === sid ? 'btn-primary' : ''}" data-msig="${sid || ''}">${lbl}</button>`).join('')}
             </div>
-          </div>
-          <div class="card"><div class="card-title"><span class="ja">${t('地上スタッフ担当役割', 'Vai trò Nhân viên Mặt đất', 'Ground Crew Roles')}</span><span class="badge badge-ok">LIVE</span></div><div id="a3d-flight-roles-panel"></div></div>
+          `, true)}
+          ${panel('roles', `👷 ${t('地上スタッフ担当役割', 'Vai trò Nhân viên Mặt đất', 'Ground Crew Roles')}`, `<div id="a3d-flight-roles-panel"></div>`, appState.userLevel === 'pro')}
         ` : (isOps3d ? `
-          <div class="card"><div class="card-title"><span class="ja">${t('3D直接クリック ＆ 実技検定', 'Thao tác 3D trực tiếp & Thi 100đ', 'Direct 3D Ops & 100pt Exam')}</span><span class="badge badge-warn">RAYCAST</span></div><div id="a3d-handson-panel"></div></div>
+          ${panel('handson', `🖱 ${t('3D直接クリック ＆ 実技検定', 'Thao tác 3D trực tiếp & Thi 100đ', 'Direct 3D Ops & 100pt Exam')}`, `<div id="a3d-handson-panel"></div>`, true)}
         ` : `
-          <div class="card">
-            <div class="card-title"><span class="ja">🚜 ${t('NGOセントレア 実戦運転 ＆ 牽引バック実習（オープンキャブTT）', '5 Bài Tập Lái Xe TT Mui Trần & Lùi Rơ-Moóc Vào Chuồng', '5 Live NGO TT Driving & Semi-Trailer Reverse Scenarios')}</span></div>
+          ${panel('drive', `🚜 ${t('NGO構内運転 実習', 'Bài tập lái xe NGO', 'NGO Driving Drills')}`, `
             <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
               ${[
                 ['SC5', t('🅿 SC5: トレーラー牽引バック車庫入れ実習（大型牽引・逆ハンドル練習）', '🅿 SC5: Luyện kéo rơ-moóc lùi vô chuồng BAY 01 (Như lái xe đầu kéo — đánh lái ngược)', '🅿 SC5: Semi-Trailer Reverse Bay Parking Drill (Articulated Counter-Steer)')],
@@ -1099,21 +1214,13 @@ export function renderAirport3dUI() {
                   'Hitting obstacles triggers physical recoil, camera shake, crash audio, and the Centrair COC (0569-38-1500 / Ext. 3000) accident alert.')}
             </div>
             <div id="a3d-log-list" style="max-height:200px;overflow-y:auto;"></div>
-          </div>
+        `, true)}
         `)}
       </div>
     </div>
   `;
 
-  mount.querySelectorAll('[data-st]').forEach(b => {
-    b.onclick = () => {
-      a3d.subtab = b.dataset.st;
-      if (a3d.subtab === 'ops3d') { a3d.camMode = 'orbit'; a3d.cam = { tx: 0, ty: 3, tz: 12, dist: 46, yaw: -0.55, pitch: 0.42 }; }
-      else if (a3d.subtab === 'drive') a3d.camMode = 'chase';
-      else a3d.camMode = 'flight_follow';
-      renderAirport3dUI();
-    };
-  });
+  mount.querySelectorAll('[data-st]').forEach(b => { b.onclick = () => openA3dSubtab(b.dataset.st); });
   mount.querySelectorAll('[data-tod]').forEach(b => {
     b.onclick = () => { a3d.timeOfDay = b.dataset.tod; mount.querySelectorAll('[data-tod]').forEach(x => x.classList.toggle('btn-primary', x.dataset.tod === a3d.timeOfDay)); };
   });
@@ -1127,6 +1234,25 @@ export function renderAirport3dUI() {
   document.getElementById('a3d-lbl-sel').onchange = e => { a3d.labelMode = e.target.value; };
   document.getElementById('a3d-gfx-sel').onchange = e => { a3d.gfxQuality = e.target.value; };
   document.getElementById('a3d-toggle-sound').onclick = () => { a3d.soundOn = !a3d.soundOn; a3dAudio.setEnabled(a3d.soundOn); document.getElementById('a3d-toggle-sound').textContent = a3d.soundOn ? '🔊' : '🔇'; };
+  mount.querySelectorAll('[data-drawer]').forEach(b => {
+    b.onclick = () => {
+      const k = b.dataset.drawer;
+      a3d.ui[k] = !a3d.ui[k];
+      b.classList.toggle('btn-primary', a3d.ui[k]);
+      const d = document.getElementById(`a3d-drawer-${k}`);
+      if (d) d.classList.toggle('open', a3d.ui[k]);
+    };
+  });
+  const mapBtn = document.getElementById('a3d-toggle-map');
+  if (mapBtn) mapBtn.onclick = () => {
+    a3d.ui.map = !a3d.ui.map;
+    mapBtn.classList.toggle('btn-primary', a3d.ui.map);
+    const mb = document.getElementById('a3d-minimap-box');
+    if (mb) mb.classList.toggle('hidden', !a3d.ui.map);
+  };
+  mount.querySelectorAll('details[data-panel]').forEach(d => {
+    d.addEventListener('toggle', () => { a3d.ui.panels[d.dataset.panel] = d.open; });
+  });
   document.getElementById('a3d-toggle-expand').onclick = () => {
     a3d.expanded = !a3d.expanded;
     document.getElementById('a3d-stage-box').classList.toggle('expanded', a3d.expanded);
@@ -1134,23 +1260,24 @@ export function renderAirport3dUI() {
 
   if (isFlight) {
     document.getElementById('a3d-fleet-sel').onchange = e => { a3d.fleetAircraftId = e.target.value; };
-    document.getElementById('a3d-flight-play').onclick = () => { a3d.flightPlaying = !a3d.flightPlaying; document.getElementById('a3d-flight-play').textContent = a3d.flightPlaying ? '⏸' : '▶'; };
-    document.getElementById('a3d-flight-prev').onclick = () => { a3d.flightPhaseIdx = (a3d.flightPhaseIdx + 9) % 10; a3d.flightProgress = 0; renderFlightPhasePanel(); };
-    document.getElementById('a3d-flight-next').onclick = () => { a3d.flightPhaseIdx = (a3d.flightPhaseIdx + 1) % 10; a3d.flightProgress = 0; renderFlightPhasePanel(); };
-    document.getElementById('a3d-flight-spd').onclick = () => { a3d.flightSpeed = a3d.flightSpeed === 1 ? 2 : (a3d.flightSpeed === 2 ? 0.5 : 1); document.getElementById('a3d-flight-spd').textContent = `${a3d.flightSpeed}x`; };
+    document.getElementById('a3d-flight-play').onclick = () => { if (a3d.marshalDrill.active) { stopMarshalDrill(); renderAirport3dUI(); return; } a3d.flightPlaying = !a3d.flightPlaying; document.getElementById('a3d-flight-play').textContent = a3d.flightPlaying ? '⏸' : '▶'; };
+    document.getElementById('a3d-flight-prev').onclick = () => { stopMarshalDrill(); a3d.flightPhaseIdx = (a3d.flightPhaseIdx + 9) % 10; a3d.flightProgress = 0; renderFlightPhasePanel(); };
+    document.getElementById('a3d-flight-next').onclick = () => { stopMarshalDrill(); a3d.flightPhaseIdx = (a3d.flightPhaseIdx + 1) % 10; a3d.flightProgress = 0; renderFlightPhasePanel(); };
+    document.getElementById('a3d-flight-spd').onclick = () => { const seq = [1, 2, 4, 8, 0.5]; a3d.flightSpeed = seq[(seq.indexOf(a3d.flightSpeed) + 1) % seq.length]; document.getElementById('a3d-flight-spd').textContent = `${a3d.flightSpeed}x`; };
     const fm = document.getElementById('a3d-focus-marsh');
-    if (fm) fm.onclick = () => {
-      a3d.camMode = 'orbit';
-      a3d.cam = { tx: 0, ty: 1.8, tz: 32.5, dist: 8.5, yaw: 0.12, pitch: 0.22 };
-    };
+    if (fm) fm.onclick = () => { setA3dViewpoint('marshal_rear'); renderAirport3dUI(); };
+    const ds = document.getElementById('a3d-drill-start');
+    if (ds) ds.onclick = () => { startMarshalDrill(); renderAirport3dUI(); };
+    const dx = document.getElementById('a3d-drill-stop');
+    if (dx) dx.onclick = () => { stopMarshalDrill(); renderAirport3dUI(); };
     mount.querySelectorAll('[data-msig]').forEach(b => {
       b.onclick = () => {
         a3d.marshallerDemoSignal = b.dataset.msig || null;
-        if (a3d.marshallerDemoSignal) {
-          a3d.camMode = 'orbit';
-          a3d.cam = { tx: 0, ty: 1.8, tz: 32.5, dist: 8.5, yaw: 0.12, pitch: 0.22 };
-        }
-        renderAirport3dUI();
+        // Watch the signal from behind the marshaller so the arm movement and the aircraft response are both visible
+        if (a3d.marshallerDemoSignal && a3d.camMode !== 'marshaller') a3d.camMode = 'marshal_rear';
+        mount.querySelectorAll('[data-msig]').forEach(x => x.classList.toggle('btn-primary', (x.dataset.msig || null) === a3d.marshallerDemoSignal));
+        mount.querySelectorAll('[data-vp]').forEach(x => x.classList.toggle('btn-primary', x.dataset.vp === a3d.camMode));
+        return;
       };
     });
     renderFlightPhasePanel();

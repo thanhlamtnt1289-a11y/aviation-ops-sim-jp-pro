@@ -22,12 +22,13 @@
 - `index.html` — Điểm vào chính của PWA, khai báo font chữ và load `src/main.js`.
 - `offline-singlefile.html` — Bản đóng gói offline 1 file duy nhất (~3.96 MB), **bắt buộc phải build lại** sau mỗi lần sửa code bằng `python3 scripts/build_singlefile.py`.
 - `scripts/build_singlefile.py` — Script Python tự động đóng gói toàn bộ `src/`, `vendor/`, `public/` thành `offline-singlefile.html`.
-- `public/sw.js` — Service Worker cache tài nguyên offline (`CACHE_NAME = 'aviation-ops-sim-jp-pro-v20'`, cần tăng version `v21`, `v22`... khi cập nhật).
+- `public/sw.js` — Service Worker cache tài nguyên offline (`CACHE_NAME = 'aviation-ops-sim-jp-pro-v21'`, cần tăng version `v22`, `v23`... khi cập nhật).
 
 ### Lõi ứng dụng (`src/core/`, `src/engines/`, `src/main.js`)
 - `src/main.js` — Khởi tạo app, điều hướng các module/tab, thanh chuyển đổi 3 ngôn ngữ (`JA` / `VI` / `EN`), Command Palette.
 - `src/core/state.js` — Quản lý trạng thái toàn cục (`appState`), lưu `localStorage`, hàm dịch 3 ngôn ngữ **`t(ja, vi, en)`** và song ngữ **`bi(ja, vi, en)`**.
 - `src/core/commandPalette.js` — Phím tắt / tìm kiếm nhanh các tính năng.
+- `src/core/roadmap.js` — **Menu theo lộ trình thi** (`ROADMAP`): ① 特定技能1号 → ② GSE運転許可 (NGO) → ③ 搭載・ULD → ④ 特定技能2号, mỗi mục trỏ tới module + tab con / chủ đề thi. Cấp độ `appState.userLevel` = `basic` (Người mới, ẩn các phần tử `.pro-only`) / `pro` (đầy đủ).
 - `src/core/jaPhraseWrap.js` — Ngắt dòng tiếng Nhật theo cụm từ (dùng `Intl.Segmenter`, chèn `<wbr>`), kết hợp `word-break: keep-all` trong `app.css` để không bao giờ cắt đôi một từ (VD: `シミ / ュレーション`). Tự chạy cho mọi nội dung render mới qua `MutationObserver`; thêm class `no-phrase-wrap` để bỏ qua một vùng.
 - `src/engines/wbEngine.js` — Động cơ tính toán Weight & Balance (`calculateWB`, giới hạn `PAX_ZONE`, `ULD_POS`, `HOLD`, `MZFW/MTOW/MLW`, `%MAC`, hậu quả mất cân bằng & gợi ý điều chỉnh).
 - `src/engines/audioEngine.js` — Âm thanh cảnh báo, còi, va chạm tổng hợp bằng Web Audio API (offline 100%).
@@ -88,7 +89,13 @@
    - Tháp ATC **Đông Bắc T1** tại `(330, 175)` (Centrair Tower 118.85).
    - Khu cargo phía Bắc: mảng `NGO_CARGO_DISTRICT` trong `airports.js` là nguồn duy nhất cho cảnh 3D, `A3D_OBSTACLES` (va chạm) và minimap. Cảnh Turnaround dùng cùng vị trí (quy đổi: `along = x − 46`, `rightM = z + 580`).
 
-6. **Chuẩn 100% Offline Single-File:**
+6. **Giao diện theo cấp độ & chuyển động thật:**
+   - Thêm tính năng mới vào đúng chặng trong `ROADMAP`; mục nâng cao gắn `pro: true`. Phần tử giao diện nâng cao dùng class `pro-only`.
+   - Màn 3D: nút phụ đặt trong ngăn "Góc nhìn" / "Cài đặt"; bảng bên phải dùng `panel(id, title, body, open)` (thu gọn được, nhớ trạng thái).
+   - Chuyển động máy bay dùng `NGO_MOTION` (`airports.js`): đường taxi theo taxiway thật có cung rẽ, tốc độ thật (taxi ~18kt, rẽ ~10kt, vào spot đi bộ, pushback ~4km/h); thời lượng pha tự tính (1x = thời gian thật).
+   - Tập dẫn tàu (`startMarshalDrill`): máy bay phản ứng theo tín hiệu tay; chấm điểm theo vạch dừng chữ T của từng loại máy bay.
+
+7. **Chuẩn 100% Offline Single-File:**
    - Không thêm `<script>` hay `fetch()` từ CDN/API bên ngoài.
    - Mọi asset/model phải nằm trong `src/` hoặc `vendor/`.
    - Sau khi sửa xong, **luôn chạy lệnh build và kiểm tra**:
@@ -104,6 +111,8 @@
 - **2026-11-26:** Ngắt dòng tiếng Nhật theo cụm từ trên toàn app; menu trái hiện đủ tên (2 dòng, bỏ "…"); sửa thẻ bị lệch hàng (Dashboard, Light Gun…); dịch 3 nút camera ULD còn cứng tiếng Nhật; bỏ chữ Việt trong chuỗi JA ở module 3D; sửa chú thích tọa độ BAY 01 cũ `(192, 26)` → `(218, 26)`; bổ sung font hệ thống dự phòng khi offline; `CACHE_NAME` → `v19`; build lại `offline-singlefile.html`.
 
 - **2026-11-27:** Thư viện GSE thống nhất `gseLibrary3D.js` (thay 3 bộ dựng cũ); mọi máy bay dùng chung model GLB + livery, đúng kích thước từng loại (thêm A320, E190, B788, B763, A359, B77F tàu hàng không cửa sổ); vị trí GSE/nhân viên/chèn bánh/cọc tiêu/PBB ở Spot 7 tính theo cửa thật; viết lại camera (POV gắn nhân vật, chuyển góc mượt, sửa xoay vòng ở Turnaround, Sky Deck không bị mái che, mây mềm hơn); dời tháp ATC sang Đông Bắc T1, sửa tần số Tower 118.85; dựng khu cargo thật (第1・第2・第3国際貨物上屋, 国内エアライン上屋, 国内フォワーダー上屋, 燻蒸施設, 貨物事務棟, トラック待機場, 北ゲート, mái che 20m, làn 無ナンバー車両通行帯, tàu hàng #103 với main-deck loader); đồng bộ cảnh Turnaround; `CACHE_NAME` → `v20`.
+
+- **2026-11-27 (2):** Menu theo lộ trình thi 4 chặng + chế độ Người mới/Pro; trang chủ thành bản đồ lộ trình; màn 3D gọn (thanh công cụ, ngăn Góc nhìn/Cài đặt, bản đồ nhỏ bật/tắt, bảng thu gọn); góc "Sau lưng Marshaller" + chế độ tập dẫn tàu (máy bay phản ứng theo tín hiệu, chấm điểm vạch dừng); đường taxi/tốc độ thật cho hạ cánh, lăn vào, đẩy lùi, lăn ra, cất cánh; sửa biển 前方優先道路 bị chồng ở giao service lane; Ground 121.8; `CACHE_NAME` → `v21`.
 
 ## 6. Yêu cầu Chỉnh sửa Tiếp theo (Dành cho Người dùng điền khi gửi Claude Cowork)
 

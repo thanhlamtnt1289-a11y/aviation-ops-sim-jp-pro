@@ -9,6 +9,8 @@ export const ALL_QUESTIONS = [...QUIZ_BANK, ...NGO_DRIVING_QUIZ];
 const UNIFIED_TOPICS = {
   all: { ja: `全分野 (${ALL_QUESTIONS.length}問)`, vi: `Tất cả (${ALL_QUESTIONS.length} câu)`, en: `All Topics (${ALL_QUESTIONS.length} Qs)` },
   ngo_driving: { ja: '🚗 NGOセントレア車両運転講習 (50問)', vi: '🚗 Bằng lái Sân đỗ NGO Centrair (50 câu)', en: '🚗 NGO Centrair Airside Driving (50 Qs)' },
+  stage_tg1: { ja: '① 特定技能1号', vi: '① Kỹ năng đặc định số 1', en: '① SSW (i)' },
+  stage_tg2: { ja: '④ 特定技能2号（総合）', vi: '④ Kỹ năng đặc định số 2 (tổng hợp)', en: '④ SSW (ii) (all topics)' },
   turnaround: { ja: 'ターンアラウンド・GSE', vi: 'Turnaround & GSE', en: 'Turnaround & GSE' },
   pax: { ja: '旅客サービス', vi: 'Dịch vụ Hành khách', en: 'Passenger Service' },
   cargo: { ja: '貨物・ULDビルドアップ・危険物', vi: 'Hàng hóa, ULD Buildup & DGR', en: 'Cargo, ULD Buildup & DGR' },
@@ -36,6 +38,31 @@ export function stopQuizTimer() {
     clearInterval(quizState.examTimer);
     quizState.examTimer = null;
   }
+}
+
+// Roadmap stage exams: ① 1号 = turnaround + passengers + safety · ④ 2号 = every SSW question (incl. W&B & cargo)
+const STAGE_TOPICS = {
+  stage_tg1: ['turnaround', 'pax', 'safety'],
+  stage_tg2: ['turnaround', 'pax', 'safety', 'cargo', 'wb']
+};
+export function questionsForTopic(tp) {
+  if (tp === 'all') return ALL_QUESTIONS;
+  if (STAGE_TOPICS[tp]) return ALL_QUESTIONS.filter(q => STAGE_TOPICS[tp].includes(q.topic));
+  return ALL_QUESTIONS.filter(q => q.topic === tp);
+}
+export function openQuizTopic(topic = 'all') {
+  stopQuizTimer();
+  quizState.mode = 'practice';
+  quizState.topic = topic;
+  quizState.idx = 0;
+  renderQuizModule();
+}
+export function openQuizExam() {
+  stopQuizTimer();
+  quizState.mode = 'exam';
+  quizState.examActive = false;
+  quizState.examFinished = false;
+  renderQuizModule();
 }
 
 export function openNgoExamMode() {
@@ -69,8 +96,7 @@ function getFilteredQuestions() {
     const wrongIds = Object.keys(appState.srsWrong || {});
     return ALL_QUESTIONS.filter(q => wrongIds.includes(q.id));
   }
-  if (quizState.topic === 'all') return ALL_QUESTIONS;
-  return ALL_QUESTIONS.filter(q => q.topic === quizState.topic);
+  return questionsForTopic(quizState.topic);
 }
 
 function startTimedExam(pool, count, minutes, examType) {
@@ -331,7 +357,7 @@ export function renderQuizModule() {
     ${quizState.mode === 'practice' ? `
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
         ${Object.entries(UNIFIED_TOPICS).map(([tpId, tp]) => {
-          const cnt = tpId === 'all' ? ALL_QUESTIONS.length : ALL_QUESTIONS.filter(q => q.topic === tpId).length;
+          const cnt = questionsForTopic(tpId).length;
           return `<button class="btn btn-sm ${quizState.topic === tpId ? 'btn-primary' : ''}" data-qtop="${tpId}">${t(tp.ja, tp.vi, tp.en)}${tpId === 'all' || tpId === 'ngo_driving' ? '' : ` (${cnt})`}</button>`;
         }).join('')}
       </div>
