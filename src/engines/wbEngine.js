@@ -43,7 +43,7 @@ export function interpolateCurve(points, weight) {
 
     // 1. DOW (運航自重)
     const dowMoment = dow * dowArm;
-    items.push({ key: 'DOW', labelJa: '運航自重 (DOW)', labelVi: 'Trọng lượng rỗng khai thác (DOW)', weight: dow, arm: dowArm, moment: dowMoment });
+    items.push({ key: 'DOW', labelJa: '運航自重 (DOW)', labelVi: 'Trọng lượng rỗng khai thác (DOW)', labelEn: 'Dry Operating Weight (DOW)', weight: dow, arm: dowArm, moment: dowMoment });
 
     // 2. Hành khách theo khoang (旅客)
     let totalPaxCount = 0;
@@ -58,14 +58,15 @@ export function interpolateCurve(points, weight) {
       totalPaxCount += count;
       totalPaxWeight += wt;
       totalPaxMoment += mom;
-      items.push({ key: `PAX_${z.id}`, labelJa: `旅客 ${z.labelJa} (${count}名)`, labelVi: `Hành khách ${z.labelVi} (${count})`, weight: wt, arm: z.arm, moment: mom });
+      items.push({ key: `PAX_${z.id}`, labelJa: `旅客 ${z.labelJa} (${count}名)`, labelVi: `Hành khách ${z.labelVi} (${count})`, labelEn: `Passengers ${z.labelEn || z.id} (${count})`, weight: wt, arm: z.arm, moment: mom });
       if (count > z.maxPax) {
         violations.push({
           code: 'PAX_ZONE_LIMIT',
           severity: 'error',
           zone: z.id,
           ja: `${z.labelJa}の定員超過（${count}名 / 上限${z.maxPax}名）`,
-          vi: `Vượt số ghế ${z.labelVi} (${count} / tối đa ${z.maxPax} khách)`
+          vi: `Vượt số ghế ${z.labelVi} (${count} / tối đa ${z.maxPax} khách)`,
+          en: `${z.labelEn || 'Zone ' + z.id} seat capacity exceeded (${count} / max ${z.maxPax} pax)`
         });
       }
     });
@@ -81,6 +82,7 @@ export function interpolateCurve(points, weight) {
         id: h.id,
         labelJa: h.labelJa,
         labelVi: h.labelVi,
+        labelEn: h.labelEn || h.id,
         arm: h.arm,
         maxWeight: h.maxWeight,
         bag,
@@ -96,6 +98,7 @@ export function interpolateCurve(points, weight) {
           key: `HOLD_${h.id}`,
           labelJa: `${h.labelJa} (手荷物+バラ貨物)`,
           labelVi: `${h.labelVi} (Hành lý + Hàng rời)`,
+          labelEn: `${h.labelEn || h.id} (Baggage + Loose Cargo)`,
           weight: looseWt,
           arm: h.arm,
           moment: looseMom
@@ -124,6 +127,7 @@ export function interpolateCurve(points, weight) {
           key: `ULD_${pos.id}`,
           labelJa: `ULD位置 ${pos.id} (${pos.type})`,
           labelVi: `Vị trí ULD ${pos.id} (${pos.type})`,
+          labelEn: `ULD Position ${pos.id} (${pos.type})`,
           weight: wt,
           arm: pos.arm,
           moment: mom
@@ -136,7 +140,8 @@ export function interpolateCurve(points, weight) {
           pos: pos.id,
           excessKg: wt - pos.maxWeight,
           ja: `ULD位置 ${pos.id} の許容重量超過（+${Math.round(wt - pos.maxWeight)} kg）`,
-          vi: `Vị trí ULD ${pos.id} vượt tải cho phép (+${Math.round(wt - pos.maxWeight)} kg)`
+          vi: `Vị trí ULD ${pos.id} vượt tải cho phép (+${Math.round(wt - pos.maxWeight)} kg)`,
+          en: `ULD Position ${pos.id} exceeds max allowable weight (+${Math.round(wt - pos.maxWeight)} kg)`
         });
       }
     });
@@ -154,7 +159,8 @@ export function interpolateCurve(points, weight) {
           holdId: hs.id,
           excessKg: hs.totalWeight - hs.maxWeight,
           ja: `${hs.labelJa} 構造制限超過（${Math.round(hs.totalWeight)} / 上限 ${hs.maxWeight} kg、超過 +${Math.round(hs.totalWeight - hs.maxWeight)} kg）`,
-          vi: `${hs.labelVi} vượt giới hạn cấu trúc (${Math.round(hs.totalWeight)} / tối đa ${hs.maxWeight} kg, dư +${Math.round(hs.totalWeight - hs.maxWeight)} kg)`
+          vi: `${hs.labelVi} vượt giới hạn cấu trúc (${Math.round(hs.totalWeight)} / tối đa ${hs.maxWeight} kg, dư +${Math.round(hs.totalWeight - hs.maxWeight)} kg)`,
+          en: `${hs.labelEn || hs.id} exceeds structural hold limit (${Math.round(hs.totalWeight)} / max ${hs.maxWeight} kg, +${Math.round(hs.totalWeight - hs.maxWeight)} kg over)`
         });
       }
     });
@@ -179,7 +185,8 @@ export function interpolateCurve(points, weight) {
         code: 'FUEL_INVALID',
         severity: 'error',
         ja: 'タキシー燃料がブロック燃料を上回っています',
-        vi: 'Taxi fuel lớn hơn Block fuel (dữ liệu nhiên liệu không hợp lệ)'
+        vi: 'Taxi fuel lớn hơn Block fuel (dữ liệu nhiên liệu không hợp lệ)',
+        en: 'Taxi fuel exceeds Block fuel (invalid fuel input)'
       });
     }
     if (tripFuel > takeoffFuel) {
@@ -187,7 +194,8 @@ export function interpolateCurve(points, weight) {
         code: 'FUEL_INSUFFICIENT',
         severity: 'error',
         ja: 'トリップ燃料が離陸時燃料を上回っています（予備燃料不足）',
-        vi: 'Trip fuel lớn hơn nhiên liệu cất cánh (thiếu nhiên liệu bay)'
+        vi: 'Trip fuel lớn hơn nhiên liệu cất cánh (thiếu nhiên liệu bay)',
+        en: 'Trip fuel exceeds Takeoff fuel (insufficient reserve fuel)'
       });
     }
     if (blockFuel > profile.maxFuel) {
@@ -196,7 +204,8 @@ export function interpolateCurve(points, weight) {
         severity: 'error',
         excessKg: blockFuel - profile.maxFuel,
         ja: `搭載燃料がタンク容量を超過（上限 ${profile.maxFuel} kg）`,
-        vi: `Nhiên liệu vượt sức chứa bình chứa (tối đa ${profile.maxFuel} kg)`
+        vi: `Nhiên liệu vượt sức chứa bình chứa (tối đa ${profile.maxFuel} kg)`,
+        en: `Block fuel exceeds tank capacity (max ${profile.maxFuel} kg)`
       });
     }
 
@@ -224,7 +233,8 @@ export function interpolateCurve(points, weight) {
         severity: 'error',
         excessKg: zfw - profile.mzfw,
         ja: `ZFW超過（${Math.round(zfw)} kg > MZFW ${profile.mzfw} kg、超過 +${Math.round(zfw - profile.mzfw)} kg）`,
-        vi: `Vượt MZFW (${Math.round(zfw)} kg > giới hạn ${profile.mzfw} kg, vượt +${Math.round(zfw - profile.mzfw)} kg)`
+        vi: `Vượt MZFW (${Math.round(zfw)} kg > giới hạn ${profile.mzfw} kg, vượt +${Math.round(zfw - profile.mzfw)} kg)`,
+        en: `MZFW Exceeded (${Math.round(zfw)} kg > MZFW ${profile.mzfw} kg, +${Math.round(zfw - profile.mzfw)} kg over)`
       });
     }
     if (tow > profile.mtow) {
@@ -233,7 +243,8 @@ export function interpolateCurve(points, weight) {
         severity: 'error',
         excessKg: tow - profile.mtow,
         ja: `TOW超過（${Math.round(tow)} kg > MTOW ${profile.mtow} kg、超過 +${Math.round(tow - profile.mtow)} kg）`,
-        vi: `Vượt MTOW (${Math.round(tow)} kg > giới hạn ${profile.mtow} kg, vượt +${Math.round(tow - profile.mtow)} kg)`
+        vi: `Vượt MTOW (${Math.round(tow)} kg > giới hạn ${profile.mtow} kg, vượt +${Math.round(tow - profile.mtow)} kg)`,
+        en: `MTOW Exceeded (${Math.round(tow)} kg > MTOW ${profile.mtow} kg, +${Math.round(tow - profile.mtow)} kg over)`
       });
     }
     if (lw > profile.mlw) {
@@ -242,7 +253,8 @@ export function interpolateCurve(points, weight) {
         severity: 'error',
         excessKg: lw - profile.mlw,
         ja: `LW超過（${Math.round(lw)} kg > MLW ${profile.mlw} kg、超過 +${Math.round(lw - profile.mlw)} kg）`,
-        vi: `Vượt MLW (${Math.round(lw)} kg > giới hạn ${profile.mlw} kg, vượt +${Math.round(lw - profile.mlw)} kg)`
+        vi: `Vượt MLW (${Math.round(lw)} kg > giới hạn ${profile.mlw} kg, vượt +${Math.round(lw - profile.mlw)} kg)`,
+        en: `MLW Exceeded (${Math.round(lw)} kg > MLW ${profile.mlw} kg, +${Math.round(lw - profile.mlw)} kg over)`
       });
     }
 
@@ -261,7 +273,8 @@ export function interpolateCurve(points, weight) {
           limit: lim.fwdMac,
           weight: wt,
           ja: `${phase} 重心が前方限界を逸脱（${mac.toFixed(1)}% MAC < 前方限界 ${lim.fwdMac.toFixed(1)}% MAC）— 機首下げ傾向`,
-          vi: `CG tại ${phase} quá lệch trước (${mac.toFixed(1)}% MAC < giới hạn trước ${lim.fwdMac.toFixed(1)}% MAC)`
+          vi: `CG tại ${phase} quá lệch trước (${mac.toFixed(1)}% MAC < giới hạn trước ${lim.fwdMac.toFixed(1)}% MAC)`,
+          en: `${phase} CG Forward of Limit (${mac.toFixed(1)}% MAC < Fwd Limit ${lim.fwdMac.toFixed(1)}% MAC) — Nose-heavy`
         });
       } else if (mac > lim.aftMac) {
         violations.push({
@@ -272,7 +285,8 @@ export function interpolateCurve(points, weight) {
           limit: lim.aftMac,
           weight: wt,
           ja: `${phase} 重心が後方限界を逸脱（${mac.toFixed(1)}% MAC > 後方限界 ${lim.aftMac.toFixed(1)}% MAC）— 縦安定性低下・尻もち危険`,
-          vi: `CG tại ${phase} quá lệch sau (${mac.toFixed(1)}% MAC > giới hạn sau ${lim.aftMac.toFixed(1)}% MAC) — nguy cơ mất ổn định dọc / tail-tipping`
+          vi: `CG tại ${phase} quá lệch sau (${mac.toFixed(1)}% MAC > giới hạn sau ${lim.aftMac.toFixed(1)}% MAC) — nguy cơ mất ổn định dọc / tail-tipping`,
+          en: `${phase} CG Aft of Limit (${mac.toFixed(1)}% MAC > Aft Limit ${lim.aftMac.toFixed(1)}% MAC) — Longitudinal instability & tail-tipping risk`
         });
       }
     };
@@ -445,8 +459,10 @@ export function interpolateCurve(points, weight) {
         severity: Math.abs(macShift) >= 3.0 || actualRes.status === 'FAIL' ? 'CRITICAL' : 'SEVERE',
         ja: `【LMC未報告・トリム誤設定】実重量が +${Math.round(addAft + addFwd)} kg 増加し、実CGが ${macShift >= 0 ? '+' : ''}${macShift.toFixed(1)}% MAC 移動！操縦席には誤ったトリム（${plannedRes.performance.stabTrimLabel} vs 真値 ${actualRes.performance.stabTrimLabel}）とVR（${vrDelta >= 0 ? '+' : ''}${vrDelta} kt誤差）が入力されます。`,
         vi: `[LỖI QUÊN KHAI BÁO LMC / SAI TRIM] Khối lượng thực tăng +${Math.round(addAft + addFwd)} kg kéo CG thực lệch ${macShift >= 0 ? '+' : ''}${macShift.toFixed(1)}% MAC! Phi công cài SAI Stabilizer Trim (${plannedRes.performance.stabTrimLabel} thay vì ${actualRes.performance.stabTrimLabel}) và sai tốc độ VR (${vrDelta >= 0 ? '+' : ''}${vrDelta} kt).`,
+        en: `[UNREPORTED LMC / TRIM MISMATCH] Actual weight increased +${Math.round(addAft + addFwd)} kg, shifting true CG by ${macShift >= 0 ? '+' : ''}${macShift.toFixed(1)}% MAC! Flight crew sets wrong Stabilizer Trim (${plannedRes.performance.stabTrimLabel} instead of true ${actualRes.performance.stabTrimLabel}) and wrong VR (${vrDelta >= 0 ? '+' : ''}${vrDelta} kt error).`,
         sopJa: '対策: 最後の1個までLMC（Last Minute Change）をロードコントローラーへ即報告し、基準値超過時はLoad Sheetを再発行。',
-        sopVi: 'Phòng ngừa: Mọi thay đổi giờ chót (LMC) vượt ngưỡng bắt buộc báo ngay Load Control để tái phát hành Load Sheet & cập nhật THS Trim.'
+        sopVi: 'Phòng ngừa: Mọi thay đổi giờ chót (LMC) vượt ngưỡng bắt buộc báo ngay Load Control để tái phát hành Load Sheet & cập nhật THS Trim.',
+        sopEn: 'SOP: Report every Last Minute Change (LMC) immediately to Load Control and reissue the Load Sheet & THS Trim when limits are exceeded.'
       });
     }
 
@@ -459,8 +475,10 @@ export function interpolateCurve(points, weight) {
         severity: 'CRITICAL',
         ja: `【駐機中テールティッピング（尻もち事故）】実CG（ZFW ${actualRes.zfwMac.toFixed(1)}% MAC）が後方限界（${actualRes.zfwLimits.aftMac.toFixed(1)}%）を大幅超過！主脚を支点に機首が浮き上がり、後部胴体がエプロンへ激突して圧力隔壁が大破・作業員負傷の危険。`,
         vi: `[SẬP ĐUÔI TRÊN SÂN ĐỖ / TAIL-TIPPING] CG thực (${actualRes.zfwMac.toFixed(1)}% MAC) vượt xa giới hạn sau (${actualRes.zfwLimits.aftMac.toFixed(1)}%)! Càng mũi nhấc bổng khỏi mặt sân đỗ, đuôi máy bay đập mạnh xuống bê tông gây vỡ vách áp suất & tai nạn cho nhân viên mặt đất.`,
+        en: `[GROUND TAIL-TIPPING] True ZFW CG (${actualRes.zfwMac.toFixed(1)}% MAC) severely exceeds aft limit (${actualRes.zfwLimits.aftMac.toFixed(1)}%)! Nose gear lifts off the apron, slamming the aft fuselage into concrete and risking pressure bulkhead rupture & crew injury.`,
         sopJa: '対策: 搭載は「前部から積み、後部から降ろす（Fwd-first load / Aft-first offload）」原則を徹底。貨物機はテールスタンド使用。',
-        sopVi: 'Phòng ngừa: Tuân thủ tuyệt đối nguyên tắc "Xếp từ hầm trước ra sau — Dỡ từ hầm sau lên trước"; dùng Tail Stand cho tàu bay chở hàng.'
+        sopVi: 'Phòng ngừa: Tuân thủ tuyệt đối nguyên tắc "Xếp từ hầm trước ra sau — Dỡ từ hầm sau lên trước"; dùng Tail Stand cho tàu bay chở hàng.',
+        sopEn: 'SOP: Strictly follow "Load Forward First, Offload Aft First" sequencing and install a tail stand / tether on freighters.'
       });
     }
 
@@ -473,8 +491,10 @@ export function interpolateCurve(points, weight) {
         severity: 'CRITICAL',
         ja: `【離陸時テールストライク・縦安定性喪失】TOW CG ${actualRes.towMac.toFixed(1)}% MAC > 後方限界 ${actualRes.towLimits.aftMac.toFixed(1)}%。機首上げ操作が過敏になり、VRで意図せず急ピッチアップ→滑走路に尾部接触（限界角 ${profile.perf.tailStrikePitchDeg}°）および失速（Stall）からの回復困難！`,
         vi: `[QUỆT ĐUÔI TAIL-STRIKE & MẤT ỔN ĐỊNH DỌC] CG cất cánh ${actualRes.towMac.toFixed(1)}% MAC > giới hạn sau ${actualRes.towLimits.aftMac.toFixed(1)}%. Mũi máy bay ngóc đột ngột vượt góc quệt đuôi (${profile.perf.tailStrikePitchDeg}°) tại VR, đồng thời giảm mạnh ổn định dọc — cực khó thoát thất tốc (Stall).`,
+        en: `[TAKEOFF TAIL-STRIKE & LOSS OF PITCH STABILITY] TOW CG ${actualRes.towMac.toFixed(1)}% MAC > Aft Limit ${actualRes.towLimits.aftMac.toFixed(1)}%. Pitch control becomes hypersensitive, causing violent uncommanded pitch-up past ${profile.perf.tailStrikePitchDeg}° tail-strike angle at VR and severe stall recovery hazard!`,
         sopJa: '対策: 後部/バルク貨物を前部貨物室へ移載し、旅客も前方ゾーンへ再配席して余裕のある%MACを確保。',
-        sopVi: 'Phòng ngừa: Dời hàng/ULD từ hầm sau & Bulk lên hầm trước, điều phối khách ngồi đều về phía trước để kéo %MAC vào vùng giữa.'
+        sopVi: 'Phòng ngừa: Dời hàng/ULD từ hầm sau & Bulk lên hầm trước, điều phối khách ngồi đều về phía trước để kéo %MAC vào vùng giữa.',
+        sopEn: 'SOP: Relocate ULDs/cargo from aft/bulk holds to forward holds and reseat passengers forward to restore safe mid-envelope %MAC.'
       });
     }
 
@@ -487,8 +507,10 @@ export function interpolateCurve(points, weight) {
         severity: 'CRITICAL',
         ja: `【ノーズヘビー・機首上げ不能】TOW CG ${actualRes.towMac.toFixed(1)}% MAC < 前方限界 ${actualRes.towLimits.fwdMac.toFixed(1)}%。昇降舵（エレベーター）の操舵力が不足し、VRに達しても機首が上がらず滑走路逸脱（オーバーラン）や前脚過負荷・パンクを引き起こします。`,
         vi: `[NẶNG MŨI — KHÔNG THỂ NGÓC ĐẦU CẤT CÁNH] CG cất cánh ${actualRes.towMac.toFixed(1)}% MAC < giới hạn trước ${actualRes.towLimits.fwdMac.toFixed(1)}%. Cánh lái độ cao (Elevator) không đủ lực nâng mũi tại VR → kéo dài đà chạy băng, quá tải càng mũi và nguy cơ lao khỏi cuối đường băng.`,
+        en: `[NOSE-HEAVY — FAILURE TO ROTATE] TOW CG ${actualRes.towMac.toFixed(1)}% MAC < Fwd Limit ${actualRes.towLimits.fwdMac.toFixed(1)}%. Insufficient elevator authority prevents rotation at VR, causing nose-gear overload, tire burst, or high-speed runway overrun.`,
         sopJa: '対策: 前部貨物/ULDを後部貨物室へ移載、または燃料・旅客ゾーンを見直して前方限界から+1.5%以上内側へ調整。',
-        sopVi: 'Phòng ngừa: Chuyển ULD/hàng từ hầm trước ra hầm sau hoặc phân bổ lại ghế hành khách để đưa %MAC vượt giới hạn trước ít nhất +1.5%.'
+        sopVi: 'Phòng ngừa: Chuyển ULD/hàng từ hầm trước ra hầm sau hoặc phân bổ lại ghế hành khách để đưa %MAC vượt giới hạn trước ít nhất +1.5%.',
+        sopEn: 'SOP: Shift forward ULDs/cargo to aft holds or redistribute cabin zones so %MAC sits ≥1.5% inside the forward envelope limit.'
       });
     }
 
@@ -502,8 +524,10 @@ export function interpolateCurve(points, weight) {
         severity: 'CRITICAL',
         ja: `【MTOW / 性能制限超過・滑走路距離不足】構造超過 +${exMtow} kg / 気象性能超過 +${perfMtowEx} kg（${actualRes.performance.airportCode} ${actualRes.performance.runwayLengthM}m・${actualRes.performance.surface}・OAT ${actualRes.performance.oatC}°C）。必要滑走路長 ${actualRes.performance.requiredRunwayM} m（余裕 ${actualRes.performance.runwayMarginM} m）となり、RTOブレーキ過熱や片発上昇不能の危険！`,
         vi: `[VƯỢT MTOW / GIỚI HẠN THỜI TIẾT — THIẾU ĐƯỜNG BĂNG] Vượt cấu trúc +${exMtow} kg / vượt hiệu năng thời tiết +${perfMtowEx} kg (${actualRes.performance.airportCode} ${actualRes.performance.runwayLengthM}m · ${actualRes.performance.surface} · OAT ${actualRes.performance.oatC}°C). Cần ${actualRes.performance.requiredRunwayM} m (dư ${actualRes.performance.runwayMarginM} m) → nguy cơ trượt cuối đường băng, cháy phanh RTO hoặc không đủ lực leo 1 động cơ!`,
+        en: `[MTOW / PERFORMANCE LIMIT EXCEEDED — RUNWAY OVERRUN RISK] Structural excess +${exMtow} kg / Weather perf excess +${perfMtowEx} kg (${actualRes.performance.airportCode} ${actualRes.performance.runwayLengthM}m · ${actualRes.performance.surface} · OAT ${actualRes.performance.oatC}°C). Required field ${actualRes.performance.requiredRunwayM} m (margin ${actualRes.performance.runwayMarginM} m) — high risk of overrun, RTO brake fire, or OEI climb failure!`,
         sopJa: '対策: 高温・追い風・湿潤/積雪路面ではペイロードまたは余剰燃料を削減し、性能制限MTOWと滑走路長余裕を確保してください。',
-        sopVi: 'Phòng ngừa: Khi trời nóng, gió xuôi hoặc mặt băng ướt/tuyết, bắt buộc giảm Payload hoặc Extra Fuel để TOW ≤ Performance-Limited MTOW và đủ cự ly đường băng.'
+        sopVi: 'Phòng ngừa: Khi trời nóng, gió xuôi hoặc mặt băng ướt/tuyết, bắt buộc giảm Payload hoặc Extra Fuel để TOW ≤ Performance-Limited MTOW và đủ cự ly đường băng.',
+        sopEn: 'SOP: Under high OAT, tailwind, or wet/snowy conditions, offload payload or excess tankered fuel to keep TOW ≤ Performance-Limited MTOW.'
       });
     }
 
@@ -516,8 +540,10 @@ export function interpolateCurve(points, weight) {
         severity: 'CRITICAL',
         ja: `【MZFW超過・主翼付け根曲げ過負荷（+${exZfw} kg）】胴体重量が過大となり、飛行中・乱気流通過時に主翼の揚力と胴体荷重の釣り合いが崩れ、主翼付け根（Wing Root）の構造疲労・亀裂が発生します（燃料を減らしても解消しません）。`,
         vi: `[VƯỢT MZFW +${exZfw} kg — QUÁ TẢI UỐN GỐC CÁNH (WING ROOT)] Trọng lượng thân máy bay quá lớn so với tải giảm uốn của nhiên liệu cánh → khi gặp nhiễu động khí quyển, lực nâng cánh bẻ gập gốc cánh vượt giới hạn kết cấu (giảm xăng KHÔNG sửa được lỗi này!).`,
+        en: `[MZFW EXCEEDED +${exZfw} kg — WING ROOT BENDING OVERLOAD] Excessive fuselage payload without wing fuel bending relief overstresses the wing root in flight/turbulence (reducing fuel does NOT resolve MZFW!).`,
         sopJa: '対策: 貨物・手荷物・旅客（ペイロード）自体を必ず削減すること。',
-        sopVi: 'Phòng ngừa: Bắt buộc phải cắt giảm Payload (hàng hóa / hành lý / khách), tuyệt đối không nhầm lẫn với việc cắt nhiên liệu.'
+        sopVi: 'Phòng ngừa: Bắt buộc phải cắt giảm Payload (hàng hóa / hành lý / khách), tuyệt đối không nhầm lẫn với việc cắt nhiên liệu.',
+        sopEn: 'SOP: You must reduce commercial Payload (cargo, baggage, or passengers); cutting fuel never reduces ZFW.'
       });
     }
 
@@ -530,8 +556,10 @@ export function interpolateCurve(points, weight) {
         severity: 'SEVERE',
         ja: `【MLW超過・主脚構造損傷・ブレーキ過熱（+${exLw} kg）】着陸接地時の衝撃エネルギーが設計上限を超え、主脚オレオ破損・タイヤバースト・ブレーキ過熱火災・着陸距離超過の危険があります。`,
         vi: `[VƯỢT MLW +${exLw} kg — HƯ HẠI CÀNG ĐÁP & QUÁ NHIỆT PHANH] Động năng chạm bánh vượt sức chịu tải kết cấu càng chính (Main Gear), gây hư trụ thủy lực, nổ lốp, cháy hệ thống phanh và trượt cuối đường băng khi hạ cánh.`,
+        en: `[MLW EXCEEDED +${exLw} kg — MAIN GEAR & BRAKE ENERGY OVERLOAD] Touchdown kinetic energy exceeds landing gear certification limits, risking oleo strut damage, tire burst, brake fire, and landing overrun.`,
         sopJa: '対策: 短距離便の過剰タンカリング燃料を削減するか、ペイロードを調整してLW ≤ MLWを厳守。',
-        sopVi: 'Phòng ngừa: Tránh mang thừa nhiên liệu chặng ngắn (fuel tankering) hoặc giảm payload để bảo đảm LW ≤ MLW.'
+        sopVi: 'Phòng ngừa: Tránh mang thừa nhiên liệu chặng ngắn (fuel tankering) hoặc giảm payload để bảo đảm LW ≤ MLW.',
+        sopEn: 'SOP: Reduce excess short-sector tankered fuel or offload payload to maintain LW ≤ MLW.'
       });
     }
 
@@ -543,8 +571,10 @@ export function interpolateCurve(points, weight) {
         severity: 'SEVERE',
         ja: `【貨物室床面・ULDロック破損】個別貨物室またはULDポジションの床面荷重上限を超過！床下を通る油圧配管・操縦索を損傷し、乱気流時にコンテナロックが破断して重心急変事故へ直結します。`,
         vi: `[QUÁ TẢI SÀN HẦM HÀNG / GÃY CHỐT KHÓA ULD] Vượt sức chịu lực cục bộ sàn hầm hoặc chốt khóa vị trí ULD → có thể nứt dầm sàn đè lên đường ống thủy lực / dây cáp điều khiển bay, hoặc bung khóa ULD khi gặp nhiễu động làm trôi hàng thay đổi CG đột ngột.`,
+        en: `[CARGO FLOOR BEAM / ULD RESTRAINT OVERLOAD] Compartment or ULD position limit exceeded — risks floor beam buckling onto underfloor flight controls/hydraulics or ULD lock shear causing sudden in-flight CG shift.`,
         sopJa: '対策: 制限超過した貨物室・ULDポジションから他位置へ分散搭載し、必ず実測計量とロック指差呼称を行う。',
-        sopVi: 'Phòng ngừa: San tải đều giữa các vị trí ULD/hầm hàng, cân chính xác từng kiện và kiểm tra指差呼称 tất cả chốt khóa ULD trước khi đóng cửa hầm.'
+        sopVi: 'Phòng ngừa: San tải đều giữa các vị trí ULD/hầm hàng, cân chính xác từng kiện và kiểm tra指差呼称 tất cả chốt khóa ULD trước khi đóng cửa hầm.',
+        sopEn: 'SOP: Redistribute weight across ULD positions/holds, weigh every unit accurately, and verify all floor locks via Point-and-Call.'
       });
     }
 
@@ -577,7 +607,8 @@ export function interpolateCurve(points, weight) {
       res.violations.filter(v => v.code === 'HOLD_LIMIT').forEach(v => {
         tips.push({
           ja: `${v.holdId} の超過分 ${Math.ceil(v.excessKg)} kg を他貨物室へ移載またはオフロードしてください。`,
-          vi: `Chuyển hoặc giảm ít nhất ${Math.ceil(v.excessKg)} kg khỏi hầm ${v.holdId} sang hầm còn dư tải hoặc offload.`
+          vi: `Chuyển hoặc giảm ít nhất ${Math.ceil(v.excessKg)} kg khỏi hầm ${v.holdId} sang hầm còn dư tải hoặc offload.`,
+          en: `Relocate or offload at least ${Math.ceil(v.excessKg)} kg from hold ${v.holdId} to another hold with spare capacity.`
         });
       });
     }
@@ -586,7 +617,8 @@ export function interpolateCurve(points, weight) {
       res.violations.filter(v => v.code === 'ULD_POS_LIMIT').forEach(v => {
         tips.push({
           ja: `ULD位置 ${v.pos} を ${Math.ceil(v.excessKg)} kg 減量し、他ポジションへ分散してください。`,
-          vi: `Giảm ít nhất ${Math.ceil(v.excessKg)} kg tại vị trí ULD ${v.pos} hoặc chia sang vị trí khác.`
+          vi: `Giảm ít nhất ${Math.ceil(v.excessKg)} kg tại vị trí ULD ${v.pos} hoặc chia sang vị trí khác.`,
+          en: `Reduce ULD position ${v.pos} by at least ${Math.ceil(v.excessKg)} kg or split load into another ULD position.`
         });
       });
     }
@@ -595,7 +627,8 @@ export function interpolateCurve(points, weight) {
       const ex = Math.ceil(res.zfw - profile.mzfw);
       tips.push({
         ja: `MZFW超過: 貨物・手荷物または旅客を合計 ${ex} kg 以上削減してください（燃料削減ではZFWは減りません）。`,
-        vi: `Vượt MZFW: Phải giảm tối thiểu ${ex} kg tải thương mại (hàng hóa/hành lý/hành khách). Giảm nhiên liệu KHÔNG làm giảm ZFW.`
+        vi: `Vượt MZFW: Phải giảm tối thiểu ${ex} kg tải thương mại (hàng hóa/hành lý/hành khách). Giảm nhiên liệu KHÔNG làm giảm ZFW.`,
+        en: `MZFW Exceeded: Offload at least ${ex} kg of payload (cargo/baggage/pax). Reducing fuel does NOT lower ZFW.`
       });
     }
 
@@ -603,7 +636,8 @@ export function interpolateCurve(points, weight) {
       const ex = Math.ceil(res.tow - profile.mtow);
       tips.push({
         ja: `MTOW超過: ペイロードまたは余剰燃料（Extra Fuel）を合計 ${ex} kg 以上削減してください。`,
-        vi: `Vượt MTOW: Giảm tối thiểu ${ex} kg tổng payload hoặc nhiên liệu dự phòng thừa (Block Fuel).`
+        vi: `Vượt MTOW: Giảm tối thiểu ${ex} kg tổng payload hoặc nhiên liệu dự phòng thừa (Block Fuel).`,
+        en: `MTOW Exceeded: Reduce payload or excess discretionary Block Fuel by at least ${ex} kg.`
       });
     }
 
@@ -611,7 +645,8 @@ export function interpolateCurve(points, weight) {
       const ex = Math.ceil(res.lw - profile.mlw);
       tips.push({
         ja: `MLW超過: 着陸時重量を ${ex} kg 以上減らすため、搭載貨物削減または不要な余剰燃料（タンカリング）の削減を検討してください。`,
-        vi: `Vượt MLW: Cần giảm ${ex} kg trọng lượng hạ cánh bằng cách giảm payload hoặc cắt nhiên liệu thừa (tránh fuel tankering).`
+        vi: `Vượt MLW: Cần giảm ${ex} kg trọng lượng hạ cánh bằng cách giảm payload hoặc cắt nhiên liệu thừa (tránh fuel tankering).`,
+        en: `MLW Exceeded: Cut landing weight by ≥${ex} kg by offloading payload or eliminating excess tankered fuel.`
       });
     }
 
@@ -629,7 +664,10 @@ export function interpolateCurve(points, weight) {
           : `CG後方逸脱対策: 後部/バルク貨物室から前部貨物室へ約 ${shiftKg} kg 移載、またはZone C旅客を約 ${shiftPax} 名 Zone Aへ移動してください。`,
         vi: profile.isFreighter
           ? `Khắc phục CG quá sau (Tàu bay chở hàng): Chuyển khoảng ${shiftKg} kg từ khu vực sau (${aftHold.id}) lên phía trước (${fwdHold.id}).`
-          : `Khắc phục CG quá sau: Chuyển khoảng ${shiftKg} kg hàng từ hầm sau/bulk lên hầm trước, hoặc dời ~${shiftPax} khách từ Zone C lên Zone A.`
+          : `Khắc phục CG quá sau: Chuyển khoảng ${shiftKg} kg hàng từ hầm sau/bulk lên hầm trước, hoặc dời ~${shiftPax} khách từ Zone C lên Zone A.`,
+        en: profile.isFreighter
+          ? `Fix Aft CG (Freighter): Shift ~${shiftKg} kg forward from ${aftHold.id} into ${fwdHold.id}.`
+          : `Fix Aft CG: Shift ~${shiftKg} kg from aft/bulk holds to forward hold, or reseat ~${shiftPax} pax from Zone C to Zone A.`
       });
     }
 
@@ -647,7 +685,10 @@ export function interpolateCurve(points, weight) {
           : `CG前方逸脱対策: 前部貨物室/ULDから後部貨物室へ約 ${shiftKg} kg 移載、またはZone A旅客を約 ${shiftPax} 名 Zone Cへ移動してください。`,
         vi: profile.isFreighter
           ? `Khắc phục CG quá trước (Tàu bay chở hàng): Chuyển khoảng ${shiftKg} kg từ phía trước (${fwdHold.id}) ra phía sau (${aftHold.id}).`
-          : `Khắc phục CG quá trước: Chuyển khoảng ${shiftKg} kg hàng từ hầm trước/ULD ra hầm sau, hoặc dời ~${shiftPax} khách từ Zone A xuống Zone C.`
+          : `Khắc phục CG quá trước: Chuyển khoảng ${shiftKg} kg hàng từ hầm trước/ULD ra hầm sau, hoặc dời ~${shiftPax} khách từ Zone A xuống Zone C.`,
+        en: profile.isFreighter
+          ? `Fix Fwd CG (Freighter): Shift ~${shiftKg} kg aft from ${fwdHold.id} into ${aftHold.id}.`
+          : `Fix Fwd CG: Shift ~${shiftKg} kg from forward hold/ULDs to aft hold, or reseat ~${shiftPax} pax from Zone A to Zone C.`
       });
     }
 

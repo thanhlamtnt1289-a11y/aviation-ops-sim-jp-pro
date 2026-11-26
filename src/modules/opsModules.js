@@ -149,7 +149,7 @@ function renderTurnaroundControlsAndChecklist() {
         <div class="alert alert-info" style="margin-top:10px;margin-bottom:0;font-size:12.5px;">
           <strong class="ja">${bi(geo.nameJa, geo.nameVi, geo.nameEn)}</strong> ·
           <span style="font-family:var(--font-mono);font-size:11.5px;">RWY ${geo.runways.map(r => `${r.label} (${r.lengthM}m)`).join(' · ')} · Elev ${geo.origin.alt}m</span><br/>
-          <span class="ja">${t(ap.ruleJa, ap.ruleVi, geo.regionEn)}</span>
+          <span class="ja">${t(ap.ruleJa, ap.ruleVi, ap.ruleEn || geo.regionEn)}</span>
         </div>
       </div>
     `;
@@ -233,12 +233,12 @@ function renderTurnaroundControlsAndChecklist() {
     body.innerHTML = `
       ${taState.activeEvent ? `
         <div class="card" style="margin-bottom:14px;border:2px solid var(--warn);">
-          <div class="card-title"><span class="ja">⚡ ${bi(taState.activeEvent.titleJa, taState.activeEvent.titleVi)}</span><span class="badge badge-warn">ABNORMAL EVENT</span></div>
-          <p class="ja" style="font-size:13px;margin-top:0;">${t(taState.activeEvent.descJa, taState.activeEvent.descVi)}</p>
+          <div class="card-title"><span class="ja">⚡ ${bi(taState.activeEvent.titleJa, taState.activeEvent.titleVi, taState.activeEvent.titleEn)}</span><span class="badge badge-warn">ABNORMAL EVENT</span></div>
+          <p class="ja" style="font-size:13px;margin-top:0;">${t(taState.activeEvent.descJa, taState.activeEvent.descVi, taState.activeEvent.descEn)}</p>
           <div style="display:flex;flex-direction:column;gap:8px;">
             ${taState.activeEvent.options.map((ch, idx) => `
               <button class="btn" data-ta-ev="${idx}" style="justify-content:flex-start;text-align:left;height:auto;padding:10px 12px;">
-                <span class="ja">${bi(ch.ja, ch.vi)}</span>
+                <span class="ja">${bi(ch.ja, ch.vi, ch.en)}</span>
               </button>
             `).join('')}
           </div>
@@ -268,8 +268,8 @@ function renderTurnaroundControlsAndChecklist() {
               return `
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid ${isDone ? 'var(--ok)' : (ready ? 'var(--accent)' : 'var(--border)')};background:${isDone ? 'var(--ok-soft)' : 'var(--surface-2)'};">
                   <div>
-                    <div class="ja" style="font-size:13px;font-weight:700;">${idx + 1}. ${t(st.ja, st.vi)} <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">(${st.duration}m)</span></div>
-                    <div class="ja" style="font-size:11.5px;color:var(--text-secondary);">${t(st.detailJa, st.detailVi)}</div>
+                    <div class="ja" style="font-size:13px;font-weight:700;">${idx + 1}. ${t(st.ja, st.vi, st.en)} <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">(${st.duration}m)</span></div>
+                    <div class="ja" style="font-size:11.5px;color:var(--text-secondary);">${t(st.detailJa, st.detailVi, st.detailEn)}</div>
                   </div>
                   <button class="btn btn-sm ${isDone ? '' : (ready ? 'btn-primary' : '')}" data-ta-step="${st.id}" ${isDone || taState.activeEvent ? 'disabled' : ''}>
                     ${isDone ? '✓ DONE' : t('実行', 'Thực hiện', 'Execute')}
@@ -350,7 +350,7 @@ function renderTurnaroundControlsAndChecklist() {
       taState.safetyScore = Math.max(0, Math.min(100, taState.safetyScore + (ch.safetyDelta || 0)));
       taState.logs.unshift({
         type: ch.ok ? 'ok' : 'danger',
-        msg: `⚡ ${t(ev.reasonJa, ev.reasonVi)} (${ch.timeDelta ? '+' + ch.timeDelta + 'm' : '0m'}, Safety ${ch.safetyDelta >= 0 ? '+' : ''}${ch.safetyDelta})`
+        msg: `⚡ ${t(ev.reasonJa, ev.reasonVi, ev.reasonEn)} (${ch.timeDelta ? '+' + ch.timeDelta + 'm' : '0m'}, Safety ${ch.safetyDelta >= 0 ? '+' : ''}${ch.safetyDelta})`
       });
       taState.eventResolved[ev.id] = true;
       taState.activeEvent = null;
@@ -367,14 +367,14 @@ function renderTurnaroundControlsAndChecklist() {
         taState.safetyScore = Math.max(0, taState.safetyScore - 15);
         taState.logs.unshift({
           type: 'danger',
-          msg: `⚠ ${t('手順違反 (-15pt): 先に必要工程を完了してください → ', 'Vi phạm quy trình (-15đ): Phải hoàn thành bước trước → ')}${missing.join(', ')}`
+          msg: `⚠ ${t('手順違反 (-15pt): 先に必要工程を完了してください → ', 'Vi phạm quy trình (-15đ): Phải hoàn thành bước trước → ', 'Sequence Violation (-15pt): Complete prerequisite step(s) first → ')}${missing.join(', ')}`
         });
         renderTurnaroundControlsAndChecklist();
         return;
       }
       taState.done.push(st.id);
       taState.elapsedMin += st.duration;
-      taState.logs.unshift({ type: 'ok', msg: `✓ ${t(st.ja, st.vi)} (+${st.duration}m)` });
+      taState.logs.unshift({ type: 'ok', msg: `✓ ${t(st.ja, st.vi, st.en)} (+${st.duration}m)` });
       if (taScene3d) taScene3d.syncTurnaroundSteps(taState.done);
 
       if ((taState.done.length === 5 || taState.done.length === 9) && TA_EVENTS.length > 0) {
@@ -417,15 +417,15 @@ export function renderPaxModule() {
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
       ${PAX_SCENARIOS.map((s, i) => {
         const solved = appState.paxSolved.includes(s.id);
-        return `<button class="btn btn-sm ${i === paxState.idx ? 'btn-primary' : ''}" data-pax-i="${i}">${solved ? '✓ ' : ''}${s.id}: ${t(s.titleJa, s.titleVi).slice(0, 22)}…</button>`;
+        return `<button class="btn btn-sm ${i === paxState.idx ? 'btn-primary' : ''}" data-pax-i="${i}">${solved ? '✓ ' : ''}${s.id}: ${t(s.titleJa, s.titleVi, s.titleEn).slice(0, 22)}…</button>`;
       }).join('')}
     </div>
     <div class="card">
       <div class="card-title">
-        <span class="ja">${bi(sc.titleJa, sc.titleVi)}</span>
+        <span class="ja">${bi(sc.titleJa, sc.titleVi, sc.titleEn)}</span>
         <span class="badge ${appState.paxSolved.includes(sc.id) ? 'badge-ok' : 'badge-accent'}">${appState.paxSolved.includes(sc.id) ? 'SOLVED' : sc.id}</span>
       </div>
-      <div class="alert alert-info" style="font-size:13.5px;">${bi(sc.descJa, sc.descVi)}</div>
+      <div class="alert alert-info" style="font-size:13.5px;">${bi(sc.descJa, sc.descVi, sc.descEn)}</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
         ${sc.options.map((ch, ci) => {
           const isPicked = pick === ci;
@@ -434,7 +434,7 @@ export function renderPaxModule() {
           return `
             <button data-pax-c="${ci}" style="text-align:left;padding:11px 14px;border-radius:8px;border:1.5px solid ${border};background:${bg};cursor:pointer;color:var(--text-primary);font-size:13.5px;">
               <strong style="margin-right:8px;">${['A', 'B', 'C', 'D'][ci]}.</strong>
-              <span class="ja">${bi(ch.ja, ch.vi)}</span>
+              <span class="ja">${bi(ch.ja, ch.vi, ch.en)}</span>
             </button>
           `;
         }).join('')}
@@ -442,7 +442,7 @@ export function renderPaxModule() {
       ${pick !== undefined ? `
         <div class="alert ${sc.options[pick].ok ? 'alert-ok' : 'alert-danger'}" style="margin-top:12px;margin-bottom:0;">
           <strong>${sc.options[pick].ok ? t('✓ 適切な対応です！', '✓ XỬ LÝ CHUẨN XÁC!', '✓ CORRECT PROCEDURE!') : t('✗ 見直しが必要です', '✗ CẦN ĐIỀU CHỈNH LẠI', '✗ NEEDS CORRECTION')}</strong>
-          <div class="ja" style="margin-top:4px;font-size:13px;">${t(sc.expJa, sc.expVi, sc.expVi)}</div>
+          <div class="ja" style="margin-top:4px;font-size:13px;">${t(sc.expJa, sc.expVi, sc.expEn)}</div>
         </div>
       ` : ''}
     </div>
@@ -609,7 +609,7 @@ export function renderSafetyModule() {
     <div class="card" style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
         <div>
-          <strong class="ja">${t('ランプ安全・FOD・航空法コンプライアンス チェックリスト (JCAB / SMS)', 'Checklist An toàn Sân đỗ, FOD & Luật Hàng không Nhật Bản (JCAB / SMS)')}</strong>
+          <strong class="ja">${t('ランプ安全・FOD・航空法コンプライアンス チェックリスト (JCAB / SMS)', 'Checklist An toàn Sân đỗ, FOD & Luật Hàng không Nhật Bản (JCAB / SMS)', 'Ramp Safety, FOD & Japan Civil Aeronautics Act Checklist (JCAB / SMS)')}</strong>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
             ${t('指差呼称（指さし確認）を行いながら各項目をチェックしてください。', 'Thực hiện chỉ tay hô xác nhận cho từng hạng mục an toàn.', 'Verify each safety item using point-and-call confirmation.')}
           </div>
@@ -622,14 +622,14 @@ export function renderSafetyModule() {
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;">
       ${SAFETY_CHECKLIST_GROUPS.map(g => `
         <div class="card">
-          <div class="card-title"><span class="ja">${bi(g.groupJa, g.groupVi)}</span></div>
+          <div class="card-title"><span class="ja">${bi(g.groupJa, g.groupVi, g.groupEn)}</span></div>
           <div style="display:flex;flex-direction:column;gap:8px;">
             ${g.items.map(it => {
               const checked = !!appState.safetyChecked[it.id];
               return `
                 <label style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:8px;border:1px solid ${checked ? 'var(--ok)' : 'var(--border)'};background:${checked ? 'var(--ok-soft)' : 'var(--surface-2)'};cursor:pointer;">
                   <input type="checkbox" data-saf="${it.id}" ${checked ? 'checked' : ''} style="margin-top:3px;accent-color:var(--ok);" />
-                  <span class="ja" style="font-size:13px;">${bi(it.ja, it.vi)}</span>
+                  <span class="ja" style="font-size:13px;">${bi(it.ja, it.vi, it.en)}</span>
                 </label>
               `;
             }).join('')}

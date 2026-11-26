@@ -242,7 +242,13 @@ function bootstrap() {
       appState.lang = btn.dataset.lang;
       saveState();
       updateLangToggleUI();
-      // Refresh W&B scenario dropdown, scenario card & cabin/hold input labels cleanly
+      // Refresh W&B aircraft dropdown, scenario dropdown, scenario card & cabin/hold input labels cleanly
+      const acSel = document.getElementById('wb-aircraft');
+      if (acSel) {
+        const curAc = wbState.aircraftId;
+        acSel.innerHTML = Object.values(AIRCRAFT_PROFILES).map(p => `<option value="${p.id}">${t(p.name, p.nameVi || p.name, p.nameEn || p.name)}</option>`).join('');
+        acSel.value = curAc;
+      }
       const scSel = document.getElementById('wb-scenario');
       if (scSel) {
         const cur = wbState.scenarioId;

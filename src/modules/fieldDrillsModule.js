@@ -105,7 +105,7 @@ export function renderFieldDrillsModule() {
         <div class="workspace-grid">
           <div class="card">
             <div class="card-title">
-              <span class="ja">${t('管制塔から照射されたライトガンの指示を選択してください', 'Chọn đúng mệnh lệnh của tín hiệu Light Gun từ Đài kiểm soát')}</span>
+              <span class="ja">${t('管制塔から照射されたライトガンの指示を選択してください', 'Chọn đúng mệnh lệnh của tín hiệu Light Gun từ Đài kiểm soát', 'Select the correct ATC Light Gun instruction from Control Tower')}</span>
               <span class="badge badge-accent">${(opsState.lgIdx % 5) + 1} / 5</span>
             </div>
             <div style="margin:12px 0;">${renderLightGunLamp(sig)}</div>
@@ -264,7 +264,7 @@ export function renderFieldDrillsModule() {
             <div class="card" style="margin-bottom:0;">
               <div style="margin-bottom:8px;">${renderQuizVisualSvg(s.id)}</div>
               <div style="font-weight:700;font-size:13.5px;color:var(--accent);">${t(s.ja, s.vi, s.en)}</div>
-              <div class="ja" style="font-size:12px;color:var(--text-secondary);margin-top:4px;">${t(s.descJa, s.descVi, s.en)}</div>
+              <div class="ja" style="font-size:12px;color:var(--text-secondary);margin-top:4px;">${t(s.descJa, s.descVi, s.descEn || s.en)}</div>
               <button class="btn btn-sm" style="margin-top:8px;" data-speak="${s.ja}">🔊 JA</button>
             </div>
           `).join('')}
@@ -281,7 +281,7 @@ export function renderFieldDrillsModule() {
                 return `<button class="quiz-opt ${cls}" data-mans="${o.id}" ${opsState.marshalAnswered !== null ? 'disabled' : ''}>${t(o.ja, o.vi, o.en)}</button>`;
               }).join('')}
             </div>
-            ${opsState.marshalAnswered !== null ? `<div class="alert ${opsState.marshalAnswered === sig.id ? 'alert-ok' : 'alert-danger'}" style="margin-top:10px;">${t(sig.descJa, sig.descVi, sig.en)}</div><button class="btn btn-sm btn-primary" id="m-next">${t('次へ →', 'Tiếp →', 'Next →')}</button>` : ''}
+            ${opsState.marshalAnswered !== null ? `<div class="alert ${opsState.marshalAnswered === sig.id ? 'alert-ok' : 'alert-danger'}" style="margin-top:10px;">${t(sig.descJa, sig.descVi, sig.descEn || sig.en)}</div><button class="btn btn-sm btn-primary" id="m-next">${t('次へ →', 'Tiếp →', 'Next →')}</button>` : ''}
           </div>
           <div class="card"><div class="card-title"><span>${t('スコア', 'Điểm số', 'Score')}</span></div><div class="kpi-grid"><div class="kpi-box ok"><div class="kpi-label">${t('現在', 'Hiện tại', 'Score')}</div><div class="kpi-val">${opsState.marshalScore}</div></div><div class="kpi-box"><div class="kpi-label">${t('最高', 'Cao nhất', 'Best')}</div><div class="kpi-val">${appState.opsBestMarshal || 0}</div></div></div></div>
         </div>
@@ -307,21 +307,21 @@ export function renderFieldDrillsModule() {
     mount.innerHTML = tabsHtml + `
       <div class="workspace-grid">
         <div class="card">
-          <div class="card-title"><span class="ja">${t(st.phaseJa, st.phaseVi, `Pushback Step ${st.step}`)}</span><span class="badge badge-accent">STEP ${st.step}/5</span></div>
+          <div class="card-title"><span class="ja">${t(st.phaseJa, st.phaseVi, st.phaseEn)}</span><span class="badge badge-accent">STEP ${st.step}/5</span></div>
           <div class="radio-bar" style="margin-bottom:12px;"><span class="radio-dot"></span><strong style="color:#38BDF8;">[INTERCOM]</strong><span>${st.pilotLine}</span></div>
-          <p class="ja" style="font-weight:600;margin:0 0 10px;">${t(st.qJa, st.qVi, st.qVi)}</p>
+          <p class="ja" style="font-weight:600;margin:0 0 10px;">${t(st.qJa, st.qVi, st.qEn)}</p>
           <div style="display:flex;flex-direction:column;gap:8px;">
             ${st.opts.map((o, idx) => {
               let cls = '';
               if (opsState.pbChosen !== null) cls = o.ok ? 'correct' : (opsState.pbChosen === idx ? 'wrong' : '');
-              return `<button class="quiz-opt ${cls}" data-pb="${idx}" ${opsState.pbChosen !== null ? 'disabled' : ''}>${String.fromCharCode(65 + idx)}. ${t(o.ja, o.vi, o.vi)}</button>`;
+              return `<button class="quiz-opt ${cls}" data-pb="${idx}" ${opsState.pbChosen !== null ? 'disabled' : ''}>${String.fromCharCode(65 + idx)}. ${t(o.ja, o.vi, o.en)}</button>`;
             }).join('')}
           </div>
-          ${opsState.pbChosen !== null ? `<div class="alert ${st.opts[opsState.pbChosen].ok ? 'alert-ok' : 'alert-danger'}" style="margin-top:10px;">${t(st.expJa, st.expVi, st.expVi)}</div><button class="btn btn-sm btn-primary" id="pb-next">${opsState.pbStepIdx < 4 ? t('次へ →', 'Bước tiếp →', 'Next Step →') : t('最初から', 'Làm lại', 'Restart')}</button>` : ''}
+          ${opsState.pbChosen !== null ? `<div class="alert ${st.opts[opsState.pbChosen].ok ? 'alert-ok' : 'alert-danger'}" style="margin-top:10px;">${t(st.expJa, st.expVi, st.expEn)}</div><button class="btn btn-sm btn-primary" id="pb-next">${opsState.pbStepIdx < 4 ? t('次へ →', 'Bước tiếp →', 'Next Step →') : t('最初から', 'Làm lại', 'Restart')}</button>` : ''}
         </div>
         <div class="card">
           <div class="card-title"><span>${t('プッシュバック手順', 'Quy trình Pushback', 'Pushback Intercom Flow')}</span></div>
-          ${OPS_PUSHBACK_STEPS.map((s, i) => `<div class="timeline-item ${i < opsState.pbStepIdx ? 'done' : ''}" style="margin-bottom:6px;padding:8px 10px;"><div class="timeline-step-num">${s.step}</div><div style="font-size:12.5px;">${t(s.phaseJa, s.phaseVi, `Step ${s.step}`)}</div></div>`).join('')}
+          ${OPS_PUSHBACK_STEPS.map((s, i) => `<div class="timeline-item ${i < opsState.pbStepIdx ? 'done' : ''}" style="margin-bottom:6px;padding:8px 10px;"><div class="timeline-step-num">${s.step}</div><div style="font-size:12.5px;">${t(s.phaseJa, s.phaseVi, s.phaseEn)}</div></div>`).join('')}
         </div>
       </div>
     `;

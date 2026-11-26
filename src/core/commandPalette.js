@@ -35,8 +35,8 @@ export function initCommandPalette(actions) {
     Object.values(AIRCRAFT_PROFILES).forEach(p => {
       items.push({
         cat: 'FLEET',
-        label: `✈ ${p.id} — ${p.name}`,
-        keys: `aircraft fleet ${p.id} ${p.name} ${p.category} ${p.gseType}`,
+        label: `✈ ${p.id} — ${t(p.name, p.nameVi || p.name, p.nameEn || p.name)}`,
+        keys: `aircraft fleet ${p.id} ${p.name} ${p.nameEn || ''} ${p.category} ${p.gseType}`,
         run: () => actions.openAircraft(p.id)
       });
     });

@@ -1,80 +1,90 @@
 // 8 ICAO Marshalling Signals, 5 Headset Pushback Steps & 66 Bilingual Aviation Terms
 export const OPS_MARSHALLING_SIGNALS = [
-    { id: 'marshal_straight', en: 'Straight Ahead / Move Ahead', ja: '直進せよ（前進）', vi: 'Tiến thẳng về phía trước', descJa: '両腕を曲げて頭上で前後に招き続ける。', descVi: 'Hai tay cầm gậy phát sáng vẫy đều về phía mình.' },
-    { id: 'marshal_left', en: 'Turn Left (Pilot View)', ja: '左折せよ（機長視点で左）', vi: 'Rẽ trái (theo hướng phi công)', descJa: '右腕を水平に固定し、左腕で招き続ける。', descVi: 'Duỗi ngang tay phải giữ nguyên, tay trái vẫy liên tục.' },
-    { id: 'marshal_right', en: 'Turn Right (Pilot View)', ja: '右折せよ（機長視点で右）', vi: 'Rẽ phải (theo hướng phi công)', descJa: '左腕を水平に固定し、右腕で招き続ける。', descVi: 'Duỗi ngang tay trái giữ nguyên, tay phải vẫy liên tục.' },
-    { id: 'marshal_slow', en: 'Slow Down', ja: '減速せよ', vi: 'Giảm tốc độ lăn', descJa: '両腕を下げ、手のひらを下に向けて上下にゆっくり振る。', descVi: 'Hạ thấp hai tay và vẫy nhẹ lên xuống đều.' },
-    { id: 'marshal_stop', en: 'Normal Stop', ja: '通常停止（停止線）', vi: 'Dừng bình thường tại vạch đỗ', descJa: '停止線に合わせて両ワンドを頭上でゆっくり交差させる。', descVi: 'Từ từ đưa hai gậy giao chéo chữ X trên đỉnh đầu.' },
-    { id: 'marshal_estop', en: 'Emergency Stop', ja: '緊急停止（即時停止）', vi: 'DỪNG KHẨN CẤP NGAY', descJa: '両腕を頭上で鋭く強く交差させ保持する（衝突・危険回避）。', descVi: 'Vung mạnh và khóa chặt chữ X trên đầu để dừng tức thì.' },
-    { id: 'marshal_chocks', en: 'Chocks Inserted', ja: '輪止め装着完了', vi: 'Đã chèn bánh xe xong', descJa: '両腕を下げて外から内側へ素早く合わせる（撤去は逆）。', descVi: 'Đưa hai tay phía dưới khép nhanh từ ngoài vào trong.' },
-    { id: 'marshal_cut', en: 'Cut Engines', ja: 'エンジン停止', vi: 'Tắt động cơ', descJa: '片手を首の前で水平に横切る動作（スロートカット）。', descVi: 'Đưa một tay kéo ngang dứt khoát qua trước cổ.' }
+    { id: 'marshal_straight', en: 'Straight Ahead / Move Ahead', ja: '直進せよ（前進）', vi: 'Tiến thẳng về phía trước', descJa: '両腕を曲げて頭上で前後に招き続ける。', descVi: 'Hai tay cầm gậy phát sáng vẫy đều về phía mình.', descEn: 'Bend both arms overhead and beckon rhythmically with wands toward yourself.' },
+    { id: 'marshal_left', en: 'Turn Left (Pilot View)', ja: '左折せよ（機長視点で左）', vi: 'Rẽ trái (theo hướng phi công)', descJa: '右腕を水平に固定し、左腕で招き続ける。', descVi: 'Duỗi ngang tay phải giữ nguyên, tay trái vẫy liên tục.', descEn: 'Extend right arm horizontally toward aircraft left wing and beckon continuously with left wand.' },
+    { id: 'marshal_right', en: 'Turn Right (Pilot View)', ja: '右折せよ（機長視点で右）', vi: 'Rẽ phải (theo hướng phi công)', descJa: '左腕を水平に固定し、右腕で招き続ける。', descVi: 'Duỗi ngang tay trái giữ nguyên, tay phải vẫy liên tục.', descEn: 'Extend left arm horizontally toward aircraft right wing and beckon continuously with right wand.' },
+    { id: 'marshal_slow', en: 'Slow Down', ja: '減速せよ', vi: 'Giảm tốc độ lăn', descJa: '両腕を下げ、手のひらを下に向けて上下にゆっくり振る。', descVi: 'Hạ thấp hai tay và vẫy nhẹ lên xuống đều.', descEn: 'Extend both arms downward with palms/wands facing ground and pat slowly up and down.' },
+    { id: 'marshal_stop', en: 'Normal Stop', ja: '通常停止（停止線）', vi: 'Dừng bình thường tại vạch đỗ', descJa: '停止線に合わせて両ワンドを頭上でゆっくり交差させる。', descVi: 'Từ từ đưa hai gậy giao chéo chữ X trên đỉnh đầu.', descEn: 'Raise both wands smoothly and cross them in an X above your head as nose wheel reaches stop bar.' },
+    { id: 'marshal_estop', en: 'Emergency Stop', ja: '緊急停止（即時停止）', vi: 'DỪNG KHẨN CẤP NGAY', descJa: '両腕を頭上で鋭く強く交差させ保持する（衝突・危険回避）。', descVi: 'Vung mạnh và khóa chặt chữ X trên đầu để dừng tức thì.', descEn: 'Abruptly and forcefully cross both wands in an X overhead and hold to prevent collision.' },
+    { id: 'marshal_chocks', en: 'Chocks Inserted', ja: '輪止め装着完了', vi: 'Đã chèn bánh xe xong', descJa: '両腕を下げて外から内側へ素早く合わせる（撤去は逆）。', descVi: 'Đưa hai tay phía dưới khép nhanh từ ngoài vào trong.', descEn: 'Sweep both wands inward below waist with thumbs pointing inward (sweep outward for Chocks Removed).' },
+    { id: 'marshal_cut', en: 'Cut Engines', ja: 'エンジン停止', vi: 'Tắt động cơ', descJa: '片手を首の前で水平に横切る動作（スロートカット）。', descVi: 'Đưa một tay kéo ngang dứt khoát qua trước cổ.', descEn: 'Draw one wand horizontally across throat level in a clear throat-cut motion.' }
   ];
 
   export const OPS_PUSHBACK_STEPS = [
     {
-      step: 1, phaseJa: '1. インターホン確認・ドア／チョーク点検', phaseVi: '1. Kiểm tra Intercom, Cửa & Chèn bánh',
+      step: 1, phaseJa: '1. インターホン確認・ドア／チョーク点検', phaseVi: '1. Kiểm tra Intercom, Cửa & Chèn bánh', phaseEn: '1. Intercom Check, Doors, PBB & Bypass Pin Verification',
       pilotLine: 'Captain: "Ground from Cockpit, loud and clear. Ready for pushback, waiting your clearance."',
       qJa: 'ヘッドセットマンとして最初に確認・返答すべき正しいフレーズは？',
       qVi: 'Là Headset Man, bạn cần kiểm tra và trả lời Cơ trưởng câu nào là chuẩn an toàn nhất?',
+      qEn: 'As Headset Man, which initial verification and readback to the Captain follows standard safety SOP?',
       opts: [
-        { ok: true, ja: '"Cockpit from Ground, all doors & hatches closed, PBB retracted, bypass pin inserted, ready for pushback. Confirm parking brake SET."', vi: '"Cockpit from Ground, toàn bộ cửa/hầm đã đóng kín, PBB đã thu, Bypass Pin đã cắm, sẵn sàng đẩy lùi. Xác nhận Phanh đỗ đang SET."' },
-        { ok: false, ja: '"Pushback OK, please release brake immediately!"（ドア・ピン確認なし）', vi: '"Đẩy luôn nhé, nhả phanh đi!" (Chưa xác nhận cửa, PBB & Bypass Pin)' },
-        { ok: false, ja: '"Start Engine 1 & 2 right now on the spot!"', vi: '"Cho nổ ngay cả 2 động cơ tại bãi đỗ!"' }
+        { ok: true, ja: '"Cockpit from Ground, all doors & hatches closed, PBB retracted, bypass pin inserted, ready for pushback. Confirm parking brake SET."', vi: '"Cockpit from Ground, toàn bộ cửa/hầm đã đóng kín, PBB đã thu, Bypass Pin đã cắm, sẵn sàng đẩy lùi. Xác nhận Phanh đỗ đang SET."', en: '"Cockpit from Ground, all doors & hatches closed, PBB retracted, bypass pin inserted, ready for pushback. Confirm parking brake SET."' },
+        { ok: false, ja: '"Pushback OK, please release brake immediately!"（ドア・ピン確認なし）', vi: '"Đẩy luôn nhé, nhả phanh đi!" (Chưa xác nhận cửa, PBB & Bypass Pin)', en: '"Pushback OK, release brakes immediately!" (Without checking doors, PBB, or bypass pin)' },
+        { ok: false, ja: '"Start Engine 1 & 2 right now on the spot!"', vi: '"Cho nổ ngay cả 2 động cơ tại bãi đỗ!"', en: '"Start Engines 1 & 2 right now on the stand!"' }
       ],
       expJa: 'プッシュバック前は全ドア閉鎖・PBB収納・周辺GSE撤去・バイパスピン挿入・ブレーキSETの5点確認が必須です。',
-      expVi: 'Trước khi Pushback bắt buộc xác nhận đủ: Đóng hết cửa, rút PBB/GSE khỏi ERA, cắm Bypass Pin và phanh đỗ đang SET.'
+      expVi: 'Trước khi Pushback bắt buộc xác nhận đủ: Đóng hết cửa, rút PBB/GSE khỏi ERA, cắm Bypass Pin và phanh đỗ đang SET.',
+      expEn: 'Before pushback, you must verify all 5 items: all doors closed, PBB/GSE clear of ERA, steering bypass pin inserted, and parking brake SET.'
     },
     {
-      step: 2, phaseJa: '2. パーキングブレーキ解除 ＆ プッシュバック開始', phaseVi: '2. Nhả phanh đỗ & Bắt đầu đẩy lùi',
+      step: 2, phaseJa: '2. パーキングブレーキ解除 ＆ プッシュバック開始', phaseVi: '2. Nhả phanh đỗ & Bắt đầu đẩy lùi', phaseEn: '2. Release Parking Brake & Commence Pushback',
       pilotLine: 'Captain: "ATC pushback approved facing North. Parking brake is SET."',
       qJa: 'トーイングトラクター接続完了・後方安全よし。機長へ送る正しい指示は？',
       qVi: 'Xe kéo đã nối chắc chắn, phía sau an toàn (Wing Walkers OK). Bạn báo gì với Cơ trưởng?',
+      qEn: 'Pushback tug is coupled and Wing Walkers confirm area clear. What instruction do you give the Captain?',
       opts: [
-        { ok: true, ja: '"Cleared to release parking brake. Commencing pushback, tail to the Left (facing North)."', vi: '"Mời nhả phanh đỗ (Release Parking Brake). Bắt đầu đẩy lùi, xoay đuôi sang Trái (mũi hướng Bắc)."' },
-        { ok: false, ja: '"Keep parking brake ON while we push!"', vi: '"Giữ nguyên phanh đỗ để chúng tôi đẩy!"' },
-        { ok: false, ja: '"Remove bypass pin now during pushback."', vi: '"Rút chốt Bypass Pin ngay lúc đang đẩy."' }
+        { ok: true, ja: '"Cleared to release parking brake. Commencing pushback, tail to the Left (facing North)."', vi: '"Mời nhả phanh đỗ (Release Parking Brake). Bắt đầu đẩy lùi, xoay đuôi sang Trái (mũi hướng Bắc)."', en: '"Cleared to release parking brake. Commencing pushback, tail to the Left (facing North)."' },
+        { ok: false, ja: '"Keep parking brake ON while we push!"', vi: '"Giữ nguyên phanh đỗ để chúng tôi đẩy!"', en: '"Keep parking brake SET while we push!"' },
+        { ok: false, ja: '"Remove bypass pin now during pushback."', vi: '"Rút chốt Bypass Pin ngay lúc đang đẩy."', en: '"Remove the steering bypass pin while pushing."' }
       ],
       expJa: 'ブレーキ解除指示＋プッシュバック方向（機尾の向き）を明確に復唱・共有することで誤進入やトーバー破損を防ぎます。',
-      expVi: 'Luôn báo rõ lệnh nhả phanh đỗ và hướng đẩy (đầu/đuôi xoay về hướng nào) để buồng lái kiểm soát đúng phương vị.'
+      expVi: 'Luôn báo rõ lệnh nhả phanh đỗ và hướng đẩy (đầu/đuôi xoay về hướng nào) để buồng lái kiểm soát đúng phương vị.',
+      expEn: 'Explicitly request brake release and state the pushback direction (nose/tail orientation) to prevent towbar shear or taxiway misalignment.'
     },
     {
-      step: 3, phaseJa: '3. エンジン始動クリアランス確認', phaseVi: '3. Cấp phép khởi động động cơ',
+      step: 3, phaseJa: '3. エンジン始動クリアランス確認', phaseVi: '3. Cấp phép khởi động động cơ', phaseEn: '3. Engine Start Clearance Verification',
       pilotLine: 'Captain: "Brakes released. Requesting clearance to start Engine 2 and 1."',
       qJa: 'プッシュバック中にエンジン周囲の安全を確認した際の正しい返答は？',
       qVi: 'Sau khi quan sát xung quanh hai động cơ hoàn toàn trống người/GSE, bạn trả lời Cơ trưởng thế nào?',
+      qEn: 'After visually confirming both engine intake and blast zones are completely clear of crew and GSE, how do you respond?',
       opts: [
-        { ok: true, ja: '"Clear to start Engine 2 and 1, area is clear!"（指差呼称で周囲確認後）', vi: '"Xung quanh an toàn (Area Clear), mời khởi động động cơ số 2 và số 1!"' },
-        { ok: false, ja: '"Wait, fuel truck is still connected, start Engine 2 anyway."', vi: '"Xe tra dầu vẫn đang nối nhưng cứ nổ máy số 2 trước đi."' },
-        { ok: false, ja: '返答せず無言で進める', vi: 'Im lặng không trả lời' }
+        { ok: true, ja: '"Clear to start Engine 2 and 1, area is clear!"（指差呼称で周囲確認後）', vi: '"Xung quanh an toàn (Area Clear), mời khởi động động cơ số 2 và số 1!"', en: '"Clear to start Engine 2 and 1, area is clear!" (After Point-and-Call visual check)' },
+        { ok: false, ja: '"Wait, fuel truck is still connected, start Engine 2 anyway."', vi: '"Xe tra dầu vẫn đang nối nhưng cứ nổ máy số 2 trước đi."', en: '"Fuel truck is still connected, start Engine 2 anyway."' },
+        { ok: false, ja: '返答せず無言で進める', vi: 'Im lặng không trả lời', en: 'Say nothing and continue pushing silently' }
       ],
       expJa: 'エンジン吸込・ブラスト区域内に人員や車両が一切いないことを目視・指差呼称して初めて「Clear to start」を出します。',
-      expVi: 'Chỉ cấp phép "Clear to start" sau khi chắc chắn 100% không còn người hay xe GSE trong vùng hút & luồng phản lực.'
+      expVi: 'Chỉ cấp phép "Clear to start" sau khi chắc chắn 100% không còn người hay xe GSE trong vùng hút & luồng phản lực.',
+      expEn: 'Issue "Clear to start" only after 100% visual confirmation via Point-and-Call that intake suction and jet blast zones are clear.'
     },
     {
-      step: 4, phaseJa: '4. プッシュバック完了 ＆ パーキングブレーキ再設定', phaseVi: '4. Hoàn tất đẩy lùi & Kéo lại phanh đỗ',
+      step: 4, phaseJa: '4. プッシュバック完了 ＆ パーキングブレーキ再設定', phaseVi: '4. Hoàn tất đẩy lùi & Kéo lại phanh đỗ', phaseEn: '4. Pushback Complete & Set Parking Brake',
       pilotLine: 'Captain: "Engine 2 and 1 stabilized. Standing by."',
       qJa: '誘導路中心線上で停止完了しました。トーバーを外す前に必ず行う指示は？',
       qVi: 'Máy bay đã dừng đúng vạch tim đường lăn. Trước khi tháo thanh kéo (Towbar), lệnh BẮT BUỘC phải gửi là gì?',
+      qEn: 'The aircraft is stopped on the taxiway centerline. Before uncoupling the towbar, what mandatory call must you make?',
       opts: [
-        { ok: true, ja: '"Pushback complete, please SET parking brake."（機長から"Brakes SET"復唱後にトーバー切離し！）', vi: '"Đẩy lùi hoàn tất, mời KÉO PHANH ĐỖ (Set Parking Brake)." (Chỉ tháo thanh kéo sau khi Cơ trưởng xác nhận Brakes SET!)' },
-        { ok: false, ja: 'ブレーキ確認を待たずにすぐトーバーを外す', vi: 'Tháo luôn thanh kéo không cần chờ xác nhận phanh đỗ' },
-        { ok: false, ja: '"Increase thrust to taxi now while towbar is attached."', vi: '"Tăng ga lăn luôn trong khi thanh kéo vẫn đang gắn."' }
+        { ok: true, ja: '"Pushback complete, please SET parking brake."（機長から"Brakes SET"復唱後にトーバー切離し！）', vi: '"Đẩy lùi hoàn tất, mời KÉO PHANH ĐỖ (Set Parking Brake)." (Chỉ tháo thanh kéo sau khi Cơ trưởng xác nhận Brakes SET!)', en: '"Pushback complete, please SET parking brake." (Disconnect towbar ONLY after Captain confirms "Brakes SET"!)' },
+        { ok: false, ja: 'ブレーキ確認を待たずにすぐトーバーを外す', vi: 'Tháo luôn thanh kéo không cần chờ xác nhận phanh đỗ', en: 'Uncouple the towbar immediately without waiting for brake confirmation' },
+        { ok: false, ja: '"Increase thrust to taxi now while towbar is attached."', vi: '"Tăng ga lăn luôn trong khi thanh kéo vẫn đang gắn."', en: '"Advance thrust to taxi while towbar is still attached."' }
       ],
       expJa: '機長から「Parking Brake SET」の明確な確認を得る前にトーバーを外すと、機体が動き出し重大人身事故になります。',
-      expVi: 'Tuyệt đối KHÔNG tháo Towbar khi chưa nghe Cơ trưởng xác nhận rõ "Parking Brake SET"!'
+      expVi: 'Tuyệt đối KHÔNG tháo Towbar khi chưa nghe Cơ trưởng xác nhận rõ "Parking Brake SET"!',
+      expEn: 'Never disconnect the towbar before receiving explicit "Parking Brake SET" confirmation from the Captain, or the aircraft may roll onto ground crew.'
     },
     {
-      step: 5, phaseJa: '5. トーバー切離し・バイパスピン抜去 ＆ インターホン切断', phaseVi: '5. Tháo Towbar, Rút Bypass Pin & Ngắt Intercom',
+      step: 5, phaseJa: '5. トーバー切離し・バイパスピン抜去 ＆ インターホン切断', phaseVi: '5. Tháo Towbar, Rút Bypass Pin & Ngắt Intercom', phaseEn: '5. Towbar Disconnect, Bypass Pin Show & Wave-Off',
       pilotLine: 'Captain: "Parking brake is SET. Clear to disconnect."',
       qJa: 'トーバー・トラクター退避＆バイパスピン抜去後の最後の無線フレーズは？',
       qVi: 'Sau khi tháo xe kéo và rút chốt đỏ Bypass Pin, câu thoại cuối trước khi rút jack Headset là gì?',
+      qEn: 'After uncoupling the tug and removing the steering bypass pin, what is your final intercom call before disconnecting headset?',
       opts: [
-        { ok: true, ja: '"Towbar disconnected, bypass pin removed. Disconnecting headset, watch for hand signal on the LEFT side. Have a safe flight!"', vi: '"Đã tháo thanh kéo & rút chốt Bypass Pin. Xin ngắt tai nghe, mời nhìn tín hiệu tay bên TRÁI. Chúc chuyến bay an toàn!"' },
-        { ok: false, ja: '"Disconnecting, watch behind the right engine!"', vi: '"Ngắt đây, nhìn ra sau động cơ phải nhé!"' },
-        { ok: false, ja: 'バイパスピンを挿したまま切断する', vi: 'Để nguyên chốt Bypass Pin trên càng mũi rồi rút tai nghe' }
+        { ok: true, ja: '"Towbar disconnected, bypass pin removed. Disconnecting headset, watch for hand signal on the LEFT side. Have a safe flight!"', vi: '"Đã tháo thanh kéo & rút chốt Bypass Pin. Xin ngắt tai nghe, mời nhìn tín hiệu tay bên TRÁI. Chúc chuyến bay an toàn!"', en: '"Towbar disconnected, bypass pin removed. Disconnecting headset, watch for hand signal on the LEFT side. Have a safe flight!"' },
+        { ok: false, ja: '"Disconnecting, watch behind the right engine!"', vi: '"Ngắt đây, nhìn ra sau động cơ phải nhé!"', en: '"Disconnecting, look behind the right engine!"' },
+        { ok: false, ja: 'バイパスピンを挿したまま切断する', vi: 'Để nguyên chốt Bypass Pin trên càng mũi rồi rút tai nghe', en: 'Leave the steering bypass pin inserted in the nose gear and unplug headset' }
       ],
       expJa: 'バイパスピン抜去を明言し、機長から見える「左側（Left Side）」で実物ピンを提示して敬礼・お見送りします。',
-      expVi: 'Báo rõ đã rút Bypass Pin, đứng bên TRÁI phía trước (tầm nhìn Cơ trưởng) giơ cờ đỏ xác nhận rồi vẫy chào tiễn bay (お見送り).' }
+      expVi: 'Báo rõ đã rút Bypass Pin, đứng bên TRÁI phía trước (tầm nhìn Cơ trưởng) giơ cờ đỏ xác nhận rồi vẫy chào tiễn bay (お見送り).',
+      expEn: 'Confirm bypass pin removal verbally, move to the safe forward-LEFT side in the Captain\'s field of view, hold up the red streamer pin, and salute/wave off.' }
   ];
 
   // Từ điển 66 thuật ngữ Hàng không Nhật–Việt chuẩn 特定技能 & Khai thác sân đỗ (có đọc phát âm JA offline!)

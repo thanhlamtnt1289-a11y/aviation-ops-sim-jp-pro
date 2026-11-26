@@ -24,13 +24,14 @@ function makeInitialHandsOn() {
     loaderH: 0,
     uldLoaded: false,
     fods: [
-      { id: 'F1', x: -5.5, z: 24.5, ja: '金属ボルト (Nose Gear前)', vi: 'Bu-lông kim loại (Trước càng mũi)', cleared: false },
-      { id: 'F2', x: -13.0, z: 12.0, ja: 'ビニール袋 (右エンジン前方)', vi: 'Túi nilon (Trước động cơ phải)', cleared: false },
-      { id: 'F3', x: 7.5, z: -2.0, ja: '手荷物ベルト (左主翼付近)', vi: 'Dây đai hành lý (Gần cánh trái)', cleared: false }
+      { id: 'F1', x: -5.5, z: 24.5, ja: '金属ボルト (Nose Gear前)', vi: 'Bu-lông kim loại (Trước càng mũi)', en: 'Metal Bolt (Ahead of Nose Gear)', cleared: false },
+      { id: 'F2', x: -13.0, z: 12.0, ja: 'ビニール袋 (右エンジン前方)', vi: 'Túi nilon (Trước động cơ phải)', en: 'Plastic Sheet (Ahead of Starboard Engine)', cleared: false },
+      { id: 'F3', x: 7.5, z: -2.0, ja: '手荷物ベルト (左主翼付近)', vi: 'Dây đai hành lý (Gần cánh trái)', en: 'Baggage Strap (Near Port Wing)', cleared: false }
     ],
     violations: 0,
     lastMsgJa: '到着完了！ビーコン消灯後、3D画面上の赤いFOD・PBB・ローダーを直接クリックまたは右パネルで操作して100点実技試験へ挑戦！',
     lastMsgVi: 'Tàu bay vừa dừng tại Spot 7! Hãy tắt Beacon rồi CLICK TRỰC TIẾP lên FOD đỏ, PBB, High-Loader trên màn hình 3D (hoặc dùng bảng bên phải)!',
+    lastMsgEn: 'Aircraft on-block at Spot 7! Switch Beacon OFF first, then CLICK DIRECTLY on red 3D FOD items, PBB, and High-Loader (or use this panel) for the 100pt exam!',
     examResult: null
   };
 }
@@ -51,7 +52,7 @@ export const a3d = {
   ngoVehMode: 'standard', // 'standard' (TT 30km/h) | 'towing' (TT + 6 carts 15km/h) | 'high38' (>3.8m) | 'backing' (Semi-Trailer Reverse Bay)
   ngoDriveScenario: 'SC1', // 'SC1' | 'SC2' | 'SC3' | 'SC4' | 'SC5' (Reverse Trailer Bay Parking)
   ngoScenarioTime: 0,
-  backingBay: { cx: 192, cz: 26, len: 11.4, w: 5.0 },
+  backingBay: { cx: 218, cz: 26, len: 11.4, w: 5.0 },
   backingStatus: { hitchDeg: 0, latErr: 0, angErr: 0, depthPct: 0, jackknife: false, parked: false, hintJa: '', hintVi: '', hintEn: '' },
   prevHitch: null,
   trailerHeadings: [0, 0, 0, 0, 0, 0],
@@ -110,12 +111,12 @@ function showRaycastToast(msg) {
 
 function handle3DInteract(hit) {
   if (a3d.subtab !== 'ops3d') {
-    showRaycastToast(t('「3. 操作実習」タブで3D直接クリック操作が使えます', 'Chuyển sang Tab 3 (Thực hành 3D) để click thao tác trực tiếp!'));
+    showRaycastToast(t('「3. 操作実習」タブで3D直接クリック操作が使えます', 'Chuyển sang Tab 3 (Thực hành 3D) để click thao tác trực tiếp!', 'Switch to Tab 3 (Direct 3D Ops) to click-interact with FOD/PBB/Loader!'));
     return;
   }
   if (hit.type === 'fod') {
     collectHandsOnFod(hit.id);
-    showRaycastToast(`✓ ${t('3DクリックでFOD回収', 'Click 3D nhặt sạch FOD')} [${hit.id}]!`);
+    showRaycastToast(`✓ ${t('3DクリックでFOD回収', 'Click 3D nhặt sạch FOD', '3D Click Collected FOD')} [${hit.id}]!`);
   } else if (hit.type === 'pbb') {
     setHandsOnPbb(a3d.handsOn.pbbExt > 0.5 ? 0 : 100);
     renderHandsOnPanel();
@@ -150,6 +151,7 @@ function checkHandsOnSafety(label) {
     a3dAudio.playBeep(360, 0.25);
     a3d.handsOn.lastMsgJa = `⚠ 安全違反 (-15pt): 赤ビーコン点灯中に「${label}」を実施しました！先にビーコンOFFを確認してください。`;
     a3d.handsOn.lastMsgVi = `⚠ VI PHẠM AN TOÀN (-15đ): Thao tác "${label}" khi đèn Beacon đỏ đang SÁNG! Phải tắt Beacon trước.`;
+    a3d.handsOn.lastMsgEn = `⚠ SAFETY VIOLATION (-15pt): Performed "${label}" while Red Beacon was still ON! Switch Beacon OFF first.`;
     return false;
   }
   return true;
@@ -160,6 +162,7 @@ export function toggleHandsOnBeacon() {
   a3dAudio.playChirp();
   a3d.handsOn.lastMsgJa = a3d.handsOn.beaconOn ? '衝突防止灯 ON — 接近禁止！' : 'ビーコン消灯よし！3D上のFOD・PBB・ローダーをクリック操作できます。';
   a3d.handsOn.lastMsgVi = a3d.handsOn.beaconOn ? 'Beacon ON — Cấm tiếp cận!' : 'Beacon OFF! Bạn có thể click thẳng FOD/PBB/Loader trên 3D hoặc thao tác bảng này.';
+  a3d.handsOn.lastMsgEn = a3d.handsOn.beaconOn ? 'Anti-Collision Beacon ON — Do Not Approach!' : 'Beacon OFF verified! Click FOD, PBB, and High-Loader directly in 3D or use controls below.';
   renderHandsOnPanel();
 }
 export function toggleHandsOnChocks() {
@@ -182,6 +185,7 @@ export function collectHandsOnFod(fid) {
     a3dAudio.playChirp();
     a3d.handsOn.lastMsgJa = `✓ FOD [${fid}] を回収しました！`;
     a3d.handsOn.lastMsgVi = `✓ Đã nhặt sạch FOD [${fid}] trên sân đỗ!`;
+    a3d.handsOn.lastMsgEn = `✓ Collected and cleared FOD [${fid}] from the stand!`;
   }
   renderHandsOnPanel();
 }
@@ -205,6 +209,7 @@ export function toggleHandsOnUld() {
     a3dAudio.playBeep(480, 0.18);
     a3d.handsOn.lastMsgJa = '⚠ ローダーを85%以上上げてからULDを押し込んでください！';
     a3d.handsOn.lastMsgVi = '⚠ Hãy nâng sàn High-Lift Loader lên ≥85% trước khi nạp thùng ULD!';
+    a3d.handsOn.lastMsgEn = '⚠ Raise the High-Lift Loader platform to ≥85% before transferring the AKH ULD!';
     renderHandsOnPanel();
     return;
   }
@@ -248,33 +253,33 @@ function renderHandsOnPanel() {
   const fodCleared = ho.fods.filter(f => f.cleared).length;
   el.innerHTML = `
     <div class="alert ${ho.violations > 0 ? 'alert-danger' : 'alert-info'}" style="font-size:12.5px;margin-bottom:10px;">
-      ${t(ho.lastMsgJa, ho.lastMsgVi)}
+      ${t(ho.lastMsgJa, ho.lastMsgVi, ho.lastMsgEn)}
     </div>
-    <div class="section-label">1. ${t('安全確認・輪止め・コーン', 'Khóa an toàn Beacon, Chèn bánh & Cọc tiêu')}</div>
+    <div class="section-label">1. ${t('安全確認・輪止め・コーン', 'Khóa an toàn Beacon, Chèn bánh & Cọc tiêu', 'Beacon Safety Check, Chocks & Cones')}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
       <button class="btn btn-sm ${ho.beaconOn ? 'btn-danger-outline' : 'btn-primary'}" id="ho-btn-beacon">${ho.beaconOn ? '🔴 Beacon ON → OFF' : '⚪ Beacon OFF (SAFE)'}</button>
-      <button class="btn btn-sm ${ho.chocksOn ? 'btn-primary' : ''}" id="ho-btn-chocks">${ho.chocksOn ? '✓ Chocks ON' : '輪止め (Chocks)'}</button>
-      <button class="btn btn-sm ${ho.conesOn ? 'btn-primary' : ''}" id="ho-btn-cones">${ho.conesOn ? '✓ Cones ON' : 'コーン (Cones)'}</button>
+      <button class="btn btn-sm ${ho.chocksOn ? 'btn-primary' : ''}" id="ho-btn-chocks">${ho.chocksOn ? '✓ Chocks ON' : t('輪止め (Chocks)', 'Chèn bánh (Chocks)', 'Wheel Chocks')}</button>
+      <button class="btn btn-sm ${ho.conesOn ? 'btn-primary' : ''}" id="ho-btn-cones">${ho.conesOn ? '✓ Cones ON' : t('コーン (Cones)', 'Cọc tiêu (Cones)', 'Safety Cones')}</button>
     </div>
-    <div class="section-label">2. ${t('ウォークアラウンド FOD回収（3D上を直接クリックも可）', 'Nhặt 3 FOD (Click thẳng trên 3D hoặc bấm bên dưới)')} (${fodCleared}/3)</div>
+    <div class="section-label">2. ${t('ウォークアラウンド FOD回収（3D上を直接クリックも可）', 'Nhặt 3 FOD (Click thẳng trên 3D hoặc bấm bên dưới)', 'Walkaround FOD Sweep (Click Directly in 3D or Below)')} (${fodCleared}/3)</div>
     <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;">
-      ${ho.fods.map(f => `<button class="btn btn-sm ${f.cleared ? '' : 'btn-danger-outline'}" data-fod="${f.id}" ${f.cleared ? 'disabled' : ''} style="justify-content:space-between;"><span>${f.cleared ? '✓' : '⚠'} [${f.id}] ${t(f.ja, f.vi)}</span><span>${f.cleared ? 'CLEARED' : t('回収', 'Nhặt')}</span></button>`).join('')}
+      ${ho.fods.map(f => `<button class="btn btn-sm ${f.cleared ? '' : 'btn-danger-outline'}" data-fod="${f.id}" ${f.cleared ? 'disabled' : ''} style="justify-content:space-between;"><span>${f.cleared ? '✓' : '⚠'} [${f.id}] ${t(f.ja, f.vi, f.en)}</span><span>${f.cleared ? 'CLEARED' : t('回収', 'Nhặt', 'Pick Up')}</span></button>`).join('')}
     </div>
-    <div class="section-label">3. ${t('PBB ＆ Low-Deck ハイリフト操作', 'Điều khiển PBB & High-Lift Loader')}</div>
+    <div class="section-label">3. ${t('PBB ＆ Low-Deck ハイリフト操作', 'Điều khiển PBB & High-Lift Loader', 'Port PBB & Starboard High-Lift Loader')}</div>
     <div class="field" style="margin-bottom:8px;">
-      <label>${t('左舷 PBB スライド', 'Ống lồng PBB L1')}: <strong id="ho-pbb-pct">${Math.round(ho.pbbExt * 100)}%</strong></label>
+      <label>${t('左舷 PBB スライド', 'Ống lồng PBB L1', 'Port L1 PBB Extension')}: <strong id="ho-pbb-pct">${Math.round(ho.pbbExt * 100)}%</strong></label>
       <input type="range" id="ho-rng-pbb" min="0" max="100" value="${Math.round(ho.pbbExt * 100)}" />
     </div>
     <div class="field" style="margin-bottom:8px;">
-      <label>${t('右舷 High-Loader 昇降', 'Độ cao Low-Deck Loader')}: <strong id="ho-ldr-pct">${Math.round(ho.loaderH * 100)}%</strong></label>
+      <label>${t('右舷 High-Loader 昇降', 'Độ cao Low-Deck Loader', 'Starboard High-Loader Lift')}: <strong id="ho-ldr-pct">${Math.round(ho.loaderH * 100)}%</strong></label>
       <input type="range" id="ho-rng-ldr" min="0" max="100" value="${Math.round(ho.loaderH * 100)}" />
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-      <button class="btn btn-sm ${ho.uldLoaded ? 'btn-primary' : ''}" id="ho-btn-uld">${ho.uldLoaded ? '✓ AKH ULD Loaded' : '📦 AKH ULD搭載 (Load ULD)'}</button>
+      <button class="btn btn-sm ${ho.uldLoaded ? 'btn-primary' : ''}" id="ho-btn-uld">${ho.uldLoaded ? '✓ AKH ULD Loaded' : t('📦 AKH ULD搭載', '📦 Nạp thùng AKH ULD', '📦 Load AKH ULD')}</button>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn btn-sm btn-primary" id="ho-btn-grade">🏆 ${t('3D実技試験 採点 (100点)', 'Chấm điểm Thi 3D (100đ)')}</button>
-      <button class="btn btn-sm" id="ho-btn-reset">↺ ${t('リセット', 'Làm lại')}</button>
+      <button class="btn btn-sm btn-primary" id="ho-btn-grade">🏆 ${t('3D実技試験 採点 (100点)', 'Chấm điểm Thi 3D (100đ)', 'Grade 3D Practical Exam (100pt)')}</button>
+      <button class="btn btn-sm" id="ho-btn-reset">↺ ${t('リセット', 'Làm lại', 'Reset')}</button>
     </div>
     ${ho.examResult ? `
       <div class="alert ${ho.examResult.score >= 80 ? 'alert-ok' : 'alert-warn'}" style="margin-top:10px;margin-bottom:0;font-size:12.5px;">
@@ -299,13 +304,13 @@ function renderFlightPhasePanel() {
   const radio = A3D_RADIO_COMMS[a3d.flightPhaseIdx];
   const radioEl = document.getElementById('a3d-radio-bar');
   if (radioEl && radio) {
-    radioEl.innerHTML = `<span class="radio-dot"></span><strong style="color:#38BDF8;flex-shrink:0;">[${radio.ch}]</strong><span class="ja">${t(radio.ja, radio.vi)}</span>`;
+    radioEl.innerHTML = `<span class="radio-dot"></span><strong style="color:#38BDF8;flex-shrink:0;">[${radio.ch}]</strong><span class="ja">${t(radio.ja, radio.vi, radio.en)}</span>`;
   }
   const strip = document.getElementById('a3d-phase-strip');
   if (strip) {
     strip.innerHTML = A3D_FLIGHT_PHASES.map((item, i) => `
       <button class="phase-chip ${i === a3d.flightPhaseIdx ? 'active' : (i < a3d.flightPhaseIdx ? 'passed' : '')}" data-phase="${i}">
-        <strong>${i + 1}.</strong> ${t(item.tagJa, item.tagVi)}
+        <strong>${i + 1}.</strong> ${t(item.tagJa, item.tagVi, item.tagEn)}
       </button>
     `).join('');
     strip.querySelectorAll('[data-phase]').forEach(b => {
@@ -317,21 +322,24 @@ function renderFlightPhasePanel() {
     panel.innerHTML = `
       <div class="alert alert-info" style="margin-bottom:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
-          <strong>${t(ph.titleJa, ph.titleVi)}</strong>
+          <strong>${t(ph.titleJa, ph.titleVi, ph.titleEn)}</strong>
           <span class="badge badge-accent">STEP ${a3d.flightPhaseIdx + 1} / 10</span>
         </div>
         <div class="progress-bar-wrap" style="margin:7px 0 4px;"><div class="progress-bar-fill" id="a3d-flight-prog" style="width:${Math.round(a3d.flightProgress * 100)}%"></div></div>
-        <div style="font-size:12px;margin-top:4px;"><strong>${t('安全ポイント:', 'Trọng điểm an toàn:')}</strong> ${t(ph.safetyJa, ph.safetyVi)}</div>
+        <div style="font-size:12px;margin-top:4px;"><strong>${t('安全ポイント:', 'Trọng điểm an toàn:', 'Safety Key Point:')}</strong> ${t(ph.safetyJa, ph.safetyVi, ph.safetyEn)}</div>
       </div>
-      ${ph.roles.map(r => `
+      ${ph.roles.map(r => {
+        const tasks = appState.lang === 'ja' ? r.tasksJa : (appState.lang === 'en' ? (r.tasksEn || r.tasksVi) : r.tasksVi);
+        return `
         <div class="crew-role-card">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong style="font-size:13px;">${bi(r.roleJa, r.roleVi)}</strong>
+            <strong style="font-size:13px;">${bi(r.roleJa, r.roleVi, r.roleEn)}</strong>
             <span class="badge badge-neutral">${r.badge}</span>
           </div>
-          <ul>${(appState.lang === 'ja' ? r.tasksJa : r.tasksVi).map(tk => `<li class="ja">${tk}</li>`).join('')}</ul>
+          <ul>${tasks.map(tk => `<li class="ja">${tk}</li>`).join('')}</ul>
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     `;
   }
 }
@@ -341,7 +349,7 @@ export function setA3dViewpoint(vpId) {
   document.querySelectorAll('[data-vp]').forEach(b => b.classList.toggle('btn-primary', b.dataset.vp === vpId));
   const vp = A3D_VIEWPOINTS.find(v => v.id === vpId);
   const descEl = document.getElementById('a3d-vp-desc');
-  if (descEl && vp) descEl.textContent = `[${vp.key}] ${t(vp.ja, vp.vi)} — ${t(vp.descJa, vp.descVi)}`;
+  if (descEl && vp) descEl.textContent = `[${vp.key}] ${t(vp.ja, vp.vi, vp.en)} — ${t(vp.descJa, vp.descVi, vp.descEn)}`;
 }
 
 function wrapAngle(a) {
@@ -355,7 +363,7 @@ function resetBackingScenario() {
   a3d.ngoDriveScenario = 'SC5';
   a3d.ngoVehMode = 'backing';
   a3d.ngoScenarioTime = 0;
-  a3d.veh.x = 171.0;
+  a3d.veh.x = 197.0;
   a3d.veh.z = 22.2;
   a3d.veh.heading = Math.PI - 0.08;
   a3d.veh.speed = 0;
@@ -397,7 +405,7 @@ function stepPhysics(dt, now) {
       }
     }
     const pose = computeFlightCyclePose(a3d.flightPhaseIdx, a3d.flightProgress);
-    if (hudZone) { hudZone.textContent = `${a3d.flightPhaseIdx + 1}/10 · ${t(ph.tagJa, ph.tagVi)}`; hudZone.className = `hud-pill ${pose.ac.beaconOn ? 'danger' : 'ok'}`; }
+    if (hudZone) { hudZone.textContent = `${a3d.flightPhaseIdx + 1}/10 · ${t(ph.tagJa, ph.tagVi, ph.tagEn)}`; hudZone.className = `hud-pill ${pose.ac.beaconOn ? 'danger' : 'ok'}`; }
     if (hudSpd) hudSpd.textContent = `ALT ${Math.round(pose.ac.y)}m | ${pose.ac.beaconOn ? 'BEACON ON' : 'BEACON OFF'}`;
     if (hudScr) hudScr.textContent = `${Math.round(a3d.flightProgress * 100)}%`;
     const bar = document.getElementById('a3d-flight-prog');
@@ -435,15 +443,13 @@ function stepPhysics(dt, now) {
       sAlert.pushback = false;
     }
   } else if (a3d.ngoDriveScenario === 'SC2') {
-    // SC2: Taxiing aircraft crosses Service Lane (-31, -55) — player MUST wait until >=100m clearance!
-    const cyc = st % 24;
-    const tx = -115 + (cyc / 24) * 260;
-    liveAc = { x: tx, z: -55, heading: 0, beaconOn: true, chocksOn: false, blastOn: true, mode: 'taxi_cross' };
-    // Distance behind tail along X when aircraft is heading +X past Service Lane (-31)
-    const distFromLane = tx < -31 ? Math.abs(-31 - tx) : (tx - (-31));
-    const tailDist = tx >= -31 ? Math.round(tx - (-31)) : 0;
+    // SC2: Taxiing aircraft crosses Service Lane (-31, -62) — player MUST wait until >=100m true meter clearance!
+    const cyc = st % 26;
+    const tx = -145 + (cyc / 26) * 320;
+    liveAc = { x: tx, z: -62, heading: 0, beaconOn: true, chocksOn: false, blastOn: true, mode: 'taxi_cross' };
+    const tailDist = tx >= -31 ? Math.max(0, Math.round((tx - 19) - (-31))) : 0;
     sAlert.blastDist = tailDist;
-    sAlert.service = (tx > -95 && tx < 70); // Active hold until aircraft is 100m (approx 70 units scaled) past -31!
+    sAlert.service = (tx > -115 && tailDist < 100); // True 1:1 100m jet-blast clearance behind aircraft tail!
   } else if (a3d.ngoDriveScenario === 'SC3') {
     // SC3: 24h Engine Run-Up at Spot 7 (Anti-collision ON + Chocks STILL IN!) + #71 Blast Active
     liveAc = { x: 0, z: 10, heading: Math.PI / 2, beaconOn: true, chocksOn: true, blastOn: true, mode: 'runup' };
@@ -473,20 +479,16 @@ function stepPhysics(dt, now) {
     const steerGain = (isBackMode && v.speed < 0) ? 0.92 : (isBackMode ? 2.2 : 3.4);
     v.heading += v.steerAngle * steerGain * dt * dir * Math.min(1, Math.abs(v.speed) / 3.0);
   }
-  const nx = Math.max(-270, Math.min(270, v.x + Math.cos(v.heading) * v.speed * dt));
-  const nz = Math.max(-148, Math.min(96, v.z + Math.sin(v.heading) * v.speed * dt));
+  const nx = Math.max(-2072, Math.min(2142, v.x + Math.cos(v.heading) * v.speed * dt));
+  const nz = Math.max(-698, Math.min(340, v.z + Math.sin(v.heading) * v.speed * dt));
 
-  // Expanded Realistic Collision Detection (Buildings, Center Pier, T2, Blast Fence, Parked Aircraft, Live Scenario Aircraft!)
+  // Full 1:1 NGO Island Collision Detection (T1, 300m Center Pier, T2, Blast Fences, Cargo Sheds, Parked & Live Aircraft)
   const dynamicObs = [
     ...A3D_OBSTACLES,
-    { x1: 27, x2: 41, z1: 6, z2: 38, name: 'Center Pier' },
-    { x1: -220, x2: -156, z1: 63, z2: 85, name: 'Terminal 2' },
-    { x1: -239.5, x2: -236.5, z1: 21, z2: 43, name: 'Blast Fence' },
-    { x1: -239.5, x2: -236.5, z1: 57, z2: 79, name: 'Blast Fence' },
-    { x1: 162, x2: 214, z1: 66, z2: 90, name: 'Cargo Warehouse' },
-    { x1: -72, x2: -64, z1: -7, z2: 26, name: 'Spot 6 Aircraft' },
-    { x1: 64, x2: 72, z1: -7, z2: 26, name: 'Spot 14 Aircraft' },
-    { x1: liveAc.x - 5.5, x2: liveAc.x + 5.5, z1: liveAc.z - 15, z2: liveAc.z + 15, name: 'Active Aircraft' }
+    { x1: -1012, x2: -1006, z1: 52, z2: 118, name: 'T2 Blast Fence' },
+    { x1: -72, x2: -64, z1: -8, z2: 28, name: 'Spot 6 Aircraft' },
+    { x1: 94, x2: 102, z1: -12, z2: 32, name: 'Spot 14 Aircraft' },
+    { x1: liveAc.x - 5.5, x2: liveAc.x + 5.5, z1: liveAc.z - 16, z2: liveAc.z + 16, name: 'Active Aircraft' }
   ];
   const pad = 1.65;
   const hitObj = dynamicObs.find(o => nx >= o.x1 - pad && nx <= o.x2 + pad && nz >= o.z1 - pad && nz <= o.z2 + pad);
@@ -588,7 +590,7 @@ function stepPhysics(dt, now) {
       const latErr = Number((tr.z - bay.cz).toFixed(2));
       const angErr = Math.round(Math.abs(wrapAngle(tr.heading - Math.PI)) * 180 / Math.PI);
       // Bay X spans [186.3, 197.7]; trailer center enters cleanly around x = 190.5..193.8
-      const depthPct = Math.max(0, Math.min(100, Math.round(((tr.x - 183.0) / 8.8) * 100)));
+      const depthPct = Math.max(0, Math.min(100, Math.round(((tr.x - 209.0) / 8.8) * 100)));
       const tailX = tr.x - Math.cos(tr.heading) * 3.1;
       const tailZ = tr.z - Math.sin(tr.heading) * 3.1;
 
@@ -688,7 +690,7 @@ function stepPhysics(dt, now) {
 
   // Live Ground Spotter Danger Intervention (whistle + STOP alert if driver ignores active Pushback / Service Lane 100m / Run-Up!)
   const inPushbackDanger = sAlert.pushback && v.x >= -17 && v.x <= 18 && v.z >= -44 && v.z <= -28;
-  const inServiceBlastDanger = sAlert.service && v.x >= -38 && v.x <= -24 && v.z < -42 && v.z > -70;
+  const inServiceBlastDanger = sAlert.service && v.x >= -38 && v.x <= -24 && v.z < -42 && v.z > -76;
   if ((inPushbackDanger || inServiceBlastDanger) && now - a3d.lastSpotterWarnTime > 2400) {
     a3d.lastSpotterWarnTime = now;
     a3d.score = Math.max(0, a3d.score - 20);
@@ -741,67 +743,105 @@ export function stopAirport3dLoop() {
 
 function drawNgoMinimap() {
   const now = performance.now();
-  if (now - (a3d._lastMinimapMs || 0) < 120) return; // Throttle to ~8fps (zero GPU bitmap churn!)
+  if (now - (a3d._lastMinimapMs || 0) < 120) return;
   a3d._lastMinimapMs = now;
   const c = document.getElementById('a3d-minimap');
   if (!c || c.offsetParent === null) return;
-  const W = 230, H = 145;
+  const W = 252, H = 152;
   if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
   const ctx = c.getContext('2d');
-  const mx = wx => ((wx + 290) / 580) * W;
-  const mz = wz => ((wz + 165) / 280) * H;
-  // Sea & Island
-  ctx.fillStyle = '#0B2340'; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = '#1E293B'; ctx.fillRect(mx(-278), mz(-154), (556 / 580) * W, (268 / 280) * H);
-  // Perimeter Road (pink/magenta matching NGO PDF J04!)
-  ctx.strokeStyle = '#EC4899'; ctx.lineWidth = 2.2;
-  ctx.strokeRect(mx(-264), mz(-142), (528 / 580) * W, (240 / 280) * H);
-  // ILS Restricted Zones (blue)
-  ctx.strokeStyle = a3d.ilsRedOn ? '#EF4444' : '#38BDF8'; ctx.lineWidth = 3;
+  // True 1:1 Chubu Centrair 4,370m × 1,920m Island Coordinate Projection
+  const mx = wx => ((wx + 2250) / 4580) * W;
+  const mz = wz => ((wz + 780) / 1720) * H;
+
+  // Ise Bay Water
+  ctx.fillStyle = '#09223B';
+  ctx.fillRect(0, 0, W, H);
+
+  // Authentic Chamfered Centrair Artificial Island Polygon (matching Official Blueprint J08-1!)
+  ctx.fillStyle = '#1E293B';
   ctx.beginPath();
-  ctx.moveTo(mx(-142), mz(-142)); ctx.lineTo(mx(-88), mz(-142));
-  ctx.moveTo(mx(88), mz(-142)); ctx.lineTo(mx(142), mz(-142));
-  ctx.stroke();
-  // Runway 36/18 (Red strip matching PDF J08-1)
-  ctx.fillStyle = '#DC2626'; ctx.fillRect(mx(-230), mz(-118), (460 / 580) * W, (28 / 280) * H);
-  // Taxiways A/B/C
-  ctx.fillStyle = '#475569';
-  ctx.fillRect(mx(-230), mz(-78), (460 / 580) * W, 4);
-  ctx.fillRect(mx(-230), mz(-61), (460 / 580) * W, 5);
-  // Apron (Green matching PDF J08-4)
-  ctx.fillStyle = 'rgba(34,197,94,0.28)';
-  ctx.fillRect(mx(-245), mz(-42), (490 / 580) * W, (116 / 280) * H);
-  // Red ABL Boundary
-  ctx.strokeStyle = '#EF4444'; ctx.lineWidth = 1.6;
-  ctx.beginPath(); ctx.moveTo(mx(-245), mz(-42)); ctx.lineTo(mx(245), mz(-42)); ctx.stroke();
-  // 3 Service Lanes (dashed white)
-  ctx.strokeStyle = '#F8FAFC'; ctx.lineWidth = 2; ctx.setLineDash([2, 2]);
-  [-155, -31, 118].forEach(sx => {
-    ctx.beginPath(); ctx.moveTo(mx(sx), mz(-68)); ctx.lineTo(mx(sx), mz(-40)); ctx.stroke();
+  [
+    [-2140, -735], [2180, -735], [2180, 320], [1560, 820],
+    [-1480, 820], [-2140, 520]
+  ].forEach(([ix, iz], idx) => {
+    if (idx === 0) ctx.moveTo(mx(ix), mz(iz));
+    else ctx.lineTo(mx(ix), mz(iz));
   });
-  ctx.setLineDash([]);
-  // T1 + Center Pier + T2 + Cargo
-  ctx.fillStyle = '#38BDF8';
-  ctx.fillRect(mx(-98), mz(66), (146 / 580) * W, (24 / 280) * H);
-  ctx.fillRect(mx(-218), mz(64), (62 / 580) * W, (18 / 280) * H);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#64748B';
+  ctx.lineWidth = 1.1;
+  ctx.stroke();
+
+  // Centrair Skyway Bridge (連絡橋 + Meitetsu Rail to Tokoname Mainland)
   ctx.fillStyle = '#94A3B8';
-  ctx.fillRect(mx(162), mz(66), (52 / 580) * W, (20 / 280) * H);
-  // Blast Caution Zones (#71 / #77 yellow)
-  ctx.fillStyle = '#FACC15';
-  ctx.fillRect(mx(-128), mz(-24), 10, 8);
-  ctx.fillRect(mx(-238), mz(45), 10, 8);
-  // Labels (clean inner padding so nothing clips at bottom edge)
-  ctx.fillStyle = '#F8FAFC'; ctx.font = '700 8px monospace'; ctx.textAlign = 'center';
-  ctx.fillText('RWY 36/18 (3500m)', mx(0), mz(-101));
-  ctx.fillText('T2 #71-80', mx(-186), mz(90));
-  ctx.fillText('T1 (#1-25)', mx(-25), mz(92));
-  ctx.fillText('CARGO #101+', mx(188), mz(92));
-  ctx.fillStyle = '#F472B6'; ctx.fillText('PERIMETER 40', mx(0), mz(-145));
-  // Live GSE Vehicle Arrow
-  const vx = mx(a3d.veh.x), vz = mz(a3d.veh.z);
+  ctx.fillRect(mx(110), mz(380), 8, H - mz(380));
+
+  // 8.5km Perimeter Road (場周道路 — Magenta per J04)
+  ctx.strokeStyle = '#EC4899';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(mx(-2060), mz(-685), mx(2130) - mx(-2060), mz(520) - mz(-685));
+
+  // Dual ILS Restricted Zones on West Seawall
+  ctx.strokeStyle = a3d.ilsRedOn ? '#EF4444' : '#38BDF8';
+  ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  ctx.moveTo(mx(-1460), mz(-685)); ctx.lineTo(mx(-1140), mz(-685));
+  ctx.moveTo(mx(1140), mz(-685)); ctx.lineTo(mx(1460), mz(-685));
+  ctx.stroke();
+
+  // 1:1 3,500m × 60m Runway 36/18 (z = -580, x = -1750..+1750)
+  ctx.fillStyle = '#DC2626';
+  ctx.fillRect(mx(-1750), mz(-610), mx(1750) - mx(-1750), Math.max(4, mz(-550) - mz(-610)));
+
+  // Parallel Taxiways A (-415), B (-335) & C (-235)
+  ctx.fillStyle = '#64748B';
+  ctx.fillRect(mx(-1750), mz(-422), mx(1750) - mx(-1750), 2.2);
+  ctx.fillRect(mx(-1560), mz(-342), mx(1660) - mx(-1560), 2.0);
+  ctx.fillRect(mx(-1350), mz(-242), mx(1620) - mx(-1350), 2.0);
+
+  // Apron Concrete Green Tint (T2, Remote #300-#600, T1, Remote #200, Cargo #101-#119, N-Area)
+  ctx.fillStyle = 'rgba(34,197,94,0.24)';
+  ctx.fillRect(mx(-1280), mz(-210), mx(1860) - mx(-1280), mz(110) - mz(-210));
+
+  // T1 Main + 300m Center Pier + North/South Wings + T2 + Cargo Sheds
   ctx.fillStyle = '#38BDF8';
-  ctx.beginPath(); ctx.arc(vx, vz, 4, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.fillRect(mx(-430), mz(72), mx(430) - mx(-430), 6); // T1 Wings
+  ctx.fillRect(mx(26), mz(-180), Math.max(3, mx(66) - mx(26)), mz(75) - mz(-180)); // 300m Center Pier!
+  ctx.fillStyle = '#0284C7';
+  ctx.fillRect(mx(-960), mz(95), mx(-565) - mx(-960), 5); // T2 LCC
+  ctx.fillStyle = '#CBD5E1';
+  ctx.fillRect(mx(545), mz(75), mx(1290) - mx(545), 6); // Cargo Sheds 1-3
+
+  // Moving AI Airliner & GSE Traffic Dots
+  const tSec = a3d.aiTime || 0;
+  ctx.fillStyle = '#FACC15';
+  const twyAcX = -1550 + ((tSec * 38) % 3100);
+  ctx.fillRect(mx(twyAcX) - 2, mz(-415) - 1.5, 4, 3);
+  const cTwyX = 1100 - ((tSec * 28) % 2100);
+  ctx.fillRect(mx(cTwyX) - 2, mz(-235) - 1.5, 4, 3);
+
+  // Labels
+  ctx.fillStyle = '#F8FAFC';
+  ctx.font = '700 7.5px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('RWY 36 ◀ 3,500m ▶ RWY 18', mx(0), mz(-628));
+  ctx.fillText('T2', mx(-770), mz(220));
+  ctx.fillText('T1 PIER', mx(35), mz(220));
+  ctx.fillText('CARGO #101-119', mx(960), mz(220));
+  ctx.fillText('N', mx(1740), mz(220));
+
+  // Active Aircraft or Player Vehicle Marker
+  const px = a3d.subtab === 'flight' ? (computeFlightCyclePose(a3d.flightPhaseIdx, a3d.flightProgress).ac.x) : a3d.veh.x;
+  const pz = a3d.subtab === 'flight' ? (computeFlightCyclePose(a3d.flightPhaseIdx, a3d.flightProgress).ac.z) : a3d.veh.z;
+  ctx.fillStyle = '#22D3EE';
+  ctx.beginPath();
+  ctx.arc(mx(px), mz(pz), 3.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 1.3;
+  ctx.stroke();
 }
 
 export async function startAirport3dLoop() {
@@ -947,8 +987,8 @@ export function renderAirport3dUI() {
           </div>
 
           <div class="pov-bar">
-            <span class="pov-label">${t('視点 (1〜0):', 'Góc nhìn (1-0):')}</span>
-            ${A3D_VIEWPOINTS.map(vp => `<button class="btn btn-sm ${a3d.camMode === vp.id ? 'btn-primary' : ''}" data-vp="${vp.id}">${t(vp.ja, vp.vi)}</button>`).join('')}
+            <span class="pov-label">${t('視点 (1〜0):', 'Góc nhìn (1-0):', 'POV (1–0):')}</span>
+            ${A3D_VIEWPOINTS.map(vp => `<button class="btn btn-sm ${a3d.camMode === vp.id ? 'btn-primary' : ''}" data-vp="${vp.id}">${t(vp.ja, vp.vi, vp.en)}</button>`).join('')}
           </div>
 
           <div class="airport3d-stage ${a3d.expanded ? 'expanded' : ''}" id="a3d-stage-box">
@@ -967,7 +1007,7 @@ export function renderAirport3dUI() {
             </div>
             <div class="hud-banner">
               <div class="hud-pill" id="a3d-vp-desc" style="font-family:var(--font-sans);font-size:11.5px;max-width:78%;">
-                [${curVp.key}] ${t(curVp.ja, curVp.vi)} — ${t(curVp.descJa, curVp.descVi)}
+                [${curVp.key}] ${t(curVp.ja, curVp.vi, curVp.en)} — ${t(curVp.descJa, curVp.descVi, curVp.descEn)}
               </div>
               ${isDrive ? `
                 <div class="drive-pad" id="a3d-drive-pad">
@@ -1038,6 +1078,14 @@ export function renderAirport3dUI() {
                 </div>
               </div>
             ` : ''}
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">
+              <span style="font-size:11px;font-weight:700;color:var(--text-secondary);width:100%;">${t('🗺 4.37kmセントレア島 クイック移動 (実寸地区ジャンプ):', '🗺 Nhảy nhanh tới các phân khu Sân bay NGO 4,37km:', '🗺 Quick Jump Across 1:1 4.37km NGO Island:')}</span>
+              <button class="btn btn-sm" data-ngojump="t1">✈ T1 Spot 7</button>
+              <button class="btn btn-sm" data-ngojump="pier">🌉 ${t('300mピア先端', 'Mũi Pier 300m', '300m Pier Tip')}</button>
+              <button class="btn btn-sm" data-ngojump="t2">🛫 T2 (#71–80)</button>
+              <button class="btn btn-sm" data-ngojump="cargo">📦 Cargo (#101+)</button>
+              <button class="btn btn-sm" data-ngojump="ils">🚨 ${t('場周ILS赤灯', 'Vành đai ILS', 'Perimeter ILS')}</button>
+            </div>
             <div class="alert alert-warn" style="font-size:12px;margin-bottom:8px;">
               <strong>${t('実車衝突＆COC通報訓練', 'Va chạm vật lý & Quy trình báo COC', 'Collision Physics & COC Protocol')}:</strong>
               ${t('障害物へ接触すると衝撃・反動・衝突音が発生し、現場保存＆COC（0569-38-1500 / 内線3000）通報指示が出ます。',
@@ -1150,6 +1198,21 @@ export function renderAirport3dUI() {
     if (bkCab) bkCab.onclick = () => { setA3dViewpoint('gse_cab'); renderAirport3dUI(); };
     const bkRst = document.getElementById('a3d-bk-reset');
     if (bkRst) bkRst.onclick = () => { resetBackingScenario(); renderAirport3dUI(); };
+    mount.querySelectorAll('[data-ngojump]').forEach(jb => {
+      jb.onclick = () => {
+        const dest = jb.dataset.ngojump;
+        a3d.veh.speed = 0;
+        a3d.prevHitch = null;
+        if (dest === 't1') { a3d.veh.x = -18; a3d.veh.z = 50; a3d.veh.heading = 0; }
+        else if (dest === 'pier') { a3d.veh.x = 46; a3d.veh.z = -192; a3d.veh.heading = Math.PI; }
+        else if (dest === 't2') { a3d.veh.x = -620; a3d.veh.z = 50; a3d.veh.heading = Math.PI; }
+        else if (dest === 'cargo') { a3d.veh.x = 620; a3d.veh.z = 50; a3d.veh.heading = 0; }
+        else if (dest === 'ils') { a3d.veh.x = -1100; a3d.veh.z = -685; a3d.veh.heading = Math.PI; a3d.ilsRedOn = true; }
+        a3d.trailerHeadings = [a3d.veh.heading, a3d.veh.heading, a3d.veh.heading, a3d.veh.heading, a3d.veh.heading, a3d.veh.heading];
+        a3d.camMode = 'chase';
+        renderAirport3dUI();
+      };
+    });
     mount.querySelectorAll('#a3d-drive-pad .drive-key').forEach(btn => {
       const k = btn.dataset.k;
       const on = e => { e.preventDefault(); a3d.keys[k] = true; btn.classList.add('pressed'); };
@@ -1189,7 +1252,8 @@ export function renderAirport3dUI() {
       return;
     }
     if (a3d.camMode !== 'orbit') setA3dViewpoint('orbit');
-    a3d.cam.dist = Math.max(18, Math.min(250, a3d.cam.dist + e.deltaY * 0.12));
+    const factor = e.deltaY > 0 ? 1.12 : 0.89;
+    a3d.cam.dist = Math.max(18, Math.min(3800, a3d.cam.dist * factor));
   };
 
   startAirport3dLoop();

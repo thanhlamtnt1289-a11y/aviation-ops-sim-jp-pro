@@ -104,86 +104,111 @@ export const JP_AIRPORTS = {
       id: 'weather',
       titleJa: '雷接近・強風警報（ランプ作業一時中断指示）',
       titleVi: 'Cảnh báo sét & gió mạnh — Yêu cầu tạm dừng sân đỗ (Ramp Closure)',
+      titleEn: 'Lightning & High-Wind Warning — Mandatory Ramp Closure',
       descJa: '空港周辺で落雷および強風警報が発令されました。給油・貨物搭載など屋外ランプ作業が危険な状態です。どう対応しますか？',
       descVi: 'Phát hiện sét gần sân bay và gió giật mạnh. Mọi hoạt động ngoài sân đỗ (tra dầu, bốc xếp) đang cực kỳ nguy hiểm. Bạn xử lý thế nào?',
+      descEn: 'Lightning and gale-force wind alerts have been issued around the airport. Outdoor fueling and ramp loading are acutely hazardous. How do you respond?',
       options: [
         { ok: true, timeDelta: 5, safetyDelta: 0, procDelta: 0,
           ja: '直ちに給油・屋外ランプ作業を中断し、作業員を屋内へ退避（解除後に再開）',
-          vi: 'Tạm dừng ngay lập tức tra dầu & thao tác ngoài trời, sơ tán nhân viên vào nơi an toàn (+5 phút chờ tạnh)' },
+          vi: 'Tạm dừng ngay lập tức tra dầu & thao tác ngoài trời, sơ tán nhân viên vào nơi an toàn (+5 phút chờ tạnh)',
+          en: 'Immediately suspend refueling & outdoor ramp work and evacuate crew to indoor shelter (+5 min weather hold)' },
         { ok: false, timeDelta: 0, safetyDelta: -18, procDelta: -5,
           ja: '定時出発を優先し、小雨のうちに給油と積み込みを続行する',
-          vi: 'Ưu tiên đúng giờ, cố tiếp tục tra dầu và xếp hàng trước khi mưa lớn' }
+          vi: 'Ưu tiên đúng giờ, cố tiếp tục tra dầu và xếp hàng trước khi mưa lớn',
+          en: 'Prioritize on-time departure and continue refueling/loading while rain is still light' }
       ],
       reasonJa: '雷警報発令中のランプ作業・給油続行は感電・引火の重大リスクがあり、定時性より人命安全が絶対優先です。',
-      reasonVi: 'Tuyệt đối không làm việc ngoài trời hay tra dầu khi có cảnh báo sét. An toàn tính mạng luôn đặt trên chỉ tiêu đúng giờ.'
+      reasonVi: 'Tuyệt đối không làm việc ngoài trời hay tra dầu khi có cảnh báo sét. An toàn tính mạng luôn đặt trên chỉ tiêu đúng giờ.',
+      reasonEn: 'Working outdoors or refueling during a lightning alert carries lethal electrocution and vapor-ignition risks; life safety always overrides on-time departure.'
     },
     {
       id: 'defect',
       titleJa: '機材不具合発見（後部貨物室ドア付近の軽微な凹み・油漏れ疑い）',
       titleVi: 'Phát hiện lỗi kỹ thuật (Vết móp cửa hầm hàng / nghi rò rỉ dầu thủy lực)',
+      titleEn: 'Airframe Defect Found (Minor Dent & Suspected Hydraulic Leak Near Aft Cargo Door)',
       descJa: '搭載作業員が後部貨物室フレーム付近に傷と液体のにじみを発見しました。',
       descVi: 'Nhân viên bốc xếp phát hiện vết xước móp gần khung cửa hầm hàng sau kèm vệt chất lỏng nghi dầu.',
+      descEn: 'Ramp loaders spot a surface dent and fluid seepage near the aft cargo door frame.',
       options: [
         { ok: true, timeDelta: 4, safetyDelta: 0, procDelta: 0,
           ja: '作業を一時停止し、直ちに整備士（Maintenance）へ報告して耐空性点検を依頼',
-          vi: 'Dừng thao tác khu vực đó và báo ngay cho Kỹ thuật viên bảo dưỡng (整備士) kiểm tra xác nhận (+4 phút)' },
+          vi: 'Dừng thao tác khu vực đó và báo ngay cho Kỹ thuật viên bảo dưỡng (整備士) kiểm tra xác nhận (+4 phút)',
+          en: 'Pause loading at that door and immediately summon Aircraft Maintenance for airworthiness sign-off (+4 min)' },
         { ok: false, timeDelta: 0, safetyDelta: -20, procDelta: -10,
           ja: '軽微に見えるため拭き取って報告せず、そのままドアを閉めて出発させる',
-          vi: 'Thấy vết nhỏ nên lau sạch, không báo cáo để khỏi trễ chuyến' }
+          vi: 'Thấy vết nhỏ nên lau sạch, không báo cáo để khỏi trễ chuyến',
+          en: 'Wipe away the fluid without reporting and close the door to avoid delay' }
       ],
       reasonJa: '機体損傷や油漏れの隠蔽・未報告は重大航空事故に直結します。疑わしい事象は必ず整備部門へ報告します。',
-      reasonVi: 'Che giấu hư hỏng thân vỏ hay rò rỉ kỹ thuật có thể dẫn đến tai nạn nghiêm trọng. Mọi bất thường bắt buộc phải báo Maintenance.'
+      reasonVi: 'Che giấu hư hỏng thân vỏ hay rò rỉ kỹ thuật có thể dẫn đến tai nạn nghiêm trọng. Mọi bất thường bắt buộc phải báo Maintenance.',
+      reasonEn: 'Concealing skin damage or fluid leaks can cause catastrophic in-flight failure; every suspected defect must be inspected by Maintenance.'
     },
     {
       id: 'late_cargo',
       titleJa: '遅着乗継手荷物・緊急貨物（120kg）が締切直前に到着',
       titleVi: 'Hành lý nối chuyến / Hàng khẩn (120 kg) đến sát giờ đóng hầm',
+      titleEn: 'Late Transfer Baggage / Rush Cargo (120 kg) Arrives Just Before Close-out',
       descJa: '他便からの遅着乗継手荷物120kgが到着しました。すでにLoad Sheet暫定版が出ています。',
       descVi: '120 kg hành lý nối chuyến từ chuyến bay trễ vừa tới sân đỗ khi Load Sheet tạm đã phát hành.',
+      descEn: '120 kg of late connecting baggage arrives on stand after the preliminary Load Sheet has been issued.',
       options: [
         { ok: true, timeDelta: 3, safetyDelta: 0, procDelta: 0,
           ja: 'ロードコントロールへ連絡し、LMC（直前変更）と制限重量・CGを確認した上で搭載可否を決定',
-          vi: 'Báo Load Control kiểm tra giới hạn tải/CG và lập LMC (Last Minute Change) trước khi xếp lên hầm (+3 phút)' },
+          vi: 'Báo Load Control kiểm tra giới hạn tải/CG và lập LMC (Last Minute Change) trước khi xếp lên hầm (+3 phút)',
+          en: 'Contact Load Control to verify weight/CG limits and record an official LMC (Last Minute Change) before loading (+3 min)' },
         { ok: false, timeDelta: 0, safetyDelta: -15, procDelta: -12,
           ja: '時間が惜しいためロードマスターに報告せずバルク室へそのまま積み込む',
-          vi: 'Gấp quá nên cứ chất đại lên hầm Bulk mà không báo Load Control' }
+          vi: 'Gấp quá nên cứ chất đại lên hầm Bulk mà không báo Load Control',
+          en: 'Load it directly into the Bulk hold without notifying Load Control to save time' }
       ],
       reasonJa: '無報告搭載は重量重心計算（Load Sheet）の誤差を生み、離陸性能やCG制限逸脱を引き起こす重大違反です。',
-      reasonVi: 'Xếp tải không khai báo làm sai lệch Load Sheet và trọng tâm máy bay (CG) — vi phạm an toàn bay nghiêm trọng.'
+      reasonVi: 'Xếp tải không khai báo làm sai lệch Load Sheet và trọng tâm máy bay (CG) — vi phạm an toàn bay nghiêm trọng.',
+      reasonEn: 'Unreported loading invalidates Load Sheet CG and stabilizer trim calculations — a severe flight safety violation.'
     },
     {
       id: 'staff',
       titleJa: '人員不足発生（隣接スポット遅延により応援要員が遅れ）',
       titleVi: 'Thiếu nhân lực đột xuất (Nhân sự hỗ trợ bị kẹt ở bãi đỗ kế bên)',
+      titleEn: 'Ramp Staffing Shortage (Support Crew Delayed at Adjacent Gate)',
       descJa: '搭載チームが2名不足しています。安全手順を守りながら遅延を最小化する対応は？',
       descVi: 'Đội bốc xếp thiếu 2 người do chuyến kế bên trễ. Cách xử lý tối ưu vừa đảm bảo an toàn vừa giảm trễ là gì?',
+      descEn: 'Your loading team is short by 2 handlers due to an adjacent late arrival. How do you minimize delay safely?',
       options: [
         { ok: true, timeDelta: 3, safetyDelta: 0, procDelta: 0,
           ja: 'スーパーバイザーへ応援要請し、クリティカルパス（降機・清掃・搭載）を優先しつつ安全確認は省略しない',
-          vi: 'Báo Supervisor điều phối hỗ trợ, ưu tiên đường găng (dỡ/vệ sinh/xếp) và KHÔNG cắt bỏ bước kiểm tra an toàn (+3 phút)' },
+          vi: 'Báo Supervisor điều phối hỗ trợ, ưu tiên đường găng (dỡ/vệ sinh/xếp) và KHÔNG cắt bỏ bước kiểm tra an toàn (+3 phút)',
+          en: 'Request backup from Supervisor, prioritize critical-path tasks, and NEVER skip guidemen or Point-and-Call safety checks (+3 min)' },
         { ok: false, timeDelta: 0, safetyDelta: -14, procDelta: -10,
           ja: '時間短縮のため安全監視員（ガイドマン）や指差呼称を省いて一人で車両を後退させる',
-          vi: 'Bỏ người xi-nhan (guideman) và bỏ bước 指差呼称 để lùi xe GSE nhanh hơn' }
+          vi: 'Bỏ người xi-nhan (guideman) và bỏ bước 指差呼称 để lùi xe GSE nhanh hơn',
+          en: 'Skip guideman marshalling and Point-and-Call to reverse GSE solo and save time' }
       ],
       reasonJa: '人員不足時こそ車両接触事故が多発します。ガイドマン配置や指差呼称などの安全基本動作は絶対に省略できません。',
-      reasonVi: 'Thiếu người là lúc dễ xảy ra va chạm xe GSE vào tàu bay nhất. Tuyệt đối không được cắt bỏ người xi-nhan hay bước 指差呼称.'
+      reasonVi: 'Thiếu người là lúc dễ xảy ra va chạm xe GSE vào tàu bay nhất. Tuyệt đối không được cắt bỏ người xi-nhan hay bước 指差呼称.',
+      reasonEn: 'Understaffed rushes cause most GSE-to-aircraft collisions; guidemen and Point-and-Call checks must never be omitted.'
     },
     {
       id: 'delay_arr',
       titleJa: '到着遅延（機材繰りにより5分遅れでオンブロック）',
       titleVi: 'Tàu bay đến trễ 5 phút (Arrival Delay)',
+      titleEn: 'Late Inbound Arrival (On-Block 5 Minutes Behind Schedule)',
       descJa: '到着が5分遅れ、定時出発までの余裕が圧迫されています。どう進めますか？',
       descVi: 'Chuyến bay vào bãi trễ 5 phút, quỹ thời gian turnaround bị thu hẹp. Bạn điều phối ra sao?',
+      descEn: 'The inbound aircraft arrives 5 minutes late, compressing turnaround margin. How do you proceed?',
       options: [
         { ok: true, timeDelta: 4, safetyDelta: 0, procDelta: 0,
           ja: '安全条件を満たす並行作業（降機取卸し・給油・ラバトリー等）を効率化し、関係部門へ見込み出発時刻を共有',
-          vi: 'Tối ưu làm song song các công việc hợp lệ (dỡ hàng, tra dầu, vệ sinh) đúng chuẩn an toàn và báo sớm giờ ETD mới' },
+          vi: 'Tối ưu làm song song các công việc hợp lệ (dỡ hàng, tra dầu, vệ sinh) đúng chuẩn an toàn và báo sớm giờ ETD mới',
+          en: 'Streamline approved parallel tasks (offload, fueling, lavatory) after safety clearance and coordinate updated ETD early' },
         { ok: false, timeDelta: 1, safetyDelta: -15, procDelta: -10,
           ja: '輪止め設置とエンジン完全停止を待たずに車両を接近させ作業を開始する',
-          vi: 'Cho xe GSE lao vào tiếp cận trước khi chèn bánh và tắt đèn beacon để tiết kiệm thời gian' }
+          vi: 'Cho xe GSE lao vào tiếp cận trước khi chèn bánh và tắt đèn beacon để tiết kiệm thời gian',
+          en: 'Rush GSE inside ERA before wheel chocks are set and before the red beacon turns OFF' }
       ],
       reasonJa: 'エンジン稼働中・衝突防止灯点灯中の接近は吸込・ブラストによる死亡事故リスクがあり厳禁です。',
-      reasonVi: 'Tiếp cận tàu bay khi đèn beacon còn sáng / động cơ chưa tắt hoàn toàn là lỗi cực kỳ nguy hiểm (rủi ro hút vào động cơ / luồng phản lực).'
+      reasonVi: 'Tiếp cận tàu bay khi đèn beacon còn sáng / động cơ chưa tắt hoàn toàn là lỗi cực kỳ nguy hiểm (rủi ro hút vào động cơ / luồng phản lực).',
+      reasonEn: 'Approaching while engines are spooling down or the red beacon is ON risks fatal engine ingestion or jet-blast injury.'
     }
   ];
 
@@ -192,76 +217,91 @@ export const PAX_SCENARIOS = [
       id: 'P1',
       titleJa: 'ケース1: オーバーブッキング（座席超過）発生',
       titleVi: 'Case 1: Overbooking (Bán vé vượt số ghế thực tế)',
+      titleEn: 'Case 1: Overbooked Flight (2 Seats Short at Gate)',
       descJa: '羽田発便が満席で2名分の座席が不足しています。地上係員として最初に取るべき適切な対応は？',
       descVi: 'Chuyến khởi hành từ Haneda bị dư 2 khách so với số ghế thực tế. Nhân viên mặt đất nên xử lý bước đầu thế nào?',
+      descEn: 'A departing Haneda flight is oversold by 2 seats. What is the proper first action for passenger service staff?',
       options: [
-        { ok: true, ja: '搭乗口でフレキシブル・トラベラー（協力金・振替便提供のボランティア）を募集し、丁寧にお詫びと代替便手配を行う', vi: 'Thông báo tìm hành khách tình nguyện đổi chuyến (Volunteer) kèm bồi thường + chuyển chuyến thay thế và xin lỗi trang trọng' },
-        { ok: false, ja: '一番最後にチェックインした乗客を事前説明なしで強制降機させる', vi: 'Tự ý từ chối khách check-in cuối cùng mà không kêu gọi tình nguyện viên trước' },
-        { ok: false, ja: '補助席（ジャンプシート）に一般旅客を座らせて出発する', vi: 'Cho hành khách thường ngồi tạm ghế jumpseat của tiếp viên' },
-        { ok: false, ja: '出発直前まで告知せず搭乗口を閉鎖する', vi: 'Im lặng tới sát giờ rồi đóng cửa boarding gate' }
+        { ok: true, ja: '搭乗口でフレキシブル・トラベラー（協力金・振替便提供のボランティア）を募集し、丁寧にお詫びと代替便手配を行う', vi: 'Thông báo tìm hành khách tình nguyện đổi chuyến (Volunteer) kèm bồi thường + chuyển chuyến thay thế và xin lỗi trang trọng', en: 'Solicit Flex-Traveler volunteers at the gate with compensation and rebooking onto an alternate flight, offering a sincere apology' },
+        { ok: false, ja: '一番最後にチェックインした乗客を事前説明なしで強制降機させる', vi: 'Tự ý từ chối khách check-in cuối cùng mà không kêu gọi tình nguyện viên trước', en: 'Involuntarily offload the last checked-in passenger without explanation or seeking volunteers' },
+        { ok: false, ja: '補助席（ジャンプシート）に一般旅客を座らせて出発する', vi: 'Cho hành khách thường ngồi tạm ghế jumpseat của tiếp viên', en: 'Seat regular passengers on cabin crew jumpseats' },
+        { ok: false, ja: '出発直前まで告知せず搭乗口を閉鎖する', vi: 'Im lặng tới sát giờ rồi đóng cửa boarding gate', en: 'Say nothing until departure time and abruptly close the boarding gate' }
       ],
       expJa: '日本の航空実務ではまず協力者（ボランティア）を募り、協力金・代替便・宿泊等の補償案内を行うのが原則です。',
-      expVi: 'Theo thông lệ hàng không Nhật Bản & quốc tế, luôn kêu gọi tình nguyện viên (Flex Traveler) kèm bồi thường/đổi chuyến trước khi áp dụng từ chối vận chuyển bắt buộc.'
+      expVi: 'Theo thông lệ hàng không Nhật Bản & quốc tế, luôn kêu gọi tình nguyện viên (Flex Traveler) kèm bồi thường/đổi chuyến trước khi áp dụng từ chối vận chuyển bắt buộc.',
+      expEn: 'Standard Japanese and IATA practice requires soliciting voluntary Flex Travelers with compensation, meals/hotel, and rebooking before involuntary denied boarding.'
     },
     {
       id: 'P2',
       titleJa: 'ケース2: 国際線チェックイン時のパスポート紛失',
       titleVi: 'Case 2: Hành khách làm mất hộ chiếu tại quầy check-in quốc tế',
+      titleEn: 'Case 2: Lost Physical Passport at International Check-in',
       descJa: '成田発国際線のお客様が「空港内でパスポートを落とした、写真コピーならスマホにある」と申し出ました。',
       descVi: 'Hành khách chuyến quốc tế tại Narita báo rơi hộ chiếu trong sân bay và chỉ có ảnh chụp hộ chiếu trên điện thoại.',
+      descEn: 'An international passenger at Narita reports losing their physical passport inside the terminal and shows only a smartphone photo.',
       options: [
-        { ok: true, ja: '原本なしでは搭乗不可であることを丁寧に説明し、空港遺失物センター・警察届出・予約変更・手荷物返却を案内する', vi: 'Giải thích lịch sự rằng ảnh chụp không thể xuất cảnh, hỗ trợ báo trung tâm thất lạc/cảnh sát sân bay, đổi vé & trả hành lý nếu đã gửi' },
-        { ok: false, ja: 'スマホの鮮明な画像があれば搭乗券を発券して出国審査へ案内する', vi: 'Ảnh chụp rõ nét nên vẫn cấp thẻ lên tàu cho khách đi qua hải quan' },
-        { ok: false, ja: '誓約書を書かせて搭乗させる', vi: 'Cho khách viết giấy cam kết rồi cho lên máy bay' },
-        { ok: false, ja: '手荷物だけ先に目的地へ送る', vi: 'Vẫn gửi hành lý ký gửi đi trước cho nhẹ' }
+        { ok: true, ja: '原本なしでは搭乗不可であることを丁寧に説明し、空港遺失物センター・警察届出・予約変更・手荷物返却を案内する', vi: 'Giải thích lịch sự rằng ảnh chụp không thể xuất cảnh, hỗ trợ báo trung tâm thất lạc/cảnh sát sân bay, đổi vé & trả hành lý nếu đã gửi', en: 'Politely explain that an original passport is mandatory, assist with Airport Lost & Found / Police report, rebook, and offload/return any checked bags' },
+        { ok: false, ja: 'スマホの鮮明な画像があれば搭乗券を発券して出国審査へ案内する', vi: 'Ảnh chụp rõ nét nên vẫn cấp thẻ lên tàu cho khách đi qua hải quan', en: 'Issue a boarding pass based on the clear smartphone photo' },
+        { ok: false, ja: '誓約書を書かせて搭乗させる', vi: 'Cho khách viết giấy cam kết rồi cho lên máy bay', en: 'Have the passenger sign a waiver form and board the international flight' },
+        { ok: false, ja: '手荷物だけ先に目的地へ送る', vi: 'Vẫn gửi hành lý ký gửi đi trước cho nhẹ', en: 'Dispatch the passenger\'s checked baggage ahead to the destination alone' }
       ],
       expJa: '国際線は有効なパスポート原本が必須です。また旅客が搭乗しない手荷物を単独搭載すること（PPBM違反）は航空保安上厳禁です。',
-      expVi: 'Bay quốc tế bắt buộc có hộ chiếu gốc hợp lệ. Đặc biệt cấm gửi hành lý khi hành khách không lên máy bay (vi phạm nguyên tắc an ninh PPBM).'
+      expVi: 'Bay quốc tế bắt buộc có hộ chiếu gốc hợp lệ. Đặc biệt cấm gửi hành lý khi hành khách không lên máy bay (vi phạm nguyên tắc an ninh PPBM).',
+      expEn: 'International travel requires a valid physical passport, and sending checked bags without the passenger onboard violates PPBM aviation security rules.'
     },
     {
       id: 'P3',
       titleJa: 'ケース3: 預け入れ手荷物が1個36kg（単体重量上限超過）',
       titleVi: 'Case 3: Một kiện hành lý ký gửi nặng 36 kg (Vượt ngưỡng đơn kiện 32 kg)',
+      titleEn: 'Case 3: Single Checked Bag Weighing 36 kg (Over 32 kg Safety Cap)',
       descJa: 'お客様が大型スーツケース1個（36kg）を預けたいと希望。超過料金を払うからこのまま預けてほしいと言っています。',
       descVi: 'Hành khách mang 1 vali nặng 36 kg và sẵn sàng đóng phí quá cân để gửi nguyên kiện.',
+      descEn: 'A passenger presents one 36 kg suitcase and offers to pay excess baggage fees to check it as a single piece.',
       options: [
-        { ok: true, ja: '地上作業員の労働安全および航空会社規定（単体最大32kg）を説明し、2個に分割していただくか航空貨物扱いをご案内する', vi: 'Giải thích quy định an toàn lao động tối đa 32 kg/kiện, đề nghị chia sang 2 kiện nhỏ hơn hoặc chuyển gửi theo đường hàng hóa (Cargo)' },
-        { ok: false, ja: '超過料金を徴収すれば何キロでもHEAVYタグを貼って受託する', vi: 'Chỉ cần thu đủ phí quá cân và dán nhãn HEAVY là nhận không giới hạn' },
-        { ok: false, ja: '計量器の表示を32kgと手入力で修正して通す', vi: 'Nhập tay 32 kg lên hệ thống cho xong thủ tục' },
-        { ok: false, ja: 'そのまま機内持込手荷物にしてもらう', vi: 'Bảo khách xách tay luôn lên cabin' }
+        { ok: true, ja: '地上作業員の労働安全および航空会社規定（単体最大32kg）を説明し、2個に分割していただくか航空貨物扱いをご案内する', vi: 'Giải thích quy định an toàn lao động tối đa 32 kg/kiện, đề nghị chia sang 2 kiện nhỏ hơn hoặc chuyển gửi theo đường hàng hóa (Cargo)', en: 'Explain the 32 kg occupational safety limit per piece and assist with repacking into 2 bags or shipping via Air Cargo' },
+        { ok: false, ja: '超過料金を徴収すれば何キロでもHEAVYタグを貼って受託する', vi: 'Chỉ cần thu đủ phí quá cân và dán nhãn HEAVY là nhận không giới hạn', en: 'Collect excess fees, attach a HEAVY tag, and accept any weight' },
+        { ok: false, ja: '計量器の表示を32kgと手入力で修正して通す', vi: 'Nhập tay 32 kg lên hệ thống cho xong thủ tục', en: 'Manually override the scale weight to 32 kg in the system' },
+        { ok: false, ja: 'そのまま機内持込手荷物にしてもらう', vi: 'Bảo khách xách tay luôn lên cabin', en: 'Tell the passenger to carry the 36 kg suitcase into the cabin' }
       ],
       expJa: '多くの航空会社・労働安全基準では1個あたり最大32kgが上限です。重量虚偽入力はW&B計算の誤差を招き絶対厳禁です。',
-      expVi: 'Quy chuẩn an toàn sân đỗ giới hạn tối đa 32 kg/kiện để tránh chấn thương nhân viên bốc xếp. Tuyệt đối không khai sai trọng lượng vì làm sai lệch W&B.'
+      expVi: 'Quy chuẩn an toàn sân đỗ giới hạn tối đa 32 kg/kiện để tránh chấn thương nhân viên bốc xếp. Tuyệt đối không khai sai trọng lượng vì làm sai lệch W&B.',
+      expEn: 'Single checked bags are capped at 32 kg to protect ramp handlers from injury, and falsifying bag weights corrupts aircraft W&B calculations.'
     },
     {
       id: 'P4',
       titleJa: 'ケース4: 搭乗口での機内持込サイズ超過（ゲートチェック）',
       titleVi: 'Case 4: Hành lý xách tay quá kích thước tại cửa lên tàu (Gate Check)',
+      titleEn: 'Case 4: Oversized Carry-on Gate-Checked at Boarding Gate',
       descJa: '搭乗口で規格外キャリーケースを貨物室預け（ゲートチェック）に切り替える際、必ず確認すべき最重要事項は？',
       descVi: 'Khi phải chuyển vali xách tay quá khổ xuống hầm hàng ngay tại cửa lên tàu (gate-check), điều quan trọng nhất phải kiểm tra là gì?',
+      descEn: 'When converting an oversized carry-on roller bag to gate-checked hold baggage, what critical check is mandatory?',
       options: [
-        { ok: true, ja: 'モバイルバッテリー・予備リチウム電池・電子タバコ・貴重品・常備薬を必ず取り出して機内へお持ちいただく', vi: 'Bắt buộc yêu cầu khách lấy ra toàn bộ pin dự phòng/pin lithium rời, thuốc lá điện tử, giấy tờ & đồ quý giá mang lên cabin' },
-        { ok: false, ja: 'タグだけ貼ってそのまま素早く貨物室へ運ぶ', vi: 'Dán thẻ ngay và chuyển thẳng xuống hầm hàng cho kịp giờ' },
-        { ok: false, ja: '電源が切れていればモバイルバッテリーは入れたままでよい', vi: 'Pin dự phòng tắt nguồn rồi thì để nguyên trong vali ký gửi được' },
-        { ok: false, ja: 'お客様に自分で貨物室ベルトまで運んでもらう', vi: 'Nhờ khách tự mang xuống băng chuyền sân đỗ' }
+        { ok: true, ja: 'モバイルバッテリー・予備リチウム電池・電子タバコ・貴重品・常備薬を必ず取り出して機内へお持ちいただく', vi: 'Bắt buộc yêu cầu khách lấy ra toàn bộ pin dự phòng/pin lithium rời, thuốc lá điện tử, giấy tờ & đồ quý giá mang lên cabin', en: 'Ensure all power banks, spare lithium batteries, e-cigarettes, valuables, and essential medications are removed and carried into the cabin' },
+        { ok: false, ja: 'タグだけ貼ってそのまま素早く貨物室へ運ぶ', vi: 'Dán thẻ ngay và chuyển thẳng xuống hầm hàng cho kịp giờ', en: 'Tag it immediately and send it straight down to the cargo hold without asking' },
+        { ok: false, ja: '電源が切れていればモバイルバッテリーは入れたままでよい', vi: 'Pin dự phòng tắt nguồn rồi thì để nguyên trong vali ký gửi được', en: 'Power banks may stay inside checked bags as long as they are switched off' },
+        { ok: false, ja: 'お客様に自分で貨物室ベルトまで運んでもらう', vi: 'Nhờ khách tự mang xuống băng chuyền sân đỗ', en: 'Ask the passenger to walk onto the apron and load it onto the belt loader themselves' }
       ],
       expJa: '予備リチウムイオン電池（モバイルバッテリー）は発火リスクのため貨物室への預け入れが法令・IATA規定で禁止されています。',
-      expVi: 'Pin lithium rời / sạc dự phòng bị CẤM tuyệt đối trong hành lý ký gửi do nguy cơ cháy nhiệt trong hầm hàng không thể dập trực tiếp.'
+      expVi: 'Pin lithium rời / sạc dự phòng bị CẤM tuyệt đối trong hành lý ký gửi do nguy cơ cháy nhiệt trong hầm hàng không thể dập trực tiếp.',
+      expEn: 'Spare lithium-ion batteries and power banks are strictly prohibited in cargo holds under Civil Aeronautics Law and IATA DGR due to thermal runaway fire risk.'
     },
     {
       id: 'P5',
       titleJa: 'ケース5: 電動車椅子（WCHC）旅客とタイトな乗継',
       titleVi: 'Case 5: Hành khách xe lăn điện (WCHC) & Nối chuyến thời gian sát',
+      titleEn: 'Case 5: Electric Wheelchair (WCHC) Passenger with Tight Connection',
       descJa: '歩行困難で電動車椅子を使用されるお客様（WCHC）がチェックイン。乗継時間も短めです。適切な対応は？',
       descVi: 'Hành khách không tự đi lại được dùng xe lăn điện (WCHC) làm thủ tục và có chuyến nối tiếp khá sát giờ. Cần làm gì?',
+      descEn: 'An immobile passenger using a battery-powered wheelchair (SSR WCHC) checks in with a tight onward connection. What is the proper procedure?',
       options: [
-        { ok: true, ja: 'バッテリー種別（乾式/湿式/リチウム）と短絡防止措置を確認し、非常口以外の適切な座席指定・搭乗口/乗継先への事前連携を行う', vi: 'Kiểm tra loại ắc quy/pin & ngắt cực chống đoản mạch, xếp ghế phù hợp (KHÔNG phải hàng thoát hiểm), thông báo trước cho cửa khởi hành & điểm nối chuyến' },
-        { ok: false, ja: '足元が広いため非常口座席（Exit Row）を割り当てる', vi: 'Xếp khách vào hàng ghế thoát hiểm (Exit Row) vì chỗ để chân rộng' },
-        { ok: false, ja: '電動車椅子はそのままバッテリー点検なしで貨物室に載せる', vi: 'Cứ đưa xe lăn điện xuống hầm hàng mà không cần kiểm tra pin' },
-        { ok: false, ja: '乗継先への連絡はお客様自身に行ってもらう', vi: 'Để khách tự liên hệ nhân viên ở sân bay nối chuyến' }
+        { ok: true, ja: 'バッテリー種別（乾式/湿式/リチウム）と短絡防止措置を確認し、非常口以外の適切な座席指定・搭乗口/乗継先への事前連携を行う', vi: 'Kiểm tra loại ắc quy/pin & ngắt cực chống đoản mạch, xếp ghế phù hợp (KHÔNG phải hàng thoát hiểm), thông báo trước cho cửa khởi hành & điểm nối chuyến', en: 'Verify battery type (dry/wet/lithium) & terminal insulation per DGR, assign a non-exit-row seat, arrange aisle-chair priority boarding, and pre-alert transfer staff' },
+        { ok: false, ja: '足元が広いため非常口座席（Exit Row）を割り当てる', vi: 'Xếp khách vào hàng ghế thoát hiểm (Exit Row) vì chỗ để chân rộng', en: 'Assign an Emergency Exit Row seat for extra legroom' },
+        { ok: false, ja: '電動車椅子はそのままバッテリー点検なしで貨物室に載せる', vi: 'Cứ đưa xe lăn điện xuống hầm hàng mà không cần kiểm tra pin', en: 'Load the electric wheelchair into the hold without checking battery specifications' },
+        { ok: false, ja: '乗継先への連絡はお客様自身に行ってもらう', vi: 'Để khách tự liên hệ nhân viên ở sân bay nối chuyến', en: 'Tell the passenger to arrange their own transfer assistance upon arrival' }
       ],
       expJa: '非常口座席は緊急脱出援助ができる旅客限定です。電動車椅子は危険物規定に基づきバッテリー確認・絶縁処理、WCHCは事前連携と優先搭乗が必須です。',
-      expVi: 'Hàng ghế thoát hiểm cấm xếp hành khách PRM/xe lăn. Xe lăn điện phải kiểm tra pin & cách điện theo quy định DGR, đồng thời phối hợp sớm với cổng nối chuyến.'
+      expVi: 'Hàng ghế thoát hiểm cấm xếp hành khách PRM/xe lăn. Xe lăn điện phải kiểm tra pin & cách điện theo quy định DGR, đồng thời phối hợp sớm với cổng nối chuyến.',
+      expEn: 'PRM passengers cannot sit in exit rows; electric wheelchairs require DGR battery inspection/insulation, pre-boarding aisle chair support, and downline transfer coordination.'
     }
   ];
 
@@ -445,67 +485,81 @@ export const ULD_CATALOG = [
       labelType: 'class9_li',
       titleJa: 'DGR-1: リチウムイオン電池組込機器（UN3481 / Section II）',
       titleVi: 'DGR-1: Pin Lithium-ion đóng kèm thiết bị (UN3481 / Section II)',
+      titleEn: 'DGR-1: Lithium-ion Batteries Contained in Equipment (UN3481 / Section II)',
       descJa: 'ノートPC 5台（1梱包あたり電池100Wh以下）。外装に「リチウム電池マーク（UN3481）」が明瞭に貼付され、損傷なし。旅客便への受託は？',
       descVi: '5 laptop (pin ≤100Wh/pin), kiện nguyên vẹn, dán rõ nhãn Lithium Battery Mark (UN3481). Có chấp nhận lên chuyến chở khách không?',
+      descEn: '5 laptops (each battery ≤100 Wh) in an undamaged outer carton clearly displaying the Lithium Battery Mark (UN3481). Can this be accepted on a passenger flight?',
       options: [
-        { ok: true, ja: '受託可（ACCEPT）— Section II基準およびリチウム電池マーク・梱包健全性を満たす', vi: 'CHẤP NHẬN (ACCEPT) — Đạt tiêu chuẩn Section II, nhãn UN3481 rõ ràng, bao bì nguyên vẹn' },
-        { ok: false, ja: '受託不可（REJECT）— リチウム電池はすべて貨物専用機（CAO）のみ', vi: 'TỪ CHỐI (REJECT) — Mọi pin lithium đều cấm lên máy bay chở khách' }
+        { ok: true, ja: '受託可（ACCEPT）— Section II基準およびリチウム電池マーク・梱包健全性を満たす', vi: 'CHẤP NHẬN (ACCEPT) — Đạt tiêu chuẩn Section II, nhãn UN3481 rõ ràng, bao bì nguyên vẹn', en: 'ACCEPT — Complies with PI967 Section II limits, UN3481 Lithium Battery Mark, and undamaged packaging' },
+        { ok: false, ja: '受託不可（REJECT）— リチウム電池はすべて貨物専用機（CAO）のみ', vi: 'TỪ CHỐI (REJECT) — Mọi pin lithium đều cấm lên máy bay chở khách', en: 'REJECT — All lithium batteries are restricted to Cargo Aircraft Only (CAO)' }
       ],
       expJa: 'UN3481（機器同梱/組込）でSection II基準を満たし適切に表示・梱包されていれば、旅客機へ受託可能です（UN3480単体電池は旅客機禁止）。',
-      expVi: 'UN3481 (pin kèm/trong thiết bị) đạt chuẩn Section II được phép đi máy bay chở khách. Ngược lại, pin rời UN3480 bị cấm trên máy bay chở khách.'
+      expVi: 'UN3481 (pin kèm/trong thiết bị) đạt chuẩn Section II được phép đi máy bay chở khách. Ngược lại, pin rời UN3480 bị cấm trên máy bay chở khách.',
+      expEn: 'UN3481 (contained in/packed with equipment) meeting Section II criteria is acceptable on passenger aircraft, whereas standalone UN3480 cargo is forbidden on passenger flights.'
     },
     {
       id: 'D2',
       labelType: 'class9_dryice',
       titleJa: 'DGR-2: ドライアイス（UN1845 / Class 9）保冷貨物',
       titleVi: 'DGR-2: Đá khô bảo quản lạnh (UN1845 / Class 9)',
+      titleEn: 'DGR-2: Dry Ice Refrigerant Shipment (UN1845 / Class 9)',
       descJa: '生鮮食品の保冷用ドライアイス（正味3.0kg）。ガス抜き可能な発泡箱、Class 9ラベル＋UN1845＋正味重量(3.0kg)記載あり。危険物申告書（DGD）は無い。',
       descVi: 'Đá khô làm lạnh thực phẩm (3.0 kg net), thùng xốp thoát khí tốt, có nhãn Class 9 + UN1845 + ghi 3.0 kg net, KHÔNG kèm tờ khai DGD.',
+      descEn: '3.0 kg net Dry Ice cooling non-dangerous seafood in a vented insulated carton bearing Class 9 label, UN1845, and "Net Wt 3.0 kg", without a Shipper\'s Declaration (DGD).',
       options: [
-        { ok: true, ja: '受託可（ACCEPT）— 非危険物の保冷用ドライアイスはAWB記載・Class 9表示・正味重量表示があればDGD不要', vi: 'CHẤP NHẬN (ACCEPT) — Đá khô dùng làm lạnh hàng thường không cần DGD nếu đã có nhãn Class 9, UN1845, ghi net weight & khai trên AWB' },
-        { ok: false, ja: '受託不可（REJECT）— 密閉容器に入れ替えさせないと受託できない', vi: 'TỪ CHỐI (REJECT) — Phải yêu cầu đóng kín khí hoàn toàn mới nhận' }
+        { ok: true, ja: '受託可（ACCEPT）— 非危険物の保冷用ドライアイスはAWB記載・Class 9表示・正味重量表示があればDGD不要', vi: 'CHẤP NHẬN (ACCEPT) — Đá khô dùng làm lạnh hàng thường không cần DGD nếu đã có nhãn Class 9, UN1845, ghi net weight & khai trên AWB', en: 'ACCEPT — Dry Ice refrigerating non-DG cargo requires no DGD when vented, labeled Class 9 / UN1845 + Net Weight, and declared on the AWB' },
+        { ok: false, ja: '受託不可（REJECT）— 密閉容器に入れ替えさせないと受託できない', vi: 'TỪ CHỐI (REJECT) — Phải yêu cầu đóng kín khí hoàn toàn mới nhận', en: 'REJECT — Require the shipper to repack Dry Ice into a hermetically sealed airtight drum' }
       ],
       expJa: 'ドライアイスは昇華してCO2ガスを発生するため、密閉容器は破裂の危険があり厳禁です。換気可能容器＋正味重量表示＋NOTOC確認が重要です。',
-      expVi: 'Đá khô thăng hoa sinh khí CO2 nên CẤM đóng kín khí (nguy cơ nổ thùng). Cần bao bì thoát khí, ghi rõ khối lượng tịnh và báo NOTOC cho cơ trưởng.'
+      expVi: 'Đá khô thăng hoa sinh khí CO2 nên CẤM đóng kín khí (nguy cơ nổ thùng). Cần bao bì thoát khí, ghi rõ khối lượng tịnh và báo NOTOC cho cơ trưởng.',
+      expEn: 'Dry Ice sublimates into CO2 gas and will burst airtight containers; vented packaging, Class 9/UN1845 net weight marking, and NOTOC entry are required.'
     },
     {
       id: 'D3',
       labelType: 'class3',
       titleJa: 'DGR-3: 香水類（UN1266 / Class 3 引火性液体）— 梱包濡れ・申告書不備',
       titleVi: 'DGR-3: Nước hoa (UN1266 / Class 3 Chất lỏng dễ cháy) — Thùng ướt & thiếu DGD',
+      titleEn: 'DGR-3: Perfumery Products (UN1266 / Class 3) — Leaking Stain & Unsigned DGD',
       descJa: 'Class 3ラベル貼付の段ボール箱に液漏れによるシミがあり、危険物申告書（Shipper\'s Declaration）の荷送人署名も抜けています。',
       descVi: 'Thùng hàng dán nhãn Class 3 có vết ẩm ướt nghi rò rỉ chất lỏng, tờ khai Shipper\'s Declaration thiếu chữ ký người gửi.',
+      descEn: 'A fiberboard box with a Class 3 Flammable Liquid label shows damp staining/odor, and the Shipper\'s Declaration (DGD) is missing the shipper\'s signature.',
       options: [
-        { ok: false, ja: '受託可（ACCEPT）— テープで補強し、係員が代わりに署名して搭載する', vi: 'CHẤP NHẬN (ACCEPT) — Dán băng keo gia cố lại và nhân viên ký thay cho kịp chuyến' },
-        { ok: true, ja: '受託拒否（REJECT）— 液漏れ疑い・梱包損傷・DGD不備はいずれもIATA DGRチェックリスト不合格', vi: 'TỪ CHỐI (REJECT) — Rò rỉ/hư hỏng bao bì và thiếu chữ ký trên DGD đều không đạt IATA DGR Acceptance Checklist' }
+        { ok: false, ja: '受託可（ACCEPT）— テープで補強し、係員が代わりに署名して搭載する', vi: 'CHẤP NHẬN (ACCEPT) — Dán băng keo gia cố lại và nhân viên ký thay cho kịp chuyến', en: 'ACCEPT — Tape over the wet corner and sign the DGD on the shipper\'s behalf' },
+        { ok: true, ja: '受託拒否（REJECT）— 液漏れ疑い・梱包損傷・DGD不備はいずれもIATA DGRチェックリスト不合格', vi: 'TỪ CHỐI (REJECT) — Rò rỉ/hư hỏng bao bì và thiếu chữ ký trên DGD đều không đạt IATA DGR Acceptance Checklist', en: 'REJECT — Suspected leakage/damaged packaging and an unsigned DGD both fail the IATA DGR Acceptance Checklist' }
       ],
       expJa: '漏れや損傷がある危険物、および申告書不備のある貨物は絶対に受託できません。係員による代筆・改ざんも厳禁です。',
-      expVi: 'Kiện hàng nguy hiểm bị rò rỉ/rách hoặc thiếu chữ ký chủ hàng trên DGD bắt buộc phải TỪ CHỐI. Tuyệt đối không sửa hộ tờ khai.'
+      expVi: 'Kiện hàng nguy hiểm bị rò rỉ/rách hoặc thiếu chữ ký chủ hàng trên DGD bắt buộc phải TỪ CHỐI. Tuyệt đối không sửa hộ tờ khai.',
+      expEn: 'Damaged or leaking DG packages and incomplete DGDs must always be rejected; airline staff may never sign or alter a Shipper\'s Declaration.'
     },
     {
       id: 'D4',
       labelType: 'class2',
       titleJa: 'DGR-4: 一般貨物申告だが「キャンプ用品」からガス缶反応（未申告危険物）',
       titleVi: 'DGR-4: Hàng thường khai "Đồ cắm trại" nhưng X-ray phát hiện bình gas (Hàng nguy hiểm không khai báo)',
+      titleEn: 'DGR-4: General Cargo "Camping Gear" Reveals Butane Gas Canisters on X-Ray (Undeclared DG)',
       descJa: '「Camping Equipment（一般貨物）」として搬入された箱をX線検査したところ、カセットガスボンベ（引火性ガス Class 2.1）が複数本写りました。',
       descVi: 'Kiện hàng khai là "Camping Equipment" (hàng thường) nhưng soi X-ray thấy nhiều bình gas mini (Class 2.1 Khí dễ cháy).',
+      descEn: 'X-ray screening of general cargo declared as "Camping Equipment" reveals multiple pressurized butane gas cartridges (Class 2.1 Flammable Gas).',
       options: [
-        { ok: true, ja: '即時受託停止・隔離し、未申告危険物（Undeclared DG）として保安・安全部門および当局規程に従い報告する', vi: 'Dừng tiếp nhận & cách ly ngay, báo cáo theo quy trình Hàng nguy hiểm không khai báo (Undeclared DG)' },
-        { ok: false, ja: '一般貨物としてそのまま搭載し、到着後に注意する', vi: 'Cho qua lần này rồi nhắc nhở người gửi sau' }
+        { ok: true, ja: '即時受託停止・隔離し、未申告危険物（Undeclared DG）として保安・安全部門および当局規程に従い報告する', vi: 'Dừng tiếp nhận & cách ly ngay, báo cáo theo quy trình Hàng nguy hiểm không khai báo (Undeclared DG)', en: 'Immediately stop acceptance, quarantine the shipment, and report it as Undeclared Dangerous Goods per JCAB/SMS security procedures' },
+        { ok: false, ja: '一般貨物としてそのまま搭載し、到着後に注意する', vi: 'Cho qua lần này rồi nhắc nhở người gửi sau', en: 'Load it as general cargo anyway and warn the shipper after arrival' }
       ],
       expJa: '未申告危険物（Hidden / Undeclared DG）は航空火災の最大要因の一つです。発見時は即時受託拒否・所定報告を行います。',
-      expVi: 'Hàng nguy hiểm ẩn / không khai báo (Undeclared DG) là mối nguy cháy nổ hàng đầu trên không. Phải từ chối và lập báo cáo sự cố ngay.'
+      expVi: 'Hàng nguy hiểm ẩn / không khai báo (Undeclared DG) là mối nguy cháy nổ hàng đầu trên không. Phải từ chối và lập báo cáo sự cố ngay.',
+      expEn: 'Hidden/Undeclared Dangerous Goods are a leading cause of in-flight cargo fires; intercept, isolate, and file an official DG occurrence report immediately.'
     },
     {
       id: 'D5',
       labelType: 'cao',
       titleJa: 'DGR-5: 「CAO（Cargo Aircraft Only）」ラベル貼付貨物を旅客便へ予約',
       titleVi: 'DGR-5: Kiện hàng dán nhãn CAO (Chỉ bay tàu chở hàng) đặt chỗ trên chuyến chở khách',
+      titleEn: 'DGR-5: "CAO (Cargo Aircraft Only)" Corrosive Shipment Booked on Passenger Flight',
       descJa: '腐食性物質（Class 8）にオレンジ色の「CARGO AIRCRAFT ONLY（CAO）」ラベルが貼られた貨物が、旅客便（A320）の搭載予定リストに入っています。',
       descVi: 'Kiện chất ăn mòn (Class 8) có dán nhãn cam "CARGO AIRCRAFT ONLY (CAO)" được lên danh sách xếp lên chuyến bay chở khách A320.',
+      descEn: 'A Class 8 Corrosive drum bearing an orange "CARGO AIRCRAFT ONLY (CAO)" label appears on the planned load list for a passenger A320.',
       options: [
-        { ok: true, ja: '旅客便への搭載を拒否（REJECT）し、貨物専用機（Freighter）への振替を手配する', vi: 'TỪ CHỐI xếp lên chuyến chở khách và yêu cầu chuyển sang tàu bay chuyên chở hàng (Freighter)' },
-        { ok: false, ja: 'バルク室の奥に積めば旅客室と離れているので搭載してよい', vi: 'Xếp sâu vào hầm Bulk cho xa khoang khách là bay được' }
+        { ok: true, ja: '旅客便への搭載を拒否（REJECT）し、貨物専用機（Freighter）への振替を手配する', vi: 'TỪ CHỐI xếp lên chuyến chở khách và yêu cầu chuyển sang tàu bay chuyên chở hàng (Freighter)', en: 'REJECT from the passenger flight and rebook onto an all-cargo Freighter aircraft' },
+        { ok: false, ja: 'バルク室の奥に積めば旅客室と離れているので搭載してよい', vi: 'Xếp sâu vào hầm Bulk cho xa khoang khách là bay được', en: 'Load it in the rear bulk hold away from passengers' }
       ],
       expJa: 'CAOラベルは「旅客機搭載厳禁・貨物専用機のみ」を意味します。いかなる貨物室であっても旅客便には搭載できません。',
       expVi: 'Nhãn CAO (Cargo Aircraft Only) cấm tuyệt đối xếp lên máy bay chở hành khách dưới mọi hình thức.',
@@ -626,86 +680,122 @@ export const SAFETY_CHECKLIST_GROUPS = [
   ];
 
 export const A3D_SPOTS = [
-    { id: '101', ngoNo: '6', name: 'NGO Spot 6 (B737-800 / Bulk)', acType: 'B738', cx: -68, cz: 10, wingHalf: 18, fuseLen: 37, bodyColor: [242, 245, 250], tailColor: [27, 79, 156], era: { x1: -90, x2: -45, z1: -14, z2: 34 }, loadPt: { x: -78, z: 20 } },
-    { id: '102', ngoNo: '7', name: 'NGO Spot 7 (A320 / AKH+Bulk)', acType: 'A320', cx: 0, cz: 10, wingHalf: 18, fuseLen: 36, bodyColor: [245, 247, 250], tailColor: [20, 92, 168], era: { x1: -22, x2: 22, z1: -14, z2: 34 }, loadPt: { x: -10, z: 20 } },
-    { id: '103', ngoNo: '14', name: 'NGO Spot 14 (B787-8 / Dual PBB)', acType: 'B788', cx: 68, cz: 10, wingHalf: 22, fuseLen: 42, bodyColor: [244, 246, 250], tailColor: [30, 64, 128], era: { x1: 44, x2: 94, z1: -16, z2: 35 }, loadPt: { x: 56, z: 21 } }
+    { id: '101', ngoNo: '6', name: 'NGO Spot 6 (B737-800 / Bulk)', acType: 'B738', cx: -68, cz: 10, wingHalf: 18, fuseLen: 39, bodyColor: [242, 245, 250], tailColor: [27, 79, 156], era: { x1: -90, x2: -45, z1: -14, z2: 34 }, loadPt: { x: -78, z: 20 } },
+    { id: '102', ngoNo: '7', name: 'NGO Spot 7 (A320 / B789)', acType: 'A320', cx: 0, cz: 10, wingHalf: 18, fuseLen: 38, bodyColor: [245, 247, 250], tailColor: [20, 92, 168], era: { x1: -22, x2: 22, z1: -14, z2: 34 }, loadPt: { x: -10, z: 20 } },
+    { id: '103', ngoNo: '14', name: 'NGO Spot 14 (B787-8 / Dual PBB)', acType: 'B788', cx: 98, cz: 10, wingHalf: 24, fuseLen: 56, bodyColor: [244, 246, 250], tailColor: [30, 64, 128], era: { x1: 70, x2: 126, z1: -18, z2: 38 }, loadPt: { x: 84, z: 21 } }
   ];
 
-  // Các vật cản cứng (tòa nhà, tháp, bồn xăng) để chống xe đi xuyên tường
+  // Solid 1:1 Meter Building & Infrastructure Colliders on Chubu Centrair (RJGG) Island
   export const A3D_OBSTACLES = [
-    { id: 'terminal', x1: -98, x2: 46, z1: 62, z2: 92 },
-    { id: 'tower', x1: -127, x2: -113, z1: 69, z2: 83 },
-    { id: 'cargo', x1: 58, x2: 126, z1: 62, z2: 92 },
-    { id: 'fire', x1: 114, x2: 136, z1: -24, z2: 0 },
-    { id: 'fuel', x1: 114, x2: 136, z1: 8, z2: 30 }
+    { id: 't1_main', x1: -165, x2: 185, z1: 68, z2: 175, name: 'Terminal 1 Main' },
+    { id: 't1_nwing', x1: 185, x2: 430, z1: 66, z2: 112, name: 'T1 North Wing' },
+    { id: 't1_swing', x1: -435, x2: -165, z1: 66, z2: 112, name: 'T1 South Wing' },
+    { id: 'center_pier', x1: 28, x2: 64, z1: -180, z2: 40, name: 'T1 Center Pier (300m)' },
+    { id: 'tower', x1: -158, x2: -134, z1: 215, z2: 239, name: 'Centrair ATC Tower (86.75m)' },
+    { id: 'fod_hall', x1: -535, x2: -455, z1: 145, z2: 225, name: 'Flight of Dreams' },
+    { id: 't2_main', x1: -960, x2: -565, z1: 95, z2: 168, name: 'Terminal 2 LCC' },
+    { id: 'fire', x1: 465, x2: 515, z1: 62, z2: 102, name: 'Airport Fire Station' },
+    { id: 'cargo1', x1: 545, x2: 880, z1: 72, z2: 155, name: 'Cargo Warehouse 1 & 2' },
+    { id: 'cargo2', x1: 910, x2: 1290, z1: 72, z2: 155, name: 'Int\'l Cargo Warehouse 3' },
+    { id: 'fuel_farm', x1: 1330, x2: 1510, z1: 150, z2: 290, name: 'Jet A-1 Fuel Farm' },
+    { id: 'coast_guard', x1: 1620, x2: 1820, z1: 68, z2: 135, name: 'Japan Coast Guard Base' }
   ];
 
-  // Danh mục các hạng mục sân bay chuẩn mô phỏng NGO (Centrair)
+  // Official Chubu Centrair (NGO / RJGG) 1:1 Scale Facility Guide (JA / VI / EN)
   export const A3D_FACILITIES = [
     {
-      id: 'runway', cam: { tx: 0, ty: 0, tz: -95, dist: 145, yaw: 0.3, pitch: 0.52 }, badge: 'FORBIDDEN', badgeCls: 'badge-danger',
-      ja: '滑走路 RWY 36/18（伊勢湾海上空港モデル）', vi: 'Đường băng RWY 36/18 (Mô phỏng đảo nhân tạo NGO)',
-      ruleJa: '【絶対進入禁止】中部国際空港（NGO）準拠の単一滑走路36/18。地上車両（GSE）の無許可進入は滑走路誤進入（Runway Incursion）となります。',
-      ruleVi: '[CẤM TUYỆT ĐỐI] Đường băng đơn 36/18 mô phỏng theo Centrair NGO trên vịnh Ise. Cấm tuyệt đối xe GSE đi vào.'
+      id: 'runway', cam: { tx: 0, ty: 0, tz: -580, dist: 920, yaw: 0.35, pitch: 0.48 }, badge: 'FORBIDDEN', badgeCls: 'badge-danger',
+      ja: '滑走路 RWY 36/18（実寸 3,500m × 60m・ピア先端から400m）',
+      vi: 'Đường băng RWY 36/18 (Tỷ lệ thật 3.500m × 60m · Cách mũi Pier 400m)',
+      en: 'Runway 36/18 (True 1:1 Scale 3,500m × 60m · 400m West of Pier Tip)',
+      ruleJa: '【絶対進入禁止】中部国際空港（RJGG）実寸の3,500m×60m滑走路。地上車両の無許可進入は滑走路誤進入（Runway Incursion）となります。',
+      ruleVi: '[CẤM TUYỆT ĐỐI] Đường băng chuẩn 3.500m × 60m của Centrair NGO. Xe mặt đất đi vào khi chưa có phép ATC là vi phạm xâm nhập đường băng.',
+      ruleEn: '[STRICTLY FORBIDDEN] Full-scale 3,500m × 60m Centrair runway. Entering without ATC Tower clearance constitutes a Runway Incursion.'
     },
     {
-      id: 'taxiway', cam: { tx: -25, ty: 0, tz: -55, dist: 115, yaw: 0.45, pitch: 0.52 }, badge: 'FORBIDDEN', badgeCls: 'badge-danger',
-      ja: '誘導路 A（Taxiway Alpha）', vi: 'Đường lăn song song A (誘導路 A)',
-      ruleJa: '【進入禁止】航空機専用。地上車両はエプロン境界赤線より北側へ出てはなりません。',
-      ruleVi: '[CẤM LÁI VÀO] Đường lăn chỉ dành cho tàu bay. Xe GSE không vượt qua vạch đỏ ranh giới sân đỗ.'
+      id: 'taxiway', cam: { tx: 0, ty: 0, tz: -335, dist: 520, yaw: 0.42, pitch: 0.50 }, badge: 'FORBIDDEN', badgeCls: 'badge-danger',
+      ja: '平行誘導路 A・B・C ＆ 高速離脱誘導路 (A1〜A10)',
+      vi: 'Hệ thống Đường lăn A · B · C & Thoát nhanh (A1–A10)',
+      en: 'Parallel Taxiways A, B, C & Rapid Exits (A1–A10)',
+      ruleJa: '【進入禁止】航空機専用。地上車両は赤実線（ABL）を越えて誘導路へ出てはなりません（横断はサービスレーンのみ）。',
+      ruleVi: '[CẤM LÁI VÀO] Đường lăn chỉ dành cho tàu bay. Xe GSE cấm vượt vạch đỏ ABL (chỉ được băng qua tại đúng vạch trắng Service Lane).',
+      ruleEn: '[NO GSE ENTRY] Taxiways are aircraft-only. GSE must never cross the solid red ABL boundary except via marked Service Lanes.'
     },
     {
       id: 'engine', cam: { tx: -68, ty: 2, tz: 8, dist: 64, yaw: 0.65, pitch: 0.55 }, badge: 'DANGER', badgeCls: 'badge-danger',
-      ja: 'エンジン吸込・ブラスト危険区域 & 翼下禁止', vi: 'Vùng hút động cơ, Luồng phản lực & Dưới cánh',
+      ja: 'エンジン吸込・ブラスト危険区域 & 翼下走行禁止',
+      vi: 'Vùng hút động cơ, Luồng phản lực Jet Blast & Cấm chui cánh',
+      en: 'Engine Suction, Jet Blast Hazard Zone & No Under-Wing Driving',
       ruleJa: '【危険区域】赤色ビーコン点灯時はエンジン前方（吸込）・後方（ジェットブラスト）へ絶対接近禁止。消灯時も翼下・胴体下走行は厳禁。',
-      ruleVi: '[NGUY HIỂM] Khi đèn beacon sáng cấm vào vùng hút phía trước & luồng phản lực sau. Luôn cấm lái xe luồn dưới cánh/bụng máy bay.'
+      ruleVi: '[NGUY HIỂM] Khi đèn beacon sáng cấm vào vùng hút phía trước & luồng phản lực sau. Luôn cấm lái xe luồn dưới cánh/bụng máy bay.',
+      ruleEn: '[DANGER ZONE] Never approach forward intake or aft jet blast while the red beacon is ON; driving beneath wings or fuselage is always prohibited.'
     },
     {
       id: 'gse_holds', cam: { tx: -8, ty: 2.5, tz: 12, dist: 56, yaw: -0.95, pitch: 0.45 }, badge: 'GSE MATCH', badgeCls: 'badge-accent',
-      ja: '右舷貨物室 GSE配置（Low-Deck High-Loader vs Belt Loader）', vi: 'Vị trí GSE Hầm hàng Phải: Low-Deck High-Loader & Belt Loader',
-      ruleJa: '【機材別GSE使い分け】A320(Spot 7)・B787(Spot 14)の前・後部コンテナ室は「ローデッキ・ハイリフトローダー」、バルク室とB737(Spot 6)全室は「ベルトローダー」を右舷側へ装着。貨物機用メインデッキローダーは貨物上屋に待機。',
-      ruleVi: '[CHUẨN DÙNG ĐÚNG GSE] Hầm container A320 (Spot 7) & B787 (Spot 14) dùng Low-Deck High-Lift Loader; hầm Bulk & toàn bộ B737 (Spot 6) dùng Belt Loader ở bên PHẢI thân máy bay. Main-Deck Loader cao nằm bên kho hàng Cargo.'
+      ja: '右舷貨物室 GSE配置（Low-Deck High-Loader vs Belt Loader）',
+      vi: 'Vị trí GSE Hầm hàng Phải: Low-Deck High-Loader & Belt Loader',
+      en: 'Starboard Cargo GSE Layout (High-Lift Loader vs Belt Loader)',
+      ruleJa: '【機材別GSE使い分け】A320(Spot 7)・B787(Spot 14)の前・後部コンテナ室は「ローデッキ・ハイリフトローダー」、バルク室とB737(Spot 6)全室は「ベルトローダー」を右舷側へ装着。',
+      ruleVi: '[CHUẨN DÙNG ĐÚNG GSE] Hầm container A320 (Spot 7) & B787 (Spot 14) dùng Low-Deck High-Lift Loader; hầm Bulk & toàn bộ B737 (Spot 6) dùng Belt Loader ở mạn PHẢI.',
+      ruleEn: '[FLEET GSE MATCH] A320 (Spot 7) and B787 (Spot 14) container holds use Low-Deck High-Lift Loaders; Bulk holds and B737 (Spot 6) use Belt Loaders on Starboard.'
     },
     {
       id: 'pbb_ngo', cam: { tx: 16, ty: 5, tz: 24, dist: 58, yaw: 0.72, pitch: 0.42 }, badge: 'PORT SIDE', badgeCls: 'badge-warn',
-      ja: 'NGO準拠 PBB（左舷側ロータンダから直角装着）＆ スカイデッキ', vi: 'Ống lồng PBB tiến ngang từ mạn Trái (L1/L2) & Sky Deck NGO',
-      ruleJa: '【PBB標準動線】PBB（搭乗橋）は機首正面ではなく左舷（Port側）の固定橋ロータンダからL1/L2ドアへ真横（直角）に接続。可動範囲下の駐車・通過は厳禁。',
-      ruleVi: '[CHUẨN PBB] Ống lồng PBB tiến VUÔNG GÓC từ tháp xoay Rotunda bên hông TRÁI (Port) vào cửa L1 (và L2 trên B787) — tuyệt đối không đi chéo qua mũi tàu bay.'
+      ja: 'NGO準拠 PBB（左舷側ロータンダから直角装着）＆ 300mセンターピア',
+      vi: 'Ống lồng PBB tiến ngang từ mạn Trái (L1/L2) & Center Pier 300m',
+      en: 'Port-Side PBB Docking (L1/L2) & 300m Center Pier Sky Deck',
+      ruleJa: '【PBB標準動線】PBB（搭乗橋）は左舷（Port側）の固定橋ロータンダからL1/L2ドアへ真横に接続。赤斜線のPBB危険区域は車両進入厳禁。',
+      ruleVi: '[CHUẨN PBB] Ống lồng PBB tiến VUÔNG GÓC từ tháp xoay Rotunda mạn TRÁI vào cửa L1/L2; vùng gạch chéo đỏ dưới gầm PBB cấm tuyệt đối mọi loại xe.',
+      ruleEn: '[PBB CLEARANCE] PBBs dock perpendicular to Port doors L1/L2; the red cross-hatched PBB operating zone is strictly off-limits to all vehicles.'
     },
     {
-      id: 'serviceroad', cam: { tx: 0, ty: 0, tz: 48, dist: 120, yaw: 0.15, pitch: 0.56 }, badge: 'MAX 30km/h', badgeCls: 'badge-ok',
-      ja: '構内車両通路 (Service Road)', vi: 'Đường chạy xe nội bộ GSE (構内通路)',
-      ruleJa: '【走行可能】白線で区画されたGSE専用通路。制限速度30km/h以下・航空機最優先・一時停止線厳守。',
-      ruleVi: '[ĐƯỢC PHÉP LÁI] Đường quy định cho xe GSE có vạch trắng. Giới hạn ≤30 km/h, luôn nhường đường tàu bay.'
+      id: 'serviceroad', cam: { tx: 0, ty: 0, tz: 48, dist: 160, yaw: 0.15, pitch: 0.56 }, badge: 'MAX 30km/h', badgeCls: 'badge-ok',
+      ja: '構内車両通路（全長2.8km T2〜T1〜貨物地区幹線道路）',
+      vi: 'Đường giao thông GSE nội bộ (Trục chính 2,8km nối T2 – T1 – Kho Cargo)',
+      en: 'Airside GSE Spine Road (2.8km T2 – T1 – Cargo Multi-Lane Arterial)',
+      ruleJa: '【走行可能】左側通行・制限速度30km/h以下（牽引時15km/h）・固定橋下は高さ制限3.8m・航空機最優先。',
+      ruleVi: '[ĐƯỢC PHÉP LÁI] Đi bên trái, tối đa 30 km/h (kéo moóc 15 km/h), gầm cầu cố định giới hạn cao 3,8m, luôn nhường tàu bay.',
+      ruleEn: '[AUTHORIZED ROAD] Keep left, max 30 km/h (15 km/h towing), 3.8m height clearance under fixed bridges, and always yield to aircraft.'
     },
     {
       id: 'gse', cam: { tx: -116, ty: 2, tz: 18, dist: 78, yaw: 0.72, pitch: 0.55 }, badge: 'MAX 15km/h', badgeCls: 'badge-ok',
-      ja: 'GSE待機エリア (GSE Staging Area)', vi: 'Khu đỗ & tập kết xe GSE (GSE待機エリア)',
-      ruleJa: '【待機・駐車区域】トーイングトラクター・ベルトローダー・ローデッキローダー等の所定待機場所。',
-      ruleVi: '[KHU TẬP KẾT GSE] Nơi đỗ xe đầu kéo, băng chuyền, Low-Deck Loader đúng ô vàng; rời xe phải kéo phanh tay.'
+      ja: 'GSE待機エリア・機材待機区域 (ESA)',
+      vi: 'Khu đỗ & Tập kết xe GSE (ESA / GSE待機エリア)',
+      en: 'Equipment Staging Area (ESA)',
+      ruleJa: '【待機・駐車区域】白破線枠内に整頓駐車し、降車時はPブレーキ・エンジン停止・輪止めを徹底。',
+      ruleVi: '[KHU TẬP KẾT GSE] Đỗ gọn trong ô vạch trắng đứt nét bên ngoài ERA; rời xe bắt buộc kéo phanh tay, tắt máy & chèn bánh.',
+      ruleEn: '[GSE STAGING] Park neatly inside white-dashed ESA bays outside red ERA; set parking brake, shut off engine, and chock wheels.'
     },
     {
-      id: 'tower', cam: { tx: -120, ty: 18, tz: 76, dist: 85, yaw: 0.7, pitch: 0.38 }, badge: 'ATC', badgeCls: 'badge-accent',
-      ja: '中部管制塔 (Chubu Tower / ATC)', vi: 'Đài kiểm soát không lưu Chubu (管制塔)',
-      ruleJa: '滑走路36/18・誘導路Aの航空機およびプッシュバック・牽引許可を統括する中枢施設。',
-      ruleVi: 'Trung tâm điều hành cấp huấn lệnh đường băng 36/18, đường lăn A và đẩy lùi (Pushback).'
+      id: 'tower', cam: { tx: -146, ty: 42, tz: 227, dist: 185, yaw: 0.65, pitch: 0.36 }, badge: 'ATC 86.75m', badgeCls: 'badge-accent',
+      ja: '中部管制塔 (Chubu Tower · 高さ86.75m)',
+      vi: 'Đài kiểm soát không lưu Chubu (Cao 86,75m)',
+      en: 'Chubu ATC Control Tower (Height 86.75m)',
+      ruleJa: '高さ86.75mの管制塔から滑走路36/18・誘導路A/B/C・全エプロン・場周道路を見渡し統括します。',
+      ruleVi: 'Đài không lưu cao 86,75m điều hành toàn bộ đường băng 36/18, đường lăn A/B/C, sân đỗ T1/T2/沖留/Cargo.',
+      ruleEn: 'Standing 86.75m tall, Chubu Tower oversees RWY 36/18, Taxiways A/B/C, T1, T2, Remote, and Cargo aprons.'
     },
     {
-      id: 'cargo_fire', cam: { tx: 102, ty: 5, tz: 35, dist: 125, yaw: -0.65, pitch: 0.5 }, badge: 'CARGO / FIRE', badgeCls: 'badge-accent',
-      ja: '貨物上屋・Main-Deck Loader・消防署・給油施設', vi: 'Kho Cargo, Main-Deck Loader, Cứu hỏa & Kho xăng',
-      ruleJa: '貨物専用機用メインデッキ・ハイリフトローダー（高床5.5m）、ULDヤード、消防動線（駐車厳禁）、JET A-1タンク。',
-      ruleVi: 'Khu tập kết Main-Deck High-Loader (cao 5.5m cho tàu hàng), bãi ULD, trạm cứu hỏa và kho nhiên liệu JET A-1.'
+      id: 'cargo_fire', cam: { tx: 680, ty: 12, tz: 55, dist: 420, yaw: -0.55, pitch: 0.48 }, badge: 'CARGO #101-119', badgeCls: 'badge-accent',
+      ja: '北貨物地区 (#101〜#119)・空港消防所・燃料タンク群・海保N地区',
+      vi: 'Khu Hàng hóa Bắc (#101–#119), Trạm Cứu hỏa, Kho xăng & Căn cứ Hải cảnh N',
+      en: 'North Cargo Apron (#101–#119), ARFF Fire Station, Fuel Farm & Coast Guard N-Area',
+      ruleJa: 'B777F大型貨物機スポット#101〜#119、第1〜第3貨物上屋、赤回転灯付きの空港消防所、北端の海上保安庁航空基地を実寸再現。',
+      ruleVi: 'Tái hiện tỷ lệ 1:1 dãy 19 bãi tàu hàng #101–#119, 3 nhà kho Cargo, Trạm cứu hỏa đèn xoay đỏ, kho bồn Jet A-1 và căn cứ tuần duyên N1–N6.',
+      ruleEn: 'Full 1:1 North Cargo district with stands #101–#119, Warehouses 1–3, ARFF Fire Station, Jet A-1 tank farm, and Coast Guard N-Area.'
     }
   ];
 
-  // 3 Nhiệm vụ lái xe GSE có hướng dẫn (Cập nhật chuẩn bên PHẢI -X của hầm hàng!)
+  // 3 Guided Airside GSE Missions (JA / VI / EN)
   export const A3D_MISSIONS = [
     {
       id: 'M1',
       titleJa: '任務1: GSE待機所 → 構内通路 → NGO Spot 7 (A320) 右舷前部貨物室へ接近',
       titleVi: 'Nhiệm vụ 1: Khu GSE → Đường nội bộ → Tiếp cận hầm hàng PHẢI Spot 7 (A320)',
-      descJa: '構内通路（30km/h以下）を経由し、Spot 7右舷側（西側）のERA赤線手前でブレーキ点検停止（Space）後、8km/h以下で緑のLow-Deck搭載ポイントへ停止してください。',
-      descVi: 'Đi theo đường nội bộ (≤30 km/h), dừng phanh kiểm tra (Space) ngoài vạch đỏ ERA phía PHẢI (mạn Tây) Spot 7, rồi tiến chậm (≤8 km/h) vào điểm xếp hàng xanh.',
+      titleEn: 'Mission 1: GSE Staging → Service Road → Dock at Spot 7 Starboard Fwd Hold',
+      descJa: '構内通路（30km/h以下）を経由し、Spot 7右舷側のERA赤線手前でブレーキ点検停止（Space）後、10km/h以下で緑の搭載ポイントへ停止してください。',
+      descVi: 'Đi theo đường nội bộ (≤30 km/h), dừng phanh kiểm tra (Space) ngoài vạch đỏ ERA mạn PHẢI Spot 7, rồi tiến chậm (≤10 km/h) vào điểm xếp hàng.',
+      descEn: 'Drive via the GSE road (≤30 km/h), make a brake-check stop (Space) outside Spot 7\'s starboard red ERA line, then creep (≤10 km/h) to the load point.',
       start: { x: -112, z: 28, heading: Math.PI / 2 },
       beacon101: true,
       target: { x: -10, z: 20, r: 5.5 },
@@ -714,10 +804,12 @@ export const A3D_SPOTS = [
     },
     {
       id: 'M2',
-      titleJa: '任務2: 貨物上屋 → NGO Spot 6 (B737) ビーコン点灯待機→消灯後右舷バルク室へ進入',
-      titleVi: 'Nhiệm vụ 2: Kho hàng → Spot 6 (B737) Chờ tắt đèn Beacon rồi vào hầm hàng PHẢI',
-      descJa: 'Spot 6（B737・バルク機）は赤色ビーコン点灯中！ERA赤線手前の黄色待機枠で完全停止し、「Spot 6 ビーコンOFF」後に右舷側緑ポイントへ進入してください。',
-      descVi: 'Spot 6 (B737 dùng Belt Loader) đang bật đèn Beacon đỏ! Dừng hẳn ở ô vàng ngoài vạch đỏ ERA, tắt Beacon Spot 6 rồi mới lái chậm vào hầm hàng bên phải.',
+      titleJa: '任務2: 東側通路 → NGO Spot 6 (B737) ビーコン点灯待機→消灯後右舷バルク室へ進入',
+      titleVi: 'Nhiệm vụ 2: Đường nội bộ → Spot 6 (B737) Chờ tắt đèn Beacon rồi vào hầm hàng PHẢI',
+      titleEn: 'Mission 2: Service Road → Hold Outside Spot 6 Red Beacon → Enter Starboard Hold',
+      descJa: 'Spot 6（B737）は赤色ビーコン点灯中！ERA赤線手前で完全停止し、「S6ビーコンOFF」後に右舷側ポイントへ進入してください。',
+      descVi: 'Spot 6 (B737) đang bật đèn Beacon đỏ! Dừng hẳn ngoài vạch đỏ ERA, bấm tắt Beacon Spot 6 rồi mới lái chậm vào hầm hàng bên phải.',
+      descEn: 'Spot 6 (B737) has its red beacon ON! Stop completely outside the red ERA line, switch S6 Beacon OFF, then creep to the starboard hold.',
       start: { x: 84, z: 50, heading: Math.PI },
       beacon101: true,
       holdPt: { x: -78, z: 39, r: 6.5 },
@@ -727,30 +819,32 @@ export const A3D_SPOTS = [
     },
     {
       id: 'M3',
-      titleJa: '任務3: エプロン外周サービスロード安全巡回（誘導路越境禁止）',
-      titleVi: 'Nhiệm vụ 3: Tuần tra an toàn quanh đường nội bộ sân đỗ (Cấm lấn đường lăn)',
-      descJa: 'GSE待機所から南側通路→東側通路→北側エプロン外周通路（誘導路境界線の手前！）を制限速度内で巡回し、北西チェックポイントへ戻ってください。',
-      descVi: 'Chạy đúng đường nội bộ vòng quanh sân đỗ: Đường phía Nam → Đường phía Đông → Đường ngoài rìa phía Bắc (không lấn sang đường lăn!) về điểm cuối Tây Bắc.',
+      titleJa: '任務3: センターピア先端迂回・サービスロード安全巡回（誘導路越境禁止）',
+      titleVi: 'Nhiệm vụ 3: Tuần tra vòng mũi Center Pier 300m & Đường sau bãi đỗ (Cấm lấn đường lăn)',
+      titleEn: 'Mission 3: 300m Center Pier Tip Loop & Behind-Stand Patrol (Zero Taxiway Incursion)',
+      descJa: 'GSE待機所からターミナル脇通路→センターピア先端周回道路（z=-194m）→後方車両通行帯を制限速度内で巡回してください。',
+      descVi: 'Lái theo đường GSE sát nhà ga → vòng qua mũi Center Pier 300m (z=-194m) → về đường xe sau bãi đỗ đúng tốc độ, không lấn vạch đỏ ABL.',
+      descEn: 'Patrol along the Terminal GSE Road, loop around the 300m Center Pier West Tip (z=-194m), and return via the Behind-Stand Road without crossing red ABL.',
       start: { x: -112, z: 28, heading: Math.PI / 2 },
       beacon101: true,
-      checkpoints: [{ x: 0, z: 50, r: 8 }, { x: 102, z: -10, r: 8 }, { x: -98, z: -38, r: 8 }],
-      target: { x: -98, z: -38, r: 8 },
-      waypoints: [{ x: -100, z: 50 }, { x: 0, z: 50 }, { x: 102, z: 50 }, { x: 102, z: -38 }, { x: -98, z: -38 }]
+      checkpoints: [{ x: 0, z: 50, r: 9 }, { x: 46, z: -194, r: 12 }, { x: -98, z: -38, r: 9 }],
+      target: { x: -98, z: -38, r: 9 },
+      waypoints: [{ x: -100, z: 50 }, { x: 18, z: 50 }, { x: 18, z: -194 }, { x: 74, z: -194 }, { x: -98, z: -38 }]
     }
   ];
 
-  // HÀM THUẦN (PURE FUNCTION) ĐÁNH GIÁ VÙNG AN TOÀN / CẤM LÁI CHUẨN NGO CENTRAIR (JA / VI / EN)
+  // PURE FUNCTION: EVALUATE 1:1 SCALE NGO CENTRAIR AIRSIDE ZONES & SPEED RULES (JA / VI / EN)
 export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) {
     const towingCarts = Boolean(opts.towingCarts);
     const over38m = Boolean(opts.over38m);
     const ilsRedOn = Boolean(opts.ilsRedOn);
     const blastActive = Boolean(opts.blastActive);
 
-    // 0. Đường vành đai sân bay 3 mặt (場周道路: Tây z=-150..-134, Nam x=-274..-254, Bắc x=254..274, 40 km/h) & Khu hạn chế ILS
-    const onWestPerim = z <= -134 && z >= -152 && x >= -274 && x <= 274;
-    const onSidePerim = (x <= -254 && x >= -274 || x >= 254 && x <= 274) && z >= -152 && z <= 115;
+    // 0. Full 8.5km Airport Perimeter Road (場周道路: West Seawall z=-696..-674, South x=-2072..-2048, North x=2118..2142; Max 40 km/h) + Dual ILS Zones
+    const onWestPerim = z <= -672 && z >= -702 && x >= -2074 && x <= 2144;
+    const onSidePerim = ((x <= -2046 && x >= -2074) || (x >= 2116 && x <= 2144)) && z >= -702 && z <= 620;
     if (onWestPerim || onSidePerim) {
-      const inIls = onWestPerim && ((x >= -145 && x <= -85) || (x >= 85 && x <= 145));
+      const inIls = onWestPerim && ((x >= -1460 && x <= -1140) || (x >= 1140 && x <= 1460) || (x >= -260 && x <= -140));
       if (inIls && ilsRedOn) {
         return {
           zone: 'ILS_RESTRICTED',
@@ -759,8 +853,8 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
           speedLimit: 0,
           penalty: 25,
           ja: 'ILS制限区域（赤灯点灯中 — 進入禁止！反対側へ迂回せよ）',
-          vi: 'Khu vực hạn chế ILS (Đèn đỏ đang sáng — CẤM vào, đi vòng phía đối diện!)',
-          en: 'ILS Restricted Area (Red Lamp ON — NO ENTRY! Detour via opposite side)'
+          vi: 'Khu vực hạn chế ILS (Đèn đỏ đang sáng — CẤM vào, phải đi vòng hướng đối diện!)',
+          en: 'ILS Restricted Area (Red Lamp ON — NO ENTRY! Detour via opposite perimeter)'
         };
       }
       const lim = towingCarts ? 15 : 40;
@@ -772,29 +866,58 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
         speedLimit: lim,
         speeding,
         penalty: speeding ? 5 : 0,
-        ja: speeding ? `場周道路 速度超過（制限${lim}km/h！）` : `場周道路（制限${lim}km/h${inIls ? '・ILS駐停車禁止50m区間' : ''}）`,
-        vi: speeding ? `Quá tốc độ Đường vành đai (Tối đa ${lim} km/h!)` : `Đường vành đai sân bay (Tối đa ${lim} km/h${inIls ? ' · Đoạn ILS cấm dừng đỗ' : ''})`,
-        en: speeding ? `Perimeter Road Speeding (Max ${lim} km/h!)` : `Airport Perimeter Road (Max ${lim} km/h${inIls ? ' · ILS No-Stopping Zone' : ''})`
+        ja: speeding ? `場周道路 速度超過（制限${lim}km/h！）` : `場周道路（制限${lim}km/h${inIls ? '・ILS駐停車禁止区間' : ''}）`,
+        vi: speeding ? `Quá tốc độ Đường vành đai (Tối đa ${lim} km/h!)` : `Đường vành đai sân bay 8,5km (Tối đa ${lim} km/h${inIls ? ' · Đoạn ILS cấm dừng đỗ' : ''})`,
+        en: speeding ? `Perimeter Road Speeding (Max ${lim} km/h!)` : `8.5km Airport Perimeter Road (Max ${lim} km/h${inIls ? ' · ILS No-Stopping Zone' : ''})`
       };
     }
 
-    // 1. Đường băng & Dải hạ cánh (滑走路・着陸帯等: z <= -78)
-    if (z <= -78) {
+    // 1. 1:1 Scale Runway 36/18 & Landing Strip (滑走路 3,500m × 60m at z=-580; Strip z <= -455)
+    if (z <= -455) {
       return {
         zone: 'RUNWAY',
         allowed: false,
         severity: 'critical',
         speedLimit: 0,
         penalty: 30,
-        ja: '滑走路・着陸帯等（管制許可なき進入厳禁！滑走路誤進入）',
-        vi: 'Đường băng / Dải hạ cánh (CẤM TUYỆT ĐỐI khi chưa có phép ATC!)',
-        en: 'Active Runway / Landing Strip (Runway Incursion — ATC Clearance Mandatory!)'
+        ja: '滑走路 RWY 36/18・着陸帯（管制許可なき進入厳禁！滑走路誤進入）',
+        vi: 'Đường băng RWY 36/18 / Dải hạ cánh (CẤM TUYỆT ĐỐI khi chưa có phép ATC!)',
+        en: 'Active Runway 36/18 / Landing Strip (Runway Incursion — ATC Clearance Mandatory!)'
       };
     }
 
-    // 1b. 3 tuyến Service Lane cắt ngang Đường lăn (x = -31, -155, +118; z = -70..-42)
-    const inSrvLane = (z > -70 && z < -42) && ((x >= -38 && x <= -24) || (x >= -162 && x <= -148) || (x >= 111 && x <= 125));
-    if (inSrvLane) {
+    // 1b. Center Pier 300m Tip Perimeter Loop Road (x ∈ [14, 78], z ∈ [-202, -42])
+    const onPierTipRoad = (z >= -202 && z < -42) && (
+      (z <= -180 && x >= 14 && x <= 78) ||
+      ((x >= 14 && x <= 27) && z >= -202 && z < -42) ||
+      ((x >= 65 && x <= 78) && z >= -202 && z < -42)
+    );
+    if (onPierTipRoad) {
+      const lim = towingCarts ? 15 : 30;
+      const speeding = speedKmh > lim + 1.5;
+      return {
+        zone: 'BEHIND_STAND_ROAD',
+        allowed: true,
+        severity: speeding ? 'warn' : 'ok',
+        speedLimit: lim,
+        speeding,
+        penalty: speeding ? 5 : 0,
+        ja: speeding ? `センターピア先端周回道路 速度超過（制限${lim}km/h！）` : `センターピア先端周回道路（制限${lim}km/h・3.8m超車両迂回路）`,
+        vi: speeding ? `Quá tốc độ Đường vòng mũi Center Pier (${lim} km/h!)` : `Đường vòng mũi Center Pier 300m (Tối đa ${lim} km/h · Lối vòng cho xe >3.8m)`,
+        en: speeding ? `Center Pier Tip Road Speeding (Max ${lim} km/h!)` : `300m Center Pier Tip Road (Max ${lim} km/h · High-Vehicle >3.8m Detour)`
+      };
+    }
+
+    // 1c. Official Service Lanes Crossing Taxilanes & C-TWY (サービスレーン)
+    const inInnerSrvLane = (z > -76 && z < -42) && (
+      (x >= -38 && x <= -24) || (x >= -162 && x <= -148) || (x >= 141 && x <= 155) ||
+      (x >= -528 && x <= -512) || (x >= 512 && x <= 528)
+    );
+    const inOuterSrvLane = (z >= -256 && z <= -208) && (
+      (x >= -116 && x <= -100) || (x >= 141 && x <= 155) ||
+      (x >= -528 && x <= -512) || (x >= 512 && x <= 528)
+    );
+    if (inInnerSrvLane || inOuterSrvLane) {
       const lim = towingCarts ? 15 : 30;
       const speeding = speedKmh > lim + 1.5;
       return {
@@ -806,11 +929,31 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
         penalty: speeding ? 5 : 0,
         ja: speeding ? `サービスレーン 速度超過（制限${lim}km/h・追越禁止！）` : `サービスレーン横断中（制限${lim}km/h・航空機後方100m確認・出口赤線停止禁止）`,
         vi: speeding ? `Quá tốc độ trong Service Lane (Tối đa ${lim} km/h, cấm vượt!)` : `Đang qua Service Lane (Tối đa ${lim} km/h · Đợi máy bay ≥100m · Không dừng vạch đỏ ra)`,
-        en: speeding ? `Service Lane Speeding (Max ${lim} km/h · No Overtaking!)` : `Service Lane Crossing (Max ${lim} km/h · 100m behind aircraft · Do not stop on exit red line)`
+        en: speeding ? `Service Lane Speeding (Max ${lim} km/h · No Overtaking!)` : `Service Lane Crossing (Max ${lim} km/h · ≥100m behind aircraft · Do not stop on exit red line)`
       };
     }
 
-    // 2. Đường lăn tàu bay (誘導路・赤実線ABL越境: z < -42)
+    // 1d. Remote Apron Island (#200 / #300-#600) & Cargo Apron (#101-#119) Pads (between C-TWY z=-210 and Taxilane z=-76)
+    const inRemoteOrCargoPad = (z >= -208 && z <= -76) && (
+      (x >= 185 && x <= 1560) || (x >= -1180 && x <= -195)
+    );
+    if (inRemoteOrCargoPad) {
+      const lim = 15;
+      const speeding = speedKmh > lim + 1.5;
+      return {
+        zone: 'APRON',
+        allowed: true,
+        severity: speeding ? 'warn' : 'ok',
+        speedLimit: lim,
+        speeding,
+        penalty: speeding ? 5 : 0,
+        ja: speeding ? '沖留・貨物エプロン内 速度超過（制限15km/h！）' : '沖留（#200〜#600）・北貨物（#101〜#119）エプロン（制限15km/h）',
+        vi: speeding ? 'Quá tốc độ Sân đỗ từ xa / Cargo (≤15 km/h!)' : 'Sân đỗ từ xa (#200–#600) / Sân đỗ Hàng hóa (#101–#119) (Tối đa 15 km/h)',
+        en: speeding ? 'Remote / Cargo Apron Speeding (Max 15 km/h!)' : 'Remote (#200–#600) & Cargo (#101–#119) Apron (Max 15 km/h)'
+      };
+    }
+
+    // 2. Parallel Taxiways A/B/C & Taxilanes (誘導路・赤実線ABL越境: z < -42)
     if (z < -42) {
       return {
         zone: 'TAXIWAY',
@@ -818,15 +961,15 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
         severity: 'critical',
         speedLimit: 0,
         penalty: 25,
-        ja: '誘導路・赤実線（ABL）越境（無許可進入禁止！サービスレーンを使用せよ）',
-        vi: 'Đường lăn tàu bay / Vượt vạch đỏ ABL (Cấm vào trái phép! Hãy đi qua Service Lane)',
-        en: 'Taxiway / Crossed Red ABL Line (Unauthorized Entry — Use Service Lane!)'
+        ja: '誘導路（A/B/C-TWY）・赤実線（ABL）越境（無許可進入禁止！サービスレーンを使用せよ）',
+        vi: 'Đường lăn tàu bay (A/B/C-TWY) / Vượt vạch đỏ ABL (Cấm vào! Hãy đi đúng Service Lane)',
+        en: 'Active Taxiway (A/B/C-TWY) / Crossed Red ABL Line (Unauthorized Entry — Use Service Lane!)'
       };
     }
 
-    // 2b. 2 Khu vực cảnh báo luồng phản lực T2 (#71 tại -117,-17 và #77 tại -228,52)
-    const inBlast71 = x >= -130 && x <= -104 && z >= -26 && z <= -8;
-    const inBlast77 = x >= -241 && x <= -215 && z >= 43 && z <= 61;
+    // 2b. T2 Jet Blast Caution Zones (#71 & #77 Yellow Boxes)
+    const inBlast71 = (x >= -130 && x <= -104 && z >= -26 && z <= -8) || (x >= -590 && x <= -550 && z >= 22 && z <= 46);
+    const inBlast77 = x >= -995 && x <= -955 && z >= 62 && z <= 96;
     if (inBlast71 || inBlast77) {
       if (blastActive) {
         return {
@@ -855,15 +998,14 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
       };
     }
 
-    // 3. Kiểm tra vùng nguy hiểm quanh 3 tàu bay (PBB nguy hiểm, Động cơ, Dưới cánh/bụng, ERA)
+    // 3. Primary Stand Safety Envelopes (PBB Danger Zone, Engine Hazard, Under-Wing, Textbook Wing-Hugging ERA)
     for (let i = 0; i < A3D_SPOTS.length; i++) {
       const sp = A3D_SPOTS[i];
       const beaconOn = sp.id === '101' && Boolean(spot101BeaconOn);
       const dx = x - sp.cx;
       const dz = z - sp.cz;
 
-      // PBB Danger Zone (gạch chéo đỏ mạn trái +X) — CẤM XE TUYỆT ĐỐI
-      const pbbX1 = sp.cx + 3.2, pbbX2 = sp.cx + 21.5;
+      const pbbX1 = sp.cx + 3.2, pbbX2 = sp.cx + 22.5;
       const pbbZ1 = sp.cz + 6.5, pbbZ2 = sp.cz + 16.5;
       if (x >= pbbX1 && x <= pbbX2 && z >= pbbZ1 && z <= pbbZ2) {
         return {
@@ -912,7 +1054,6 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
         };
       }
 
-      // Authentic Wing-Hugging Open-Back ERA Contour Check (matches 3D Bright-Red ERA Line — excludes outer ESA Staging Bays!)
       const halfSpan = sp.wingHalf || 18;
       const halfL = halfSpan > 20 ? 23.0 : 18.5;
       const bodyW = halfSpan > 20 ? 9.6 : 8.4;
@@ -921,17 +1062,13 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
       let inEraContour = false;
       if (dz >= -(halfL + 4.0) && dz <= halfL + 6.5 && absX <= wingW) {
         if (dz > halfL + 1.5) {
-          // Pointed Nose Diamond Chevron (︿)
-          const t = (dz - (halfL + 1.5)) / 5.0;
-          inEraContour = absX <= bodyW * (1 - t * 0.95);
+          const tVal = (dz - (halfL + 1.5)) / 5.0;
+          inEraContour = absX <= bodyW * (1 - tVal * 0.95);
         } else if (dz > 4.5) {
-          // Forward Fuselage Corridor
           inEraContour = absX <= bodyW;
         } else if (dz >= -9.5) {
-          // Swept Wing Envelope
           inEraContour = absX <= wingW;
         } else {
-          // Aft Fuselage Corridor (tucked inward behind swept wings — outer corners are safe ESA staging bays!)
           inEraContour = absX <= bodyW;
         }
       }
@@ -967,11 +1104,11 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
       }
     }
 
-    // 4. Đường GSE sát nhà ga (3.8m Fixed Bridge Clearance) & Đường xe sau bãi đỗ
-    const onHeadRoad = z >= 44 && z <= 56 && x >= -136 && x <= 136;
-    const onOuterRoad = z >= -42 && z <= -34 && x >= -136 && x <= 136;
+    // 4. 2.8km Continuous Head-of-Stand GSE Spine Road (z=44..56, 3.8m Bridge Clearance) & Behind-Stand Road (z=-42..-34)
+    const onHeadRoad = z >= 44 && z <= 58 && x >= -1280 && x <= 1860;
+    const onOuterRoad = z >= -42 && z <= -33 && x >= -1280 && x <= 1860;
     if (onHeadRoad) {
-      const underFixedBridge = over38m && (Math.abs(x + 48) < 6 || Math.abs(x - 19) < 6 || Math.abs(x - 92) < 6);
+      const underFixedBridge = over38m && (Math.abs(x + 48) < 6 || Math.abs(x - 21) < 6 || Math.abs(x - 46) < 18 || Math.abs(x - 122) < 6);
       if (underFixedBridge) {
         return {
           zone: 'HEIGHT_LIMIT_38M',
@@ -979,9 +1116,9 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
           severity: 'critical',
           speedLimit: 0,
           penalty: 25,
-          ja: '全高3.8m超過 — 固定橋下通行不可！（スポット後方車両通行帯へ迂回せよ）',
-          vi: 'Vi phạm chiều cao >3.8m — Cấm qua gầm cầu cố định! (Phải đi vòng Đường sau bãi đỗ)',
-          en: 'Over 3.8m Height Violation — Fixed Bridge Clearance Exceeded! (Use Behind-Stand Road)'
+          ja: '全高3.8m超過 — 固定橋・センターピア下通行不可！（ピア先端周回道路へ迂回せよ）',
+          vi: 'Vi phạm chiều cao >3.8m — Cấm chui gầm cầu cố định / Center Pier! (Phải vòng qua mũi Pier)',
+          en: 'Over 3.8m Height Violation — Fixed Bridge / Center Pier Clearance Exceeded! (Detour via Pier Tip)'
         };
       }
       const lim = towingCarts ? 15 : 30;
@@ -993,9 +1130,9 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
         speedLimit: lim,
         speeding,
         penalty: speeding ? 5 : 0,
-        ja: speeding ? `ターミナル脇GSE通行帯 速度超過（制限${lim}km/h！）` : `ターミナル脇GSE通行帯（制限${lim}km/h・高さ制限3.8m）`,
-        vi: speeding ? `Quá tốc độ đường GSE sát nhà ga (Tối đa ${lim} km/h!)` : `Đường GSE sát nhà ga (Tối đa ${lim} km/h · Giới hạn cao 3.8m)`,
-        en: speeding ? `Terminal GSE Lane Speeding (Max ${lim} km/h!)` : `Terminal GSE Road (Max ${lim} km/h · 3.8m Height Limit)`
+        ja: speeding ? `幹線GSE車両通路 速度超過（制限${lim}km/h！）` : `幹線GSE車両通路（左側通行・制限${lim}km/h・固定橋下3.8m）`,
+        vi: speeding ? `Quá tốc độ Trục đường GSE (Tối đa ${lim} km/h!)` : `Trục đường GSE 2,8km (Đi bên trái · Tối đa ${lim} km/h · Gầm cầu 3.8m)`,
+        en: speeding ? `GSE Spine Road Speeding (Max ${lim} km/h!)` : `2.8km GSE Spine Road (Keep Left · Max ${lim} km/h · 3.8m Bridge Limit)`
       };
     }
     if (onOuterRoad) {
@@ -1014,8 +1151,8 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
       };
     }
 
-    // 5. Khu tập kết GSE (GSE Staging Area — Max 15 km/h)
-    if (x >= -135 && x <= -104 && z >= -8 && z <= 44) {
+    // 5. GSE Staging Area (Max 15 km/h)
+    if (x >= -145 && x <= -98 && z >= -8 && z <= 44) {
       const speeding = speedKmh > 16.5;
       return {
         zone: 'GSE_STAGING',
@@ -1030,7 +1167,7 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
       };
     }
 
-    // 6. Sân đỗ Apron / trong bán kính 30m quanh tàu bay (Max 15 km/h)
+    // 6. General Apron / Within 30m of Aircraft (Max 15 km/h)
     const speeding = speedKmh > 16.5;
     return {
       zone: 'APRON',
@@ -1046,416 +1183,511 @@ export function evaluateAirportZone(x, z, speedKmh, spot101BeaconOn, opts = {}) 
   }
 
   // =========================================================================
-  // MÔ PHỎNG CHU TRÌNH CẤT / HẠ CÁNH 10 GIAI ĐOẠN & VAI TRÒ NHÂN VIÊN MẶT ĐẤT
+  // 10-PHASE FLIGHT & TURNAROUND CYCLE ON 1:1 NGO 3,500m RUNWAY (JA / VI / EN)
   // =========================================================================
 
 export const A3D_FLIGHT_PHASES = [
     {
-      id: 'landing', duration: 9, tagJa: '着陸', tagVi: 'Hạ cánh',
-      titleJa: '1. 最終進入・着陸（NGO RWY 36 Final Approach & Landing）',
-      titleVi: '1. Tiếp cận cuối & Hạ cánh (NGO Centrair RWY 36)',
-      safetyJa: '滑走路36・誘導路は完全閉鎖（GSE進入厳禁）。到着NGO Spot 7のFOD点検を完了し、機材はERA赤線の外で待機。',
-      safetyVi: 'Đường băng 36 & đường lăn tuyệt đối không có xe GSE. Bãi NGO Spot 7 đã quét sạch FOD, toàn bộ thiết bị & nhân sự chờ ngoài vạch đỏ ERA.',
+      id: 'landing', duration: 10, tagJa: '着陸', tagVi: 'Hạ cánh', tagEn: 'Landing',
+      titleJa: '1. 最終進入・着陸（NGO 3,500m 滑走路36 Final Approach & Landing）',
+      titleVi: '1. Tiếp cận cuối & Hạ cánh trên đường băng thật 3.500m (NGO RWY 36)',
+      titleEn: '1. Final Approach & Touchdown on 3,500m Runway 36 (NGO RJGG)',
+      safetyJa: '3,500m×60m滑走路36・誘導路は完全クリア。到着Spot 7のFOD点検を完了し、全GSE・作業員はERA赤線の外で待機。',
+      safetyVi: 'Đường băng 3.500m × 60m (RWY 36) thông thoáng. Bãi Spot 7 đã quét sạch FOD, toàn bộ xe GSE & nhân sự đứng ngoài vạch đỏ ERA.',
+      safetyEn: 'Full-scale 3,500m × 60m RWY 36 and taxiways are clear. Spot 7 FOD sweep complete; all GSE and ramp crew hold outside red ERA.',
       roles: [
-        { roleJa: '中部管制塔 (Chubu Tower ATC)', roleVi: 'Kiểm soát viên không lưu (Chubu Tower)', badge: 'TOWER',
-          tasksJa: ['滑走路36着陸許可（Cleared to Land RWY 36）を発出', '着陸後の滑走路離脱ルート（誘導路A → NGO Spot 7）を指示'],
-          tasksVi: ['Cấp huấn lệnh hạ cánh đường băng 36 (Cleared to Land RWY 36)', 'Hướng dẫn thoát đường băng sang đường lăn A về NGO Spot 7'] },
-        { roleJa: 'ランプリダー / 到着チーム', roleVi: 'Trưởng ca sân đỗ & Đội đón tàu bay', badge: 'NGO SPOT 7',
-          tasksJa: ['NGO Spot 7のFOD（異物）最終点検・回収', 'ローデッキローダー・ベルトローダー・GPUをERA赤線外に待機配置'],
-          tasksVi: ['Kiểm tra & thu gom sạch FOD toàn bãi đỗ NGO Spot 7', 'Tập kết Low-Deck Loader, Belt Loader, chèn bánh & GPU sẵn ngoài vạch đỏ ERA'] },
-        { roleJa: '空港消防隊 (ARFF)', roleVi: 'Đội cứu hỏa sân bay', badge: 'STANDBY',
-          tasksJa: ['着陸時のブレーキ過熱・異常に備え消防署で即時出動待機'],
-          tasksVi: ['Trực sẵn sàng ứng phó sự cố hạ cánh / quá nhiệt phanh tại trạm cứu hỏa'] }
+        { roleJa: '中部管制塔 (Chubu Tower 86.75m)', roleVi: 'Đài kiểm soát không lưu Chubu', roleEn: 'Chubu Tower ATC (118.45 MHz)', badge: 'TOWER',
+          tasksJa: ['滑走路36着陸許可（Cleared to Land RWY 36）を発出', '着陸後の高速離脱誘導路 A6 → A-TWY → C-TWY → Spot 7 ルートを指示'],
+          tasksVi: ['Cấp huấn lệnh hạ cánh đường băng 36 (Cleared to Land RWY 36)', 'Hướng dẫn thoát nhanh qua đường lăn A6 → A-TWY → C-TWY về Spot 7'],
+          tasksEn: ['Issue landing clearance on 3,500m Runway 36', 'Assign high-speed exit A6 → A-TWY → C-TWY → Spot 7 taxi route'] },
+        { roleJa: 'ランプリダー / 到着チーム', roleVi: 'Trưởng ca sân đỗ & Đội đón tàu', roleEn: 'Ramp Team Leader & Arrival Crew', badge: 'NGO SPOT 7',
+          tasksJa: ['Spot 7内のFOD（異物）最終点検・回収', 'ハイリフト・ベルト・GPUを白破線ESA枠内に整頓待機'],
+          tasksVi: ['Kiểm tra & thu gom sạch FOD toàn bãi đỗ Spot 7', 'Tập kết Low-Deck Loader, Belt Loader & GPU gọn trong ô trắng ESA ngoài vạch đỏ ERA'],
+          tasksEn: ['Complete pre-arrival FOD walkaround on Spot 7', 'Stage High-Lift Loader, Belt Loader, and GPU inside white-dashed ESA bays'] },
+        { roleJa: '空港消防所 (ARFF)', roleVi: 'Trạm cứu hỏa sân bay (ARFF)', roleEn: 'Airport Fire Rescue (ARFF)', badge: 'STANDBY',
+          tasksJa: ['北貨物手前の空港消防所にて着陸時の緊急出動体制を維持'],
+          tasksVi: ['Trực sẵn sàng ứng cứu khẩn cấp tại Trạm cứu hỏa sân bay cạnh khu Cargo'],
+          tasksEn: ['Maintain immediate crash-fire-rescue readiness at the North Apron Fire Station'] }
       ]
     },
     {
-      id: 'taxi_in', duration: 10, tagJa: '駐機誘導', tagVi: 'Dẫn vào bãi',
-      titleJa: '2. 誘導路走行・駐機誘導（Taxi-in & Marshalling — NGO Spot 7）',
-      titleVi: '2. Lăn vào bãi & Dẫn tàu bay vào NGO Spot 7 (駐機誘導)',
-      safetyJa: '赤色ビーコン点灯・エンジン稼働中！PBBは左舷側待機位置へ完全収納し、マーシャラー・ウイングウォーカーのみ所定位置へ。',
-      safetyVi: 'Đèn beacon đỏ đang nháy! PBB thu gọn hoàn toàn về mạn trái (+X); chỉ Marshaller và Wing Walker đứng đúng vị trí an toàn.',
+      id: 'taxi_in', duration: 11, tagJa: '駐機誘導', tagVi: 'Dẫn vào bãi', tagEn: 'Taxi-in & Marshal',
+      titleJa: '2. 高速離脱 A6 → 誘導路 A/C 走行 → Spot 7 駐機誘導（Marshalling）',
+      titleVi: '2. Thoát nhanh A6 → Lăn qua A-TWY / C-TWY → Dẫn vào Spot 7 (駐機誘導)',
+      titleEn: '2. Vacate via A6 → Taxiways A & C → Spot 7 Marshalling',
+      safetyJa: '赤色ビーコン点灯・エンジン稼働中！センターピア先端（滑走路から400m）を通過し、マーシャラーと両翼監視員（エンジン外側5m以上）が誘導。',
+      safetyVi: 'Đèn beacon đỏ đang nháy! Tàu bay lăn qua mũi Center Pier (cách đường băng 400m) vào Spot 7 theo gậy Marshaller & 2 Watchman (cách vỏ động cơ ≥5m).',
+      safetyEn: 'Red anti-collision beacon ON! Aircraft taxis past the 300m Center Pier tip into Spot 7 guided by the Marshaller and Watchmen (≥5m outside engines).',
       roles: [
-        { roleJa: 'マーシャラー（誘導員）', roleVi: 'Nhân viên dẫn tàu bay (Marshaller)', badge: 'PADDLE',
-          tasksJa: ['停止線前方に立ち、オレンジパドルで中心線合わせ・減速・停止を指示', '前輪がA320停止バーに一致した瞬間に「停止（クロス）」合図'],
-          tasksVi: ['Đứng trước vạch dừng dùng gậy phát sáng căn tim, điều chỉnh tốc độ', 'Bắt chéo gậy báo dừng (STOP) chuẩn xác khi bánh mũi chạm vạch T của A320'] },
-        { roleJa: 'ウイングウォーカー（両翼監視）', roleVi: 'Nhân viên canh đầu cánh trái/phải (Wing Walker)', badge: 'WINGS',
-          tasksJa: ['左右主翼端と左舷PBBロータンダ・隣接機材のクリアランスを常時監視', '接触危険があれば即座に緊急停止合図を送る'],
-          tasksVi: ['Giám sát khoảng trống đầu cánh trái (phía tháp xoay PBB) và đầu cánh phải', 'Phát tín hiệu dừng khẩn cấp ngay nếu có nguy cơ va chạm'] },
-        { roleJa: 'チョック・コーン担当', roleVi: 'Nhân viên chèn bánh & đặt cọc tiêu', badge: 'HOLD ERA',
-          tasksJa: ['エンジン完全停止とビーコン消灯を確認するまでERA外で待機'],
-          tasksVi: ['Đứng chờ tuyệt đối ngoài vạch đỏ ERA cho đến khi động cơ tắt hẳn'] }
+        { roleJa: 'マーシャラー（誘導員）', roleVi: 'Nhân viên dẫn tàu bay (Marshaller)', roleEn: 'Aircraft Marshaller', badge: 'PADDLE',
+          tasksJa: ['停止線前方に立ち、パドルで直進・減速・停止（頭上クロス）を明確に指示', '前輪が停止バーに一致した瞬間に「Normal Stop」合図'],
+          tasksVi: ['Đứng trước vạch dừng dùng gậy phát sáng ra hiệu Tiến thẳng, Giảm tốc và Dừng (chéo chữ X)', 'Ra lệnh dừng chuẩn xác khi bánh mũi chạm vạch dừng'],
+          tasksEn: ['Stand ahead of the stop bar signaling Straight Ahead, Slow Down, and overhead X Normal Stop', 'Command full stop precisely as nose wheels reach the aircraft stop bar'] },
+        { roleJa: 'ウイングウォーカー（両翼監視）', roleVi: 'Nhân viên canh đầu cánh trái/phải', roleEn: 'Port & Starboard Wingwalkers', badge: 'WINGS ≥5m',
+          tasksJa: ['左右主翼端とPBBロータンダ・隣接機のクリアランス（目測誤差±3m）を監視', '接触危険時は直ちに頭上急交差で緊急停止を送る'],
+          tasksVi: ['Giám sát khoảng trống hai đầu cánh (bù sai số mắt phi công ±3m) và đứng cách động cơ ≥5m', 'Phát tín hiệu Dừng khẩn cấp ngay nếu có nguy cơ va quẹt'],
+          tasksEn: ['Monitor wingtip clearances (±3m cockpit visual error) while staying ≥5m outside engines', 'Give immediate Emergency Stop overhead X if any obstacle threatens clearance'] },
+        { roleJa: 'チョック・コーン担当', roleVi: 'Nhân viên chèn bánh & cọc tiêu', roleEn: 'Chock & Cone Handler', badge: 'HOLD ERA',
+          tasksJa: ['エンジン停止・赤ビーコン消灯を確認するまでERA赤線外で絶対待機'],
+          tasksVi: ['Đứng chờ tuyệt đối ngoài vạch đỏ ERA cho đến khi động cơ dừng và đèn Beacon đỏ tắt hẳn'],
+          tasksEn: ['Remain strictly outside the red ERA boundary until engines spool down and red beacon is OFF'] }
       ]
     },
     {
-      id: 'onblock', duration: 8, tagJa: '輪止め・PBB', tagVi: 'Chèn bánh & PBB',
+      id: 'onblock', duration: 8, tagJa: '輪止め・PBB', tagVi: 'Chèn bánh & PBB', tagEn: 'On-Block & PBB',
       titleJa: '3. オンブロック・輪止め・GPU（右舷）・PBB直角装着（左舷L1）',
       titleVi: '3. On-Block, Chèn bánh, GPU (mạn Phải) & PBB tiến ngang từ mạn Trái (L1)',
-      safetyJa: 'エンジン停止・ビーコン消灯を指差呼称で確認後に接近！GPUは右舷機首側、PBBは左舷ロータンダからL1ドアへ真横に装着。',
-      safetyVi: 'Chỉ tiếp cận sau khi tắt đèn beacon & 指差呼称! GPU cắm ở mũi mạn PHẢI (-X), PBB tiến VUÔNG GÓC từ tháp xoay mạn TRÁI (+X) vào cửa L1.',
+      titleEn: '3. On-Block, Wheel Chocks, Starboard GPU & Port L1 PBB Docking',
+      safetyJa: 'ビーコン消灯を指差呼称で確認後に接近！GPUは右舷機首（AC 115V/400Hz）、PBBはセンターピア側ロータンダから左舷L1へ直角装着。',
+      safetyVi: 'Chỉ tiếp cận sau khi tắt đèn beacon & 指差呼称! GPU cắm mũi mạn PHẢI (-X), PBB nối ngang từ Center Pier vào cửa L1 mạn TRÁI (+X).',
+      safetyEn: 'Approach only after Point-and-Call confirmation of Beacon OFF! Connect 115V/400Hz GPU at starboard nose and dock PBB onto port door L1.',
       roles: [
-        { roleJa: 'ランプ作業員（チョック＆コーン）', roleVi: 'Nhân viên sân đỗ (Chèn bánh & Cọc tiêu)', badge: 'SAFETY',
-          tasksJa: ['前輪・主輪へ輪止め（チョック）を設置し機体移動を防止', '機首・両翼端・エンジン前方に安全コーン配置＆機体損傷点検'],
-          tasksVi: ['Chèn bánh mũi và bánh chính (Chock On) cố định tàu bay', 'Đặt cọc tiêu mũi/đầu cánh/động cơ & kiểm tra thân vỏ bằng 指差呼称'] },
-        { roleJa: 'GPU操作員（右舷機首）', roleVi: 'Nhân viên GPU (Mũi mạn Phải)', badge: 'STARBOARD',
-          tasksJa: ['右舷機首下のレセプタクルへ400Hz地上電源ケーブルを接続・給電開始'],
-          tasksVi: ['Cắm cáp nguồn 400Hz vào ổ cắm mũi mạn phải và xác nhận cấp điện ổn định'] },
-        { roleJa: 'PBB操作員（左舷側方装着）', roleVi: 'Nhân viên vận hành PBB (Tiến từ hông Trái)', badge: 'PORT L1',
-          tasksJa: ['左舷固定橋ロータンダからPBBを機体側面（L1ドア）へ直角に徐行接近・キャノピー密着'],
-          tasksVi: ['Điều khiển ống lồng từ Rotunda bên hông TRÁI tiến vuông góc áp sát cửa L1, hạ đệm cao su an toàn'] }
+        { roleJa: 'ランプ作業員（チョック＆コーン）', roleVi: 'Nhân viên sân đỗ (Chèn bánh & Cọc tiêu)', roleEn: 'Ramp Safety Mechanic', badge: 'SAFETY',
+          tasksJa: ['前輪・主輪へ輪止め（チョック）を設置し機体移動を防止', '機首・両翼端・エンジン前へコーン配置＆到着外部点検'],
+          tasksVi: ['Chèn bánh mũi và bánh chính (Chock On) cố định tàu bay', 'Đặt cọc tiêu mũi/đầu cánh/động cơ & kiểm tra thân vỏ bằng 指差呼称'],
+          tasksEn: ['Insert nose and main gear wheel chocks to secure aircraft', 'Place safety cones at nose, wingtips, and engines & conduct arrival walkaround'] },
+        { roleJa: 'GPU操作員（右舷機首）', roleVi: 'Nhân viên GPU (Mũi mạn Phải)', roleEn: 'GPU Operator (Starboard Nose)', badge: '400Hz',
+          tasksJa: ['5m手前ブレーキ点検後、右舷機首下へAC 115V/400Hzケーブルを接続・給電'],
+          tasksVi: ['Dừng thử phanh ở 5m, cắm cáp nguồn AC 115V/400Hz vào ổ mũi phải và xác nhận đèn cấp điện'],
+          tasksEn: ['Perform 5m brake-check, connect AC 115V/400Hz cable to starboard nose receptacle, and verify power'] },
+        { roleJa: 'PBB操作員（左舷L1）', roleVi: 'Nhân viên vận hành PBB (Hông Trái L1)', roleEn: 'PBB Operator (Port L1)', badge: 'PORT L1',
+          tasksJa: ['キャビン側のディスアーム確認後、PBBをL1ドアへ直角装着し開扉'],
+          tasksVi: ['Xác nhận tiếp viên đã Disarm cầu trượt thoát hiểm rồi mới áp sát PBB và mở cửa L1'],
+          tasksEn: ['Dock PBB squarely to Port L1 and verify slide DISARMED via door window before opening'] }
       ]
     },
     {
-      id: 'unload', duration: 8, tagJa: 'ULD・バルク取卸', tagVi: 'Dỡ ULD & Bulk',
+      id: 'unload', duration: 8, tagJa: 'ULD・バルク取卸', tagVi: 'Dỡ ULD & Bulk', tagEn: 'Offload ULD/Bulk',
       titleJa: '4. 降機 ＆ 右舷貨物室取卸し（Low-Deck High-Loader＋Bulk Belt Loader）',
       titleVi: '4. Xuống khách & Dỡ hàng mạn Phải (Low-Deck High-Loader + Belt Loader cho Bulk)',
-      safetyJa: '【GSE適正配置】前部コンテナ室（AKH）は「ローデッキ・ハイリフトローダー」、後部バルク室（バラ手荷物）は「ベルトローダー」を右舷側へ装着！',
-      safetyVi: '[ĐÚNG LOẠI GSE] Hầm container trước (AKH) dùng Low-Deck High-Lift Loader; hầm Bulk sau (hành lý rời) dùng Belt Loader — cả 2 đều ở mạn PHẢI (-X)!',
+      titleEn: '4. Passenger Deplaning & Starboard ULD / Bulk Baggage Offloading',
+      safetyJa: '前部コンテナ室は「ローデッキ・ハイリフトローダー」、後部バルク室は「ベルトローダー」を5mブレーキ点検後に右舷側へ装着！',
+      safetyVi: 'Hầm container trước dùng Low-Deck High-Lift Loader; hầm Bulk sau dùng Belt Loader — dừng thử phanh 5m trước khi áp vào mạn PHẢI!',
+      safetyEn: 'Dock Low-Deck High-Lift Loader to Fwd ULD hold and Belt Loader to Aft Bulk hold on Starboard after mandatory 5m brake check!',
       roles: [
-        { roleJa: 'ハイリフトローダー操作員（前部AKH室）', roleVi: 'Vận hành Low-Deck High-Lift Loader (Hầm Container)', badge: 'LOW-DECK',
-          tasksJa: ['右舷前部貨物室へローデッキ・ハイリフトローダーを装着（ERA手前でブレーキ点検必須）', 'AKH（LD3-45）コンテナを引き出し、後方のコンテナドーリーへ移載'],
-          tasksVi: ['Áp sát Low-Deck High-Lift Loader (sàn nâng thấp) vào hầm trước mạn PHẢI sau khi Brake Check', 'Đẩy container AKH (LD3-45) ra bàn nâng hạ xuống Container Dolly'] },
-        { roleJa: 'ベルトローダー担当（後部バルク室）', roleVi: 'Nhân viên Belt Loader (Hầm Bulk sau)', badge: 'BULK BELT',
-          tasksJa: ['右舷後部バルク室（Hold 5）へベルトローダーを装着し、優先手荷物・ベビーカー等を取卸し', 'トーイングトラクターでバゲージカートを国内/国際ターンテーブルへ搬送'],
-          tasksVi: ['Gắn Belt Loader vào hầm Bulk sau mạn PHẢI dỡ hành lý rời, xe đẩy trẻ em, hành lý Priority', 'Kéo xe ba-gát (Baggage Cart) về băng chuyền trả hành lý nhà ga'] },
-        { roleJa: '旅客ハンドリング係員（左舷PBB）', roleVi: 'Nhân viên phục vụ khách (Cửa PBB Trái)', badge: 'PORT PAX',
-          tasksJa: ['左舷L1ドアのPBBで降機旅客を案内、PRM・乗継旅客を優先誘導'],
-          tasksVi: ['Đón khách rời máy bay qua ống lồng L1 bên trái, hỗ trợ PRM & nối chuyến'] }
+        { roleJa: 'ハイリフトローダー操作員', roleVi: 'Vận hành Low-Deck High-Lift Loader', roleEn: 'High-Lift Loader Operator', badge: 'LOW-DECK',
+          tasksJa: ['ガイドマン誘導で右舷前部貨物室へ装着し、ULDをコンテナドーリーへ移載'],
+          tasksVi: ['Theo còi xi-nhan Guideman áp sát hầm trước mạn PHẢI, hạ container ULD xuống đoàn xe Dolly'],
+          tasksEn: ['Follow guideman whistle signals to dock at Fwd cargo door and transfer ULDs onto dollies'] },
+        { roleJa: 'ベルトローダー担当（バルク室）', roleVi: 'Nhân viên Belt Loader (Hầm Bulk)', roleEn: 'Bulk Hold Belt Loader Crew', badge: 'BULK BELT',
+          tasksJa: ['右舷後部バルク室から手荷物を50cm間隔で取卸し、TT牽引車列で手荷物仕分け場へ搬送'],
+          tasksVi: ['Dỡ hành lý rời cách nhau 50cm trên băng chuyền hầm Bulk và dùng xe TT kéo về nhà ga'],
+          tasksEn: ['Offload loose bags spaced 50cm apart on the belt conveyor and tow baggage carts to sorting'] },
+        { roleJa: '旅客係員（左舷PBB）', roleVi: 'Nhân viên phục vụ khách (PBB Trái)', roleEn: 'Gate & PRM Agent (Port PBB)', badge: 'PORT PAX',
+          tasksJa: ['降機旅客の案内およびWCHC/WCHS/WCHR旅客の介助・乗継誘導'],
+          tasksVi: ['Đón khách rời tàu qua PBB bên trái, hỗ trợ xe lăn PRM & hành khách nối chuyến'],
+          tasksEn: ['Guide deplaning passengers via Port PBB and assist PRM wheelchair & connecting travelers'] }
       ]
     },
     {
-      id: 'service', duration: 9, tagJa: '給油・清掃', tagVi: 'Tra dầu & Vệ sinh',
-      titleJa: '5. ハイドラント給油（右主翼下）・清掃・ラバトリー（左舷後部）',
-      titleVi: '5. Tra dầu Hydrant (dưới cánh Phải), Vệ sinh cabin & Lavatory (sau Trái)',
-      safetyJa: 'NGOでは地下配管から給油する「ハイドラント給油車（サービサー）」を右主翼下へ配置。左舷後部のラバトリー作業とは完全分離。',
-      safetyVi: 'Tại NGO dùng xe Hydrant Servicer lấy nhiên liệu ngầm đặt dưới cánh PHẢI; xe Lavatory đặt tách biệt ở đuôi mạn TRÁI.',
+      id: 'service', duration: 9, tagJa: '給油・機内食・水', tagVi: 'Tra dầu, Suất ăn & Nước', tagEn: 'Fuel, Catering & Water',
+      titleJa: '5. ハイドラント給油（右翼下）・ケータリング（-19cm）・汚水/給水衛生分離',
+      titleVi: '5. Tra dầu Hydrant (cánh Phải), Xe suất ăn (-19cm) & Lavatory/Nước sạch tách biệt',
+      titleEn: '5. Hydrant Refueling, Catering (-19cm Sill) & Hygienic Lavatory/Water Service',
+      safetyJa: 'サービサーは前方退避路を確保して白ピット＆赤アース接続。フードローダーはアウトリガー張出＋床面-19cmセット。',
+      safetyVi: 'Xe Hydrant quay đầu ra ngoài giữ lối thoát hiểm, nối hố Trắng & kẹp tiếp địa Đỏ. Xe suất ăn hạ 4 chân chống & đặt sàn thấp hơn 19cm.',
+      safetyEn: 'Park Hydrant Servicer facing forward escape path with white pit hose & red bonding wire; deploy catering outriggers at -19cm sill offset.',
       roles: [
-        { roleJa: '給油作業員（ハイドラントサービサー）', roleVi: 'Nhân viên tra dầu (Hydrant Servicer - Cánh Phải)', badge: 'FUEL',
-          tasksJa: ['右主翼下の給油パネルへアース接続・消火器待機後にハイドラントピットからJET A-1を給油', '給油伝票を機長およびロードコントロールへ報告'],
-          tasksVi: ['Tiếp địa, đặt bình chữa cháy, nối hố ngầm Hydrant bơm JET A-1 vào cánh PHẢI', 'Xác nhận phiếu nhiên liệu báo Cơ trưởng & Load Control'] },
-        { roleJa: '機内清掃・フードローダー（右舷ドア）', roleVi: 'Vệ sinh cabin & Xe suất ăn (Cửa Phải R2)', badge: 'CABIN/R2',
-          tasksJa: ['座席清掃・忘れ物確認・保安検査および右舷ドアからの機内食・飲料補給'],
-          tasksVi: ['Dọn khoang khách, kiểm tra an ninh cabin & tiếp tế suất ăn qua cửa R2 bên phải'] },
-        { roleJa: 'ラバトリー＆ウォーター担当（左舷後部）', roleVi: 'Nhân viên Lavatory & Nước sạch (Đuôi mạn Trái)', badge: 'PORT AFT',
-          tasksJa: ['左舷後部パネルにて汚水処理・飲料水補給を衛生分離ルール厳守で実施'],
-          tasksVi: ['Hút thải & cấp nước sạch ở đuôi mạn trái, tách biệt tuyệt đối với khu suất ăn & hàng hóa'] }
+        { roleJa: '給油作業員（乙種第4類）', roleVi: 'Nhân viên tra dầu (Chứng chỉ 乙4)', roleEn: 'Certified HazMat Class 4 Fueler', badge: 'JET A-1',
+          tasksJa: ['ボンディング接続・消火器風上配置を確認し、白ピットから右主翼下へJet A-1給油'],
+          tasksVi: ['Kẹp dây tiếp địa chống tĩnh điện, đặt bình chữa cháy đầu gió và bơm Jet A-1 vào cánh phải'],
+          tasksEn: ['Connect bonding wire, stage fire extinguisher upwind, and pump Jet A-1 from white hydrant pit'] },
+        { roleJa: 'ケータリング＆機内清掃', roleVi: 'Xe suất ăn & Vệ sinh khoang khách', roleEn: 'Catering High-Loader & Cabin Crew', badge: 'R1 -19cm',
+          tasksJa: ['アウトリガー完全張出後にバンを上昇させ、機内沈み込み対策として床面-19cmで装着'],
+          tasksVi: ['Hạ 4 chân chống thủy lực, nâng thùng xe thấp hơn sàn cabin ~19cm tránh cạ cửa khi máy bay nặng dần'],
+          tasksEn: ['Extend all 4 outriggers before lifting van body ~19cm below cabin floor to allow strut settling'] },
+        { roleJa: 'ラバトリー＆ウォーター担当', roleVi: 'Nhân viên Lavatory & Nước sạch', roleEn: 'Lavatory & Potable Water Techs', badge: 'HYGIENE',
+          tasksJa: ['汚水車（右後部）と給水車（左後部・当日水のみ使用）を完全分離して作業'],
+          tasksVi: ['Tách biệt hoàn toàn xe hút thải và xe cấp nước sạch trong ngày (không dùng nước lưu qua đêm)'],
+          tasksEn: ['Service waste and fresh same-day potable water using strictly segregated trucks and hoses'] }
       ]
     },
     {
-      id: 'load_board', duration: 9, tagJa: 'ULD搭載・搭乗', tagVi: 'Xếp ULD & Lên khách',
-      titleJa: '6. 搭乗（左舷PBB）・AKHコンテナ/バルク搭載（右舷）・W&B最終確認',
-      titleVi: '6. Lên khách (PBB Trái), Xếp AKH bằng Low-Deck Loader + Bulk bằng Belt Loader & Chốt W&B',
-      safetyJa: '前部AKHコンテナはローデッキローダーでLIR指定位置（11P/12P）へロック、後部バルクはベルトローダーで搭載しLMC報告を徹底！',
-      safetyVi: 'Xếp container AKH vào vị trí LIR (11P/12P) bằng Low-Deck Loader, xếp hàng rời hầm Bulk bằng Belt Loader và chốt Load Sheet!',
+      id: 'load_board', duration: 9, tagJa: 'ULD搭載・搭乗', tagVi: 'Xếp ULD & Lên khách', tagEn: 'Load ULD & Board',
+      titleJa: '6. 搭乗（左舷PBB）・ULD/バルク搭載（右舷）・LIR照合＆W&B確定',
+      titleVi: '6. Lên khách (PBB Trái), Xếp ULD/Bulk theo LIR & Chốt Load Sheet / NOTOC',
+      titleEn: '6. Passenger Boarding, LIR-Verified ULD/Bulk Loading & Final Load Sheet',
+      safetyJa: 'ULDタグとLIR指定位置を指差呼称で照合し、フロアロックを完全施錠（Close & Lock）。LMCがあれば即時報告！',
+      safetyVi: 'Đối chiếu thẻ ULD khớp 100% vị trí LIR, gạt đủ chốt khóa sàn (Close & Lock) và báo ngay mọi thay đổi giờ chót (LMC)!',
+      safetyEn: 'Match ULD tags to LIR positions via Point-and-Call, engage all sill/floor locks, and report any Last Minute Change (LMC)!',
       roles: [
-        { roleJa: 'ロードマスター / ロードコントロール', roleVi: 'Loadmaster & Load Control (LIR/W&B)', badge: 'W&B / LIR',
-          tasksJa: ['前部AKHコンテナ重量・後部バルク重量をLIRと照合、LMC反映後にLoad Sheet・NOTOCを機長へ提出'],
-          tasksVi: ['Đối chiếu trọng lượng container AKH hầm trước & hàng rời hầm Bulk khớp LIR, giao Load Sheet & NOTOC'] },
-        { roleJa: 'ハイリフト＆ベルト搭載チーム（右舷）', roleVi: 'Đội xếp hàng Low-Deck & Bulk (Mạn Phải)', badge: 'STARBOARD',
-          tasksJa: ['ローデッキローダーでAKHコンテナを所定ロックへ固定、ベルトローダーでバルク手荷物を積込みネット固縛'],
-          tasksVi: ['Khóa chặt chốt sàn container AKH hầm trước, móc lưới hầm Bulk sau và đóng cửa hầm bằng 指差呼称'] },
-        { roleJa: '搭乗口係員（左舷PBB L1）', roleVi: 'Nhân viên Gate (Cửa PBB Trái L1)', badge: 'PORT GATE',
-          tasksJa: ['PRM優先搭乗・ゲートチェック手荷物（リチウム電池取出確認）をバルク室へ引き渡し、最終人数確定'],
-          tasksVi: ['Ưu tiên khách PRM, chuyển vali gate-check (đã lấy pin lithium) xuống hầm Bulk và chốt sĩ số'] }
+        { roleJa: 'ロードマスター / ロードコントロール', roleVi: 'Loadmaster & Load Control (LIR/W&B)', roleEn: 'Loadmaster & Load Controller', badge: 'W&B / LIR',
+          tasksJa: ['実搭載ULD番号・重量とLIRの一致を確認し、最終Load Sheet・NOTOCを機長へ手交'],
+          tasksVi: ['Kiểm tra số thùng/trọng lượng thực tế khớp LIR, trình ký Load Sheet & NOTOC cho Cơ trưởng'],
+          tasksEn: ['Reconcile actual ULD positions/weights against LIR and deliver signed Load Sheet & NOTOC to Captain'] },
+        { roleJa: 'ハイリフト＆バルク搭載班', roleVi: 'Đội xếp hầm ULD & Bulk', roleEn: 'Starboard Cargo Loading Team', badge: 'CLOSE&LOCK',
+          tasksJa: ['コンター逸脱・偏荷重なきことを確認し、全ロック施錠とネット固縛を実施'],
+          tasksVi: ['Kiểm tra không vượt biên dạng Contour / không lệch tải, khóa sàn và cài lưới hầm Bulk chắc chắn'],
+          tasksEn: ['Verify zero contour overhang or eccentric load, latch all floor locks, and secure bulk nets'] },
+        { roleJa: '搭乗口係員（ゲートチェック＆PPBM）', roleVi: 'Nhân viên Gate (Xách tay & PPBM)', roleEn: 'Boarding Gate Agent (PPBM)', badge: 'PORT GATE',
+          tasksJa: ['ゲート預け手荷物から予備リチウム電池を取り出し確認、搭乗者数と預け手荷物をPPBM照合'],
+          tasksVi: ['Kiểm tra lấy pin dự phòng khỏi vali gate-check, chốt tổng khách lên tàu khớp hành lý PPBM'],
+          tasksEn: ['Remove power banks from gate-checked bags and reconcile final passenger headcount with PPBM'] }
       ]
     },
     {
-      id: 'clear', duration: 8, tagJa: 'ドア閉・退避', tagVi: 'Đóng cửa & Rút GSE',
-      titleJa: '7. ドア閉鎖・GSE退避・PBB切離し・最終指差呼称',
-      titleVi: '7. Đóng cửa, Rút toàn bộ xe GSE/PBB & Kiểm tra vòng quanh cuối cùng',
-      safetyJa: 'すべてのGSE・コーン・GPUをERA外へ完全退避！出発前ウォークアラウンドで全ドア・パネル閉鎖を指差呼称。',
-      safetyVi: 'Toàn bộ xe GSE, cọc tiêu, GPU phải rút gọn ra ngoài vạch đỏ ERA. Đi vòng quanh tàu bay kiểm tra đóng kín mọi nắp/cửa bằng 指差呼称.',
+      id: 'clear', duration: 8, tagJa: 'ドア閉・退避', tagVi: 'Đóng cửa & Rút GSE', tagEn: 'Clear ERA & Tug',
+      titleJa: '7. 全ドア閉鎖・GSE/PBB完全退避・ウォークアラウンド・トーイングカー連結',
+      titleVi: '7. Đóng kín cửa, Rút toàn bộ GSE/PBB khỏi ERA, Walkaround & Nối xe kéo Tug',
+      titleEn: '7. Doors Closed, GSE/PBB Retracted Outside ERA, Walkaround & Tug Coupling',
+      safetyJa: '全GSE・PBB・コーンをERA赤線外（白破線ESA・PBB待機枠）へ完全撤収！バイパスピンを前脚へ挿入。',
+      safetyVi: 'Rút sạch toàn bộ xe GSE, PBB và cọc tiêu ra ngoài vạch đỏ ERA. Cắm chốt đỏ Steering Bypass Pin vào càng mũi và nối thanh kéo.',
+      safetyEn: 'Retract all GSE, cones, and PBB completely outside red ERA into standby boxes; insert nose-gear steering bypass pin and couple tug.',
       roles: [
-        { roleJa: '地上整備士 / ヘッドセットマン', roleVi: 'Kỹ thuật viên mặt đất / Nhân viên tai nghe', badge: 'HEADSET',
-          tasksJa: ['機体周囲ウォークアラウンド（全貨物室ドア・サービスパネル閉鎖、FOD無し確認）', 'GPU切離し・バイパスピン挿入・インターホンで機長と出発準備完了を確認'],
-          tasksVi: ['Đi vòng quanh kiểm tra toàn bộ cửa hầm/nắp kỹ thuật đóng kín, mặt sân sạch FOD', 'Ngắt GPU, cắm chốt bypass steering & kết nối tai nghe liên lạc buồng lái'] },
-        { roleJa: 'PBB操作員 & ランプ員', roleVi: 'Nhân viên ống lồng & Sân đỗ', badge: 'CLEAR ERA',
-          tasksJa: ['客室ドア閉鎖確認後にPBBを収納位置へ退避', 'ベルトローダー・給油車・安全コーンをERA赤線外へ撤収'],
-          tasksVi: ['Đợi cửa L1 đóng kín rồi rút ống lồng PBB về vị trí an toàn', 'Rút sạch băng chuyền, xe tra dầu và cọc tiêu ra ngoài vạch đỏ ERA'] },
-        { roleJa: 'トーイングカードライバー', roleVi: 'Tài xế xe đẩy lùi (Pushback Tug)', badge: 'TUG',
-          tasksJa: ['プッシュバック用トラクターを前輪へ連結し、ブレーキ解除待機'],
-          tasksVi: ['Đưa xe đẩy lùi áp sát và khớp chốt vào bánh mũi máy bay sẵn sàng đẩy'] }
+        { roleJa: '地上整備士 / ヘッドセットマン', roleVi: 'Kỹ thuật viên mặt đất / Headset Man', roleEn: 'Ground Mechanic / Headset Man', badge: 'HEADSET',
+          tasksJa: ['機体1周ウォークアラウンドで全扉・ラッチ・給油パネル閉鎖を指差呼称確認', 'ステアリング・バイパスピン挿入＆インターホン接続'],
+          tasksVi: ['Đi vòng 360° kiểm tra đóng kín mọi cửa hầm/nắp kỹ thuật bằng 指差呼称', 'Cắm chốt Bypass Pin càng mũi và kết nối tai nghe với Cơ trưởng'],
+          tasksEn: ['Perform 360° pre-departure walkaround verifying all doors/panels latched via Point-and-Call', 'Insert steering bypass pin and establish cockpit intercom contact'] },
+        { roleJa: 'PBB＆GSE退避担当', roleVi: 'Nhân viên rút PBB & GSE', roleEn: 'PBB & GSE Clearance Crew', badge: 'CLEAR ERA',
+          tasksJa: ['L1ドア閉鎖後にPBBを白枠待機位置へ収納し、全GSEをERA外へ退避'],
+          tasksVi: ['Đợi cửa L1 đóng kín rồi rút PBB về ô trắng chờ, đưa toàn bộ xe GSE ra ngoài vạch đỏ ERA'],
+          tasksEn: ['Retract PBB into its white standby box after L1 closure and clear all GSE outside red ERA'] },
+        { roleJa: 'プッシュバックTugドライバー', roleVi: 'Tài xế xe đẩy lùi (Pushback Tug)', roleEn: 'Pushback Tractor Driver', badge: 'TUG',
+          tasksJa: ['トーバーを前脚へ確実に連結し、管制承認とブレーキ解除指示を待機'],
+          tasksVi: ['Khớp chắc chắn thanh kéo Towbar vào càng mũi, chờ huấn lệnh ATC và lệnh nhả phanh đỗ'],
+          tasksEn: ['Couple towbar securely to nose gear and stand by for ATC clearance and brake release'] }
       ]
     },
     {
-      id: 'pushback', duration: 10, tagJa: 'プッシュバック', tagVi: 'Đẩy lùi & Nổ máy',
-      titleJa: '8. プッシュバック ＆ エンジン始動（Pushback & Engine Start）',
-      titleVi: '8. Đẩy lùi khỏi bãi đỗ & Khởi động động cơ (プッシュバック)',
-      safetyJa: '赤色ビーコン点灯！エンジン始動許可前に周囲の人員・車両クリアを再確認。ゆっくり一定速度で誘導路へ押出し。',
-      safetyVi: 'Đèn Beacon đỏ bật sáng! Xác nhận xung quanh hoàn toàn thông thoáng trước khi báo cơ trưởng nổ máy. Đẩy lùi êm, chậm đúng đường dẫn.',
+      id: 'pushback', duration: 10, tagJa: 'プッシュバック', tagVi: 'Đẩy lùi & Nổ máy', tagEn: 'Pushback & Start',
+      titleJa: '8. プッシュバック ＆ エンジン始動（後方車両通行帯の地上監視員ブロック）',
+      titleVi: '8. Đẩy lùi khỏi Spot 7 & Khởi động động cơ (Cảnh giới đường xe phía sau)',
+      titleEn: '8. Pushback onto Apron Taxilane & Engine Start',
+      safetyJa: '赤色ビーコン点灯！後方車両通行帯のGSE車両を停止させ、周囲安全確認後にエンジン始動クリアランスを発出。',
+      safetyVi: 'Đèn Beacon đỏ bật sáng! Chặn luồng xe GSE phía sau, đi bộ cảnh giới hai đầu cánh và cấp phép khởi động động cơ.',
+      safetyEn: 'Red beacon ON! Hold behind-stand vehicle traffic, escort nose and wingtips on foot, and issue Engine Start clearance.',
       roles: [
-        { roleJa: 'ATC 管制官', roleVi: 'Kiểm soát viên không lưu (ATC)', badge: 'TOWER',
-          tasksJa: ['プッシュバックおよびエンジン始動許可（Pushback & Start-up Approved）を発出'],
-          tasksVi: ['Cấp huấn lệnh đẩy lùi hướng Tây trên đường lăn A và cho phép nổ máy'] },
-        { roleJa: 'トーイングカードライバー', roleVi: 'Tài xế xe Pushback Tug', badge: 'PUSHBACK',
-          tasksJa: ['ヘッドセットマンと連携し、誘導路Aの中心線へ機首を西向きに正確に整列させる'],
-          tasksVi: ['Phối hợp với Headset Man đẩy lùi và xoay đuôi đưa máy bay nằm chuẩn trên tim đường lăn A'] },
-        { roleJa: 'ヘッドセットマン & ウイングウォーカー', roleVi: 'Nhân viên tai nghe & Canh đầu cánh', badge: 'ESCORT',
-          tasksJa: ['前輪横を並走監視しつつ、機長へ「エンジン1・2始動安全確認」を伝達', '両翼端のクリアランスと後方車両交錯を最後まで監視'],
-          tasksVi: ['Đi bộ song song vùng an toàn giám sát bánh mũi, thông báo cơ trưởng nổ từng động cơ', 'Hai Wing Walker cảnh giới đầu cánh và các xe xung quanh trong suốt quá trình đẩy'] }
+        { roleJa: '中部グランド管制 (Chubu Ground)', roleVi: 'Kiểm soát mặt đất (Chubu Ground)', roleEn: 'Chubu Ground ATC (121.7 MHz)', badge: 'ATC GND',
+          tasksJa: ['プッシュバックおよびエンジン始動を承認（Pushback & Start-up Approved）'],
+          tasksVi: ['Cấp huấn lệnh cho phép đẩy lùi và khởi động động cơ'],
+          tasksEn: ['Approve aircraft pushback and engine start sequence'] },
+        { roleJa: 'プッシュバックTugドライバー', roleVi: 'Tài xế xe Pushback Tug', roleEn: 'Pushback Tug Operator', badge: 'PUSHBACK',
+          tasksJa: ['一定低速で後退し、エプロン誘導路の中心線へ機首を正確に整列'],
+          tasksVi: ['Đẩy lùi êm ở tốc độ chậm ổn định, xoay đuôi đưa tàu bay nằm chuẩn trên tim đường lăn'],
+          tasksEn: ['Push smoothly at walking pace and align aircraft nose cleanly on taxilane centerline'] },
+        { roleJa: 'ヘッドセットマン＆ウイングウォーカー', roleVi: 'Headset Man & Canh đầu cánh', roleEn: 'Headset Man & Wingwalkers', badge: 'ESCORT',
+          tasksJa: ['前脚横・両翼端外側を並走警戒し、「Clear to start Engine 2 & 1」を伝達'],
+          tasksVi: ['Đi bộ song song cảnh giới bánh mũi & hai đầu cánh, báo Cơ trưởng nổ máy số 2 & số 1'],
+          tasksEn: ['Walk alongside nose gear and wingtips maintaining clearance and call "Clear to start Engines 2 & 1"'] }
       ]
     },
     {
-      id: 'waveoff_taxiout', duration: 11, tagJa: 'お見送り・滑走前', tagVi: 'Tiễn bay & Lăn ra',
-      titleJa: '9. トーバー切離し・バイパスピン提示（お見送り）→ 誘導路タキシング',
-      titleVi: '9. Tháo thanh kéo, Giơ cờ đỏ Bypass Pin tiễn bay (お見送り) & Lăn ra đường băng',
-      safetyJa: 'バイパスピン（赤リボン）を確実に抜き、機長から見える左側安全位置で提示・お見送り合図！滑走路手前停止線で待機。',
-      safetyVi: 'Rút chốt bypass (cờ đỏ), đứng phía trái mũi máy bay nơi cơ trưởng nhìn rõ để giơ cao xác nhận và vẫy chào tiễn bay (お見送り)!',
+      id: 'waveoff_taxiout', duration: 12, tagJa: 'お見送り・滑走へ', tagVi: 'Tiễn bay & Lăn ra', tagEn: 'Pin Show & Taxi-Out',
+      titleJa: '9. トーバー切離し・左前方バイパスピン提示（お見送り）→ 3,500m滑走路36端へタキシー',
+      titleVi: '9. Tháo Towbar, Giơ cờ đỏ Bypass Pin bên trái (お見送り) & Lăn ra đầu RWY 36',
+      titleEn: '9. Towbar Disconnect, Forward-Left Bypass Pin Salute & Taxi to RWY 36 Threshold',
+      safetyJa: 'パーキングブレーキSET確認後にトーバー切離し！機長から見える左前方で赤リボン付きピンを掲げお見送り後、A-TWY経由で南端A1へ。',
+      safetyVi: 'Chờ Cơ trưởng xác nhận Parking Brake SET mới tháo Towbar! Đứng chếch TRÁI mũi tàu giơ cờ đỏ Bypass Pin & vẫy chào tiễn bay ra đầu băng A1.',
+      safetyEn: 'Confirm Parking Brake SET before uncoupling! Display the red-streamer bypass pin forward-left of the nose, wave off, and taxi via C-TWY/A-TWY to A1.',
       roles: [
-        { roleJa: 'ヘッドセットマン（お見送り）', roleVi: 'Nhân viên tai nghe / Tiễn bay (Wave-off)', badge: 'PIN SHOW',
-          tasksJa: ['パーキングブレーキ確認後にトーバー切離し・ステアリングバイパスピンを抜去', '左側安全位置へ移動し赤リボン（ピン）を掲げてOKサイン＆お見送り（Wave-off）'],
-          tasksVi: ['Sau khi máy bay gài phanh, tháo thanh kéo và rút chốt đỏ Bypass Pin', 'Di chuyển ra vị trí an toàn bên trái giơ cao cờ đỏ xác nhận & cúi chào/vẫy tay tiễn bay'] },
-        { roleJa: 'ランプチーム（出発後確認）', roleVi: 'Đội sân đỗ (Kiểm tra sau rời bãi)', badge: 'POST-DEP',
-          tasksJa: ['機体離脱後のスポット内FOD・忘れ物・オイル漏れ有無を点検'],
-          tasksVi: ['Quét kiểm tra bãi Spot 102 sau khi tàu bay rời đi (FOD, vết dầu, dụng cụ bỏ quên)'] },
-        { roleJa: 'ATC 管制官（タキシー指示）', roleVi: 'Kiểm soát viên không lưu (Ground/Tower)', badge: 'TAXI OUT',
-          tasksJa: ['誘導路A経由で滑走路09停止位置（Hold Short）までの走行許可を発出'],
-          tasksVi: ['Cấp huấn lệnh lăn theo đường lăn A ra đầu đường băng 09 và chờ vào đường băng'] }
+        { roleJa: 'ヘッドセットマン（お見送り）', roleVi: 'Headset Man (Giơ chốt & Tiễn bay)', roleEn: 'Headset Man (Pin Show & Salute)', badge: 'PIN SHOW',
+          tasksJa: ['バイパスピンを抜去し、左前方安全位置で赤リボンを高く提示して敬礼・お見送り'],
+          tasksVi: ['Rút chốt Bypass Pin, di chuyển ra phía trước bên trái giơ cao cờ đỏ xác nhận rồi cúi chào/vẫy tay'],
+          tasksEn: ['Remove steering bypass pin, step to Captain\'s forward-left view, hold up red streamer, and wave off'] },
+        { roleJa: 'ランプチーム（整列お見送り＆FOD確認）', roleVi: 'Đội sân đỗ (Vẫy chào お見送り)', roleEn: 'Ramp Team (Omiokuri Wave-Off)', badge: 'WAVE-OFF',
+          tasksJa: ['エプロン安全線に沿って整列お見送り後、スポット内の出発後FOD点検を実施'],
+          tasksVi: ['Xếp hàng ngay ngắn vẫy tay chào tiễn bay (お見送り), sau đó kiểm tra lại mặt sân Spot 7'],
+          tasksEn: ['Line up along apron edge for traditional Japanese wave-off, then conduct post-departure FOD check'] },
+        { roleJa: '中部グランド管制', roleVi: 'Kiểm soát mặt đất (Taxi-Out)', roleEn: 'Chubu Ground Control', badge: 'TAXI A1',
+          tasksJa: ['C-TWY → A-TWY 経由で滑走路36南端 A1 停止位置（Hold Short）まで走行指示'],
+          tasksVi: ['Hướng dẫn lăn dọc đường lăn song song A-TWY ra đầu Nam đường băng 36 (vạch dừng A1)'],
+          tasksEn: ['Clear aircraft to taxi South via C-TWY and 3,500m A-TWY to Hold Short RWY 36 at A1'] }
       ]
     },
     {
-      id: 'takeoff', duration: 9, tagJa: '離陸上昇', tagVi: 'Cất cánh',
-      titleJa: '10. 離陸滑走・上昇（Takeoff Roll & Climb-out RWY 09）',
-      titleVi: '10. Chạy đà cất cánh & Lấy độ cao (離陸滑走・上昇 RWY 09)',
-      safetyJa: '滑走路クリア確認後に離陸許可。運航管理は出発電文（MVT）を送信し、次便到着へ備えます。',
-      safetyVi: 'Đường băng thông thoáng hoàn toàn để máy bay tăng tốc, nâng mũi (Rotate) và cất cánh. Bộ phận khai thác phát điện văn khởi hành (MVT).',
+      id: 'takeoff', duration: 10, tagJa: '離陸上昇', tagVi: 'Cất cánh', tagEn: 'Takeoff & Climb',
+      titleJa: '10. 3,500m 滑走路36 離陸滑走・ローテーション・伊勢湾上空へ上昇',
+      titleVi: '10. Chạy đà trên đường băng 3.500m RWY 36, Nâng mũi VR & Lấy độ cao trên Vịnh Ise',
+      titleEn: '10. Full-Scale Takeoff Roll on 3,500m RWY 36, Rotation (VR) & Climb-Out over Ise Bay',
+      safetyJa: '南端閾値（x=-1,680m）から約2,000m滑走してVRで機首上げ離陸！ギア格納後、伊勢湾北側へ上昇します。',
+      safetyVi: 'Tàu bay tăng tốc dọc đường băng thật 3.500m từ ngưỡng Nam (-1.680m), đạt VR kéo mũi rời đất, thu càng và vươn cao trên Vịnh Ise!',
+      safetyEn: 'Aircraft accelerates ~2,000m down full-scale RWY 36 from South threshold (-1,680m), rotates at VR, retracts gear, and climbs over Ise Bay.',
       roles: [
-        { roleJa: 'ATC 管制官（タワー）', roleVi: 'Kiểm soát viên Đài không lưu (Tower)', badge: 'TAKEOFF',
-          tasksJa: ['滑走路09離陸許可（Cleared for Takeoff RWY 09）発出・離陸後に進入管制（Departure）へ移管'],
-          tasksVi: ['Cấp huấn lệnh cất cánh RWY 09 và bàn giao tàu bay cho kiểm soát tiếp cận/rời sân bay'] },
-        { roleJa: '運航管理・ランプコントロール', roleVi: 'Điều phái bay & Kiểm soát sân đỗ', badge: 'DISPATCH',
-          tasksJa: ['実出発時刻（ATOT）を記録し、MVT（運航移動電文）・LDM（搭載電文）を到着空港へ送信', 'スポット102の次便受入れスケジュールを更新'],
-          tasksVi: ['Ghi nhận giờ cất cánh thực tế (ATOT), gửi điện văn MVT/LDM cho sân bay đích', 'Cập nhật trạng thái trống bãi Spot 102 cho chuyến tiếp theo'] }
+        { roleJa: '中部管制塔（タワー）', roleVi: 'Đài kiểm soát không lưu (Tower)', roleEn: 'Chubu Tower & Departure ATC', badge: 'TAKEOFF',
+          tasksJa: ['滑走路36離陸許可（Cleared for Takeoff RWY 36）発出・離陸後にセントレア進入管制へ移管'],
+          tasksVi: ['Cấp huấn lệnh cất cánh RWY 36 và chuyển giao cho kiểm soát tiếp cận Centrair Departure'],
+          tasksEn: ['Issue takeoff clearance on RWY 36 and hand off airborne flight to Centrair Departure'] },
+        { roleJa: '運航管理・ランプコントロール', roleVi: 'Điều phái bay & Kiểm soát sân đỗ', roleEn: 'Flight Dispatch & Ramp Control', badge: 'DISPATCH',
+          tasksJa: ['実離陸時刻（ATOT）を記録し、MVT・LDM電文を到着空港へ発信、次便受入準備へ移行'],
+          tasksVi: ['Ghi nhận giờ cất cánh thực tế (ATOT), phát điện văn MVT/LDM và mở bãi đón chuyến kế tiếp'],
+          tasksEn: ['Log Actual Takeoff Time (ATOT), transmit MVT/LDM telexes, and ready Spot 7 for next arrival'] }
       ]
     }
   ];
 
-  // HÀM THUẦN (PURE FUNCTION) TÍNH TỌA ĐỘ 3D CỦA MÁY BAY, NHÂN VIÊN & GSE THEO GIAI ĐOẠN (0..9) VÀ TIẾN ĐỘ p (0..1)
+  // PURE FUNCTION: 1:1 NGO 3,500m RUNWAY & APRON 3D FLIGHT POSE GENERATOR (JA / VI / EN CREW CALLOUTS)
   export function computeFlightCyclePose(phaseIdx, pRaw) {
     const p = Math.max(0, Math.min(1, pRaw));
     const lerp = (a, b, tVal) => a + (b - a) * Math.max(0, Math.min(1, tVal));
     const ac = { x: 0, y: 0, z: 10, heading: Math.PI / 2, pitch: 0, beaconOn: false };
-    let pbbExt = 0; // 0 = thu gọn, 1 = nối sát cửa máy bay
+    let pbbExt = 0;
     let conesOn = false;
     let chocksOn = false;
     let smoke = false;
-    const crew = []; // { x, z, labelJa, labelVi, vest, waving, pin }
-    const gse = [];  // { kind, x, z, heading, label }
+    const crew = [];
+    const gse = [];
 
     if (phaseIdx === 0) {
-      // 1. Final Approach & Landing RWY 09
+      // 1. Final Approach & Touchdown on 1:1 3,500m Runway 36 (z = -580, South -1750m -> North +1750m)
       ac.beaconOn = true;
       ac.heading = 0;
-      ac.z = -97;
-      if (p < 0.45) {
-        const u = p / 0.45;
-        ac.x = lerp(-230, -125, u);
-        ac.y = lerp(42, 0, u * u * 0.35 + u * 0.65);
-        ac.pitch = u > 0.75 ? 0.08 : -0.04;
+      ac.z = -580;
+      if (p < 0.42) {
+        const u = p / 0.42;
+        ac.x = lerp(-2350, -1450, u);
+        ac.y = lerp(112, 0, u * u * 0.35 + u * 0.65);
+        ac.pitch = u > 0.78 ? 0.08 : -0.05;
       } else {
-        const u = (p - 0.45) / 0.55;
-        const decel = 1 - Math.pow(1 - u, 1.5);
-        ac.x = lerp(-125, 95, decel);
+        const u = (p - 0.42) / 0.58;
+        const decel = 1 - Math.pow(1 - u, 1.65);
+        ac.x = lerp(-1450, 180, decel);
         ac.y = 0;
         ac.pitch = u < 0.12 ? 0.06 * (1 - u / 0.12) : 0;
-        smoke = u < 0.12;
+        smoke = u < 0.14;
       }
-      crew.push({ x: -16, z: 38, labelJa: 'ランプ員(FOD確認済)', labelVi: 'Đội sân đỗ (Chờ ngoài ERA)', vest: [190, 242, 100], waving: false });
+      crew.push({ x: -16, z: 38, labelJa: 'ランプ員 (ERA外待機・FOD確認済)', labelVi: 'Đội sân đỗ (Chờ ngoài ERA)', labelEn: 'Ramp Crew (Holding Outside ERA)', vest: [190, 242, 100], waving: false });
       gse.push({ kind: 'gpu', x: -18, z: 40, heading: 0 });
     } else if (phaseIdx === 1) {
-      // 2. Taxi-in & Marshalling into Spot 102
+      // 2. Vacate via Rapid Exit A6 -> A-TWY (-415) -> C-TWY (-235) -> Past 300m Center Pier Tip -> Spot 7 (0, 10)
       ac.beaconOn = true;
-      if (p < 0.28) {
-        const u = p / 0.28;
-        ac.x = 95;
-        ac.z = lerp(-97, -55, u);
-        ac.heading = Math.PI / 2;
-      } else if (p < 0.68) {
-        const u = (p - 0.28) / 0.40;
-        ac.x = lerp(95, 0, u);
-        ac.z = -55;
+      if (p < 0.24) {
+        const u = p / 0.24;
+        ac.x = lerp(180, 255, u);
+        ac.z = lerp(-580, -235, u);
+        ac.heading = Math.atan2(345, 75);
+      } else if (p < 0.54) {
+        const u = (p - 0.24) / 0.30;
+        ac.x = lerp(255, 0, u);
+        ac.z = -235;
         ac.heading = Math.PI;
-      } else {
-        const u = (p - 0.68) / 0.32;
+      } else if (p < 0.76) {
+        const u = (p - 0.54) / 0.22;
         ac.x = 0;
-        ac.z = lerp(-55, 10, u);
+        ac.z = lerp(-235, -62, u);
+        ac.heading = Math.PI / 2;
+      } else {
+        const u = (p - 0.76) / 0.24;
+        ac.x = 0;
+        ac.z = lerp(-62, 10, u);
         ac.heading = Math.PI / 2;
       }
-      // Đội đón tàu bay đứng chuẩn vị trí tại Spot 102
-      crew.push({ x: 0, z: 33, labelJa: 'マーシャラー(誘導)', labelVi: 'Marshaller (Dẫn tàu)', vest: [249, 115, 22], waving: true });
-      crew.push({ x: -21, z: 8, labelJa: 'ウイングウォーカーL', labelVi: 'Canh cánh trái', vest: [190, 242, 100], waving: true });
-      crew.push({ x: 21, z: 8, labelJa: 'ウイングウォーカーR', labelVi: 'Canh cánh phải', vest: [190, 242, 100], waving: true });
-      crew.push({ x: -16, z: 39, labelJa: 'チョック担当(待機)', labelVi: 'Đội chèn bánh (Chờ ERA)', vest: [190, 242, 100], waving: false });
+      crew.push({ x: 0, z: 33.5, labelJa: 'マーシャラー (駐機誘導)', labelVi: 'Marshaller (Dẫn tàu)', labelEn: 'Marshaller (Lead-in Signals)', vest: [249, 115, 22], waving: true });
+      crew.push({ x: -22.5, z: 8, labelJa: 'ウォッチマン右 (≥5m)', labelVi: 'Canh cánh phải (≥5m)', labelEn: 'Starboard Watchman (≥5m)', vest: [190, 242, 100], waving: true });
+      crew.push({ x: 22.5, z: 8, labelJa: 'ウォッチマン左 (≥5m)', labelVi: 'Canh cánh trái (≥5m)', labelEn: 'Port Watchman (≥5m)', vest: [190, 242, 100], waving: true });
+      crew.push({ x: -13.5, z: 36, labelJa: 'チョック担当 (ERA外待機)', labelVi: 'Chèn bánh (Chờ ngoài ERA)', labelEn: 'Chock Crew (Hold Outside ERA)', vest: [190, 242, 100], waving: false });
       gse.push({ kind: 'gpu', x: -18, z: 40, heading: 0 });
     } else if (phaseIdx === 2) {
-      // 3. On-Block, Beacon OFF, Chocks, Cones, GPU (Starboard Nose -X) & Side-Approach PBB (Port L1 +X)
+      // 3. On-Block, Beacon OFF, Chocks, Cones, Starboard GPU & Port L1 PBB
       ac.beaconOn = false;
       pbbExt = p;
       chocksOn = p > 0.2;
       conesOn = p > 0.35;
-      crew.push({ x: lerp(-12, -3.5, p), z: lerp(36, 23, p), labelJa: 'チョック・コーン担当', labelVi: 'Chèn bánh & Cọc tiêu', vest: [190, 242, 100], waving: false });
-      crew.push({ x: lerp(-16, -8.5, p), z: lerp(38, 26, p), labelJa: 'GPU担当 (右舷機首)', labelVi: 'GPU (Mũi mạn Phải)', vest: [249, 115, 22], waving: false });
-      crew.push({ x: 14, z: 26, labelJa: 'PBB操作員 (左舷L1)', labelVi: 'Vận hành PBB (Hông Trái L1)', vest: [59, 130, 246], waving: false });
-      gse.push({ kind: 'gpu', x: lerp(-18, -7.2, p), z: lerp(39, 25.5, p), heading: 0 });
+      crew.push({ x: -3.2, z: 24.8, labelJa: '整備士 (輪止め・指差呼称)', labelVi: 'Cơ giới (Chèn bánh & 指差呼称)', labelEn: 'Mechanic (Chocks & Point-and-Call)', vest: [190, 242, 100], waving: false });
+      crew.push({ x: -8.5, z: 26.5, labelJa: 'GPU担当 (AC 115V/400Hz)', labelVi: 'Nhân viên GPU (400Hz)', labelEn: 'GPU Operator (115V/400Hz)', vest: [249, 115, 22], waving: false });
+      crew.push({ x: 12.0, z: 23.5, labelJa: 'PBB操作員 (左舷L1)', labelVi: 'Vận hành PBB (Cửa L1)', labelEn: 'PBB Operator (Port L1)', vest: [59, 130, 246], waving: false });
+      gse.push({ kind: 'gpu', x: lerp(-17.5, -5.4, p), z: lerp(34.5, 26.2, p), heading: 0 });
     } else if (phaseIdx === 3) {
-      // 4. Deplaning (Port PBB +X) & Starboard Cargo Unloading (-X): Low-Deck High-Loader (Fwd AKH) + Belt Loader (Aft Bulk)
+      // 4. Deplaning & Starboard Offloading
       ac.beaconOn = false;
       pbbExt = 1; chocksOn = true; conesOn = true;
-      const app = Math.min(1, p * 2.2);
-      gse.push({ kind: 'gpu', x: -7.2, z: 25.5, heading: 0 });
-      // Hầm trước (Container AKH) -> Low-Deck High-Lift Loader + Container Dolly (bên PHẢI -X)
-      gse.push({ kind: 'lowloader', x: lerp(-24, -7.4, app), z: 18.5, heading: 0, hasUld: true, uldType: 'AKH' });
-      gse.push({ kind: 'uld_dolly', x: lerp(-32, -15.5, app), z: 18.5, heading: 0 });
-      // Hầm Bulk sau (Hành lý rời) -> Belt Loader + Baggage Tractor (bên PHẢI -X)
-      gse.push({ kind: 'belt', x: lerp(-24, -7.2, app), z: -7.5, heading: 0 });
-      gse.push({ kind: 'tractor', x: lerp(-31, -15.5, app), z: -7.5, heading: 0 });
-      crew.push({ x: lerp(-21, -10.5, app), z: 15.0, labelJa: 'ローデッキ・ハイリフト担当 (AKH)', labelVi: 'Low-Deck High-Loader (AKH)', vest: [249, 115, 22], waving: false });
-      crew.push({ x: lerp(-21, -10.5, app), z: -10.5, labelJa: 'ベルトローダー担当 (バルク)', labelVi: 'Belt Loader (Hầm Bulk)', vest: [190, 242, 100], waving: false });
-      crew.push({ x: 11, z: 26, labelJa: '旅客係員 (左舷PBB)', labelVi: 'Nhân viên hành khách (PBB Trái)', vest: [59, 130, 246], waving: false });
+      const app = Math.min(1, p * 2.0);
+      gse.push({ kind: 'gpu', x: -5.4, z: 26.2, heading: 0 });
+      gse.push({ kind: 'lowloader', x: lerp(-18.5, -6.4, app), z: 18.5, heading: 0, hasUld: true, uldType: 'AKH' });
+      gse.push({ kind: 'uld_dolly', x: lerp(-20.0, -12.8, app), z: 18.0, heading: 0 });
+      gse.push({ kind: 'belt', x: lerp(-17.8, -5.8, app), z: -6.2, heading: 0 });
+      crew.push({ x: -9.5, z: 21.8, labelJa: 'ハイリフト誘導員 (5m確認)', labelVi: 'Guideman High-Loader (5m)', labelEn: 'High-Loader Guideman (5m Stop)', vest: [249, 115, 22], waving: false });
+      crew.push({ x: -12.2, z: 12.8, labelJa: 'ロードマスター (LIR照合)', labelVi: 'Loadmaster (Kiểm LIR)', labelEn: 'Loadmaster (LIR Check)', vest: [190, 242, 100], waving: false });
+      crew.push({ x: 12.5, z: 25.5, labelJa: '旅客係員 (左舷PBB)', labelVi: 'Nhân viên hành khách (PBB)', labelEn: 'Gate Agent (Port PBB)', vest: [59, 130, 246], waving: false });
     } else if (phaseIdx === 4) {
-      // 5. Hydrant Fueling (Under Starboard Wing -X), Catering/Cleaning (Starboard R2 -X) & Lavatory/Water (Port Aft +X)
+      // 5. Hydrant Fueling, Catering (-19cm) & Lavatory/Water
       ac.beaconOn = false;
       pbbExt = 1; chocksOn = true; conesOn = true;
-      const app = Math.min(1, p * 2.2);
-      gse.push({ kind: 'gpu', x: -7.2, z: 25.5, heading: 0 });
-      gse.push({ kind: 'hydrant', x: lerp(-26, -11.5, app), z: 7.5, heading: Math.PI / 2 });
-      gse.push({ kind: 'catering', x: lerp(-24, -7.8, app), z: -2.0, heading: 0 });
-      gse.push({ kind: 'lav', x: lerp(24, 9.5, app), z: -8.5, heading: Math.PI });
-      crew.push({ x: -14.8, z: 10.5, labelJa: 'ハイドラント給油員 (右主翼下)', labelVi: 'Tra dầu Hydrant (Cánh Phải)', vest: [249, 115, 22], waving: false });
-      crew.push({ x: -12.0, z: -4.5, labelJa: '機内清掃・フードローダー', labelVi: 'Vệ sinh & Suất ăn (R2 Phải)', vest: [190, 242, 100], waving: false });
-      crew.push({ x: 13.0, z: -6.0, labelJa: 'ラバトリー/水担当 (左舷後部)', labelVi: 'Lavatory/Nước (Đuôi Trái)', vest: [190, 242, 100], waving: false });
+      crew.push({ x: -13.4, z: 9.2, labelJa: '給油員 (乙4・アース確認)', labelVi: 'Tra dầu Hydrant (Tiếp địa)', labelEn: 'Fueler (Hydrant & Bonding)', vest: [249, 115, 22], waving: false });
+      crew.push({ x: -9.5, z: 25.5, labelJa: 'フードローダー誘導 (-19cm)', labelVi: 'Suất ăn R1 (Sàn -19cm)', labelEn: 'Catering R1 (-19cm Sill)', vest: [190, 242, 100], waving: false });
+      crew.push({ x: 8.5, z: -6.5, labelJa: '給水担当 (衛生分離)', labelVi: 'Cấp nước sạch (Tách biệt)', labelEn: 'Potable Water (Sanitary)', vest: [59, 130, 246], waving: false });
     } else if (phaseIdx === 5) {
-      // 6. Boarding (Port PBB +X), Outbound Loading (Starboard Low-Deck Loader + Bulk Belt Loader) & Loadmaster LIR/W&B
+      // 6. Boarding, Outbound ULD/Bulk Loading & Final W&B
       ac.beaconOn = false;
       pbbExt = 1; chocksOn = true; conesOn = true;
-      gse.push({ kind: 'gpu', x: -7.2, z: 25.5, heading: 0 });
-      gse.push({ kind: 'lowloader', x: -7.4, z: 18.5, heading: 0, hasUld: true, uldType: 'AKH' });
-      gse.push({ kind: 'uld_dolly', x: -15.5, z: 18.5, heading: 0 });
-      gse.push({ kind: 'belt', x: -7.2, z: -7.5, heading: 0 });
-      gse.push({ kind: 'tractor', x: -15.5, z: -7.5, heading: 0 });
-      crew.push({ x: -13.5, z: 13.5, labelJa: 'ロードマスター (LIR/W&B照合)', labelVi: 'Loadmaster (Chốt LIR & W&B)', vest: [249, 115, 22], waving: false });
-      crew.push({ x: -10.5, z: -10.5, labelJa: 'バルク搭載担当', labelVi: 'Đội xếp hầm Bulk', vest: [190, 242, 100], waving: false });
-      crew.push({ x: 11, z: 26, labelJa: '搭乗口係員 (左舷PBB)', labelVi: 'Nhân viên Gate (PBB Trái)', vest: [59, 130, 246], waving: false });
+      crew.push({ x: -12.2, z: 12.8, labelJa: 'ロードマスター (LIR/ロック確認)', labelVi: 'Loadmaster (Chốt LIR & Khóa)', labelEn: 'Loadmaster (LIR & Sill Locks)', vest: [249, 115, 22], waving: false });
+      crew.push({ x: -9.5, z: 21.8, labelJa: '搭載チーム (Close & Lock)', labelVi: 'Đội xếp tải (Close & Lock)', labelEn: 'Cargo Crew (Close & Lock)', vest: [190, 242, 100], waving: false });
+      crew.push({ x: 12.5, z: 25.5, labelJa: '搭乗口係員 (PPBM確認)', labelVi: 'Nhân viên Gate (PPBM)', labelEn: 'Gate Agent (PPBM Verified)', vest: [59, 130, 246], waving: false });
     } else if (phaseIdx === 6) {
-      // 7. Door Close, GSE Clear outside ERA, Side PBB Retract (+X) & Pushback Tug Couple
+      // 7. Door Close, GSE Clear outside ERA, Walkaround & Tug Couple
       ac.beaconOn = false;
       pbbExt = 1 - p;
       chocksOn = p < 0.85;
       conesOn = p < 0.45;
-      gse.push({ kind: 'gpu', x: lerp(-7.2, -25, p), z: lerp(25.5, 40, p), heading: Math.PI });
-      gse.push({ kind: 'lowloader', x: lerp(-7.4, -27, p), z: lerp(18.5, 36, p), heading: Math.PI, hasUld: false });
-      gse.push({ kind: 'belt', x: lerp(-7.2, -26, p), z: lerp(-7.5, -24, p), heading: Math.PI });
-      gse.push({ kind: 'tug', x: 0, z: lerp(42, 31, p), heading: -Math.PI / 2 });
-      crew.push({ x: lerp(-5, -4, p), z: lerp(22, 30, p), labelJa: 'ヘッドセットマン(最終確認)', labelVi: 'Headset Man (指差呼称)', vest: [249, 115, 22], waving: false });
+      const ang = p * Math.PI * 1.4;
+      crew.push({ x: -Math.cos(ang) * 6.5, z: 14 + Math.sin(ang) * 14, labelJa: 'ヘッドセットマン (最終指差呼称)', labelVi: 'Headset Man (Walkaround 指差呼称)', labelEn: 'Headset Man (360° Walkaround)', vest: [249, 115, 22], waving: false });
     } else if (phaseIdx === 7) {
-      // 8. Pushback & Engine Start
+      // 8. Pushback onto Inner Taxilane D5 (z = -62) & Engine Start
       ac.beaconOn = true;
       if (p < 0.55) {
         const u = p / 0.55;
         ac.x = 0;
-        ac.z = lerp(10, -45, u);
+        ac.z = lerp(10, -50, u);
         ac.heading = Math.PI / 2;
       } else {
         const u = (p - 0.55) / 0.45;
-        ac.x = lerp(0, -8, u);
-        ac.z = lerp(-45, -55, u);
+        ac.x = lerp(0, -10, u);
+        ac.z = lerp(-50, -62, u);
         ac.heading = lerp(Math.PI / 2, Math.PI, u);
       }
-      const noseX = ac.x + Math.cos(ac.heading) * 21;
-      const noseZ = ac.z + Math.sin(ac.heading) * 21;
-      gse.push({ kind: 'tug', x: noseX, z: noseZ, heading: ac.heading + Math.PI });
-      crew.push({ x: noseX - Math.sin(ac.heading) * 5, z: noseZ + Math.cos(ac.heading) * 5, labelJa: 'ヘッドセットマン', labelVi: 'Headset Man (Tai nghe)', vest: [249, 115, 22], waving: false });
-      crew.push({ x: ac.x - Math.sin(ac.heading) * 21, z: ac.z + Math.cos(ac.heading) * 21, labelJa: 'ウイングウォーカー', labelVi: 'Canh đầu cánh', vest: [190, 242, 100], waving: true });
+      const noseX = ac.x + Math.cos(ac.heading) * 19.5;
+      const noseZ = ac.z + Math.sin(ac.heading) * 19.5;
+      const portDX = -Math.sin(ac.heading), portDZ = Math.cos(ac.heading);
+      crew.push({ x: noseX + portDX * 5.2, z: noseZ + portDZ * 5.2, labelJa: 'ヘッドセットマン (並走)', labelVi: 'Headset Man (Đi kèm mũi)', labelEn: 'Headset Man (Nose Escort)', vest: [249, 115, 22], waving: false });
+      crew.push({ x: ac.x + portDX * 21.5, z: ac.z + portDZ * 21.5, labelJa: 'ウイングウォーカー', labelVi: 'Canh đầu cánh', labelEn: 'Wingwalker Escort', vest: [190, 242, 100], waving: true });
     } else if (phaseIdx === 8) {
-      // 9. Disconnect, Bypass Pin Wave-Off & Taxi-out to RWY 36
+      // 9. Bypass Pin Wave-Off & Full-Scale Taxi-Out via C-TWY/A-TWY to RWY 36 Threshold (x = -1680, z = -580)
       ac.beaconOn = true;
-      if (p < 0.32) {
-        const u = p / 0.32;
-        ac.x = -8; ac.z = -55; ac.heading = Math.PI;
-        gse.push({ kind: 'tug', x: lerp(-29, -32, u), z: lerp(-55, -37, u), heading: Math.PI / 2 });
-        crew.push({ x: -29.0, z: -46.5, labelJa: 'バイパスピン左前方提示・お見送り', labelVi: 'Giơ cờ đỏ Bypass Pin bên trái & Tiễn bay (お見送り)', vest: [56, 189, 248], waving: true, pin: true });
-      } else if (p < 0.65) {
-        const u = (p - 0.32) / 0.33;
-        ac.x = lerp(-8, -95, u); ac.z = -55; ac.heading = Math.PI;
-        gse.push({ kind: 'tug', x: -32, z: -37, heading: Math.PI / 2 });
-        crew.push({ x: -22, z: -39, labelJa: 'ランプチーム お見送り', labelVi: 'Đội sân đỗ vẫy chào tiễn bay (お見送り)', vest: [190, 242, 100], waving: true });
-      } else if (p < 0.88) {
-        const u = (p - 0.65) / 0.23;
-        ac.x = -95; ac.z = lerp(-55, -97, u); ac.heading = -Math.PI / 2;
+      if (p < 0.28) {
+        ac.x = -10; ac.z = -62; ac.heading = Math.PI;
+        crew.push({ x: -29.0, z: -53.0, labelJa: 'バイパスピン左前方提示・お見送り', labelVi: 'Giơ cờ đỏ Bypass Pin bên trái & Tiễn bay', labelEn: 'Bypass Pin Shown on Left & Wave-Off!', vest: [56, 189, 248], waving: true, pin: true });
+      } else if (p < 0.45) {
+        const u = (p - 0.28) / 0.17;
+        ac.x = lerp(-10, -108, u); ac.z = -62; ac.heading = Math.PI;
+        crew.push({ x: -19.0, z: -40.5, labelJa: 'ランプチーム お見送り', labelVi: 'Đội sân đỗ vẫy chào (お見送り)', labelEn: 'Ramp Team Wave-Off (Omiokuri)', vest: [190, 242, 100], waving: true });
+      } else if (p < 0.62) {
+        const u = (p - 0.45) / 0.17;
+        ac.x = -108; ac.z = lerp(-62, -415, u); ac.heading = -Math.PI / 2;
+      } else if (p < 0.86) {
+        const u = (p - 0.62) / 0.24;
+        ac.x = lerp(-108, -1680, u); ac.z = -415; ac.heading = Math.PI;
       } else {
-        const u = (p - 0.88) / 0.12;
-        ac.x = -95; ac.z = -97; ac.heading = lerp(-Math.PI / 2, 0, u);
+        const u = (p - 0.86) / 0.14;
+        ac.x = -1680; ac.z = lerp(-415, -580, u); ac.heading = lerp(-Math.PI / 2, 0, Math.max(0, (u - 0.55) / 0.45));
       }
     } else {
-      // 10. Takeoff Roll & Climb-out NGO RWY 36
+      // 10. Full-Scale Takeoff Roll (~2,030m) & Climb-out on 3,500m NGO RWY 36!
       ac.beaconOn = true;
-      ac.z = -97;
+      ac.z = -580;
       ac.heading = 0;
-      if (p < 0.55) {
-        const u = p / 0.55;
-        ac.x = lerp(-95, 58, u * u);
+      if (p < 0.56) {
+        const u = p / 0.56;
+        ac.x = lerp(-1680, 350, u * u);
         ac.y = 0;
-        ac.pitch = u > 0.85 ? lerp(0, 0.18, (u - 0.85) / 0.15) : 0;
+        ac.pitch = u > 0.84 ? lerp(0, 0.17, (u - 0.84) / 0.16) : 0;
       } else {
-        const u = (p - 0.55) / 0.45;
-        ac.x = lerp(58, 235, u);
-        ac.y = lerp(0, 56, u * 1.15);
-        ac.pitch = 0.22;
+        const u = (p - 0.56) / 0.44;
+        ac.x = lerp(350, 2150, u);
+        ac.y = lerp(0, 235, Math.pow(u, 1.12));
+        ac.pitch = 0.20;
       }
-      crew.push({ x: -16, z: 38, labelJa: 'ランプ員(次便準備)', labelVi: 'Đội sân đỗ (Chuẩn bị chuyến kế)', vest: [190, 242, 100], waving: false });
+      crew.push({ x: -16, z: 38, labelJa: 'ランプ員 (次便受入準備)', labelVi: 'Đội sân đỗ (Chuẩn bị chuyến kế)', labelEn: 'Ramp Crew (Next Flight Prep)', vest: [190, 242, 100], waving: false });
     }
 
     return { ac, pbbExt, conesOn, chocksOn, smoke, crew, gse };
   }
 
-  // Chủ đề thời gian trong ngày (Ngày / Hoàng hôn / Đêm đèn sân bay)
-
 export const A3D_RADIO_COMMS = [
-    { ch: 'NGO TWR 118.45', ja: 'Chubu Tower: "Japan Air 102, wind 360 at 10kt, Runway 36, cleared to land."（中部滑走路36着陸許可）', vi: 'Chubu Tower 118.45: "Japan Air 102, gió 360/10kt, Đường băng 36, cho phép hạ cánh."' },
-    { ch: 'NGO GND 121.7', ja: 'Chubu Ground: "JP102, taxi to NGO Spot 7 via Taxiway A. Follow marshaller."（誘導路A経由スポット7へ）', vi: 'Chubu Ground 121.7: "JP102, lăn vào NGO Spot 7 qua đường lăn A, theo tín hiệu Marshaller."' },
-    { ch: 'RAMP INT', ja: 'Ramp: "オンブロック！ビーコン消灯よし！右舷機首GPU接続、左舷L1へPBB直角装着開始！"', vi: 'Ramp Intercom: "On-block! Đèn Beacon OFF! Cắm GPU mũi phải, PBB tiến ngang từ hông trái vào cửa L1!"' },
-    { ch: 'OPS 131.4', ja: 'Ramp: "右舷前部AKH室へローデッキ・ハイリフト装着完了！後部バルク室へベルトローダー装着完了！"', vi: 'Ops 131.4: "Đã gắn Low-Deck High-Lift Loader vào hầm container trước AKH & Belt Loader vào hầm Bulk sau!"' },
-    { ch: 'FUEL / OPS', ja: 'Fueler: "右主翼下ハイドラント接続・アース確認よし！給油開始。左舷後部ラバトリー作業並行中。"', vi: 'Fueler: "Đấu nối Hydrant dưới cánh phải & tiếp địa OK! Bắt đầu tra dầu song song vệ sinh đuôi trái."' },
-    { ch: 'LOAD CTRL', ja: 'Loadmaster: "AKHコンテナ11P/12Pロック確認・バルク重量LIR照合完了！Load Sheet提出済！"', vi: 'Load Control: "Đã khóa container AKH 11P/12P & khớp tải Bulk theo LIR! Đã giao Load Sheet & NOTOC!"' },
-    { ch: 'HEADSET', ja: 'Headset: "全ドア閉鎖・左舷PBB収納・右舷ローダー/GPU退避完了！ウォークアラウンド異常なし！"', vi: 'Headset Man: "Đóng kín cửa, thu gọn PBB mạn trái, rút sạch Low-Deck Loader/GPU ngoài ERA! Walkaround OK!"' },
-    { ch: 'NGO GND', ja: 'Headset: "プッシュバック承認取得！パーキングブレーキ解除願います。エンジン1・2始動クリア！"', vi: 'Headset Man: "Đã có phép Pushback! Mời nhả phanh đỗ. Xung quanh an toàn, mời nổ máy 1 & 2!"' },
-    { ch: 'HEADSET', ja: 'Headset: "トーバー切離し・バイパスピン抜去確認！左側にて提示します。良い空の旅を！(お見送り)"', vi: 'Headset Man: "Đã tháo thanh kéo & rút chốt đỏ Bypass Pin! Giơ cờ bên trái tiễn bay an toàn!"' },
-    { ch: 'NGO TWR 118.45', ja: 'Chubu Tower: "Japan Air 102, Runway 36, cleared for takeoff!"（中部滑走路36離陸許可！）', vi: 'Chubu Tower 118.45: "Japan Air 102, Đường băng 36, cho phép cất cánh!"' }
+    { ch: 'NGO TWR 118.45',
+      ja: 'Chubu Tower: "All Nippon 102, wind 360 at 10kt, Runway 36 (3,500m), cleared to land."（中部滑走路36着陸許可）',
+      vi: 'Chubu Tower 118.45: "ANA 102, gió 360/10kt, Đường băng 36 (3.500m), cho phép hạ cánh."',
+      en: 'Chubu Tower 118.45: "All Nippon 102, wind 360 at 10kt, Runway 36 (3,500m), cleared to land."' },
+    { ch: 'NGO GND 121.7',
+      ja: 'Chubu Ground: "NH102, vacate A6, taxi via A-TWY and C-TWY to Spot 7."（A6離脱→誘導路A・C経由スポット7へ）',
+      vi: 'Chubu Ground 121.7: "NH102, rời đường băng qua A6, lăn theo A-TWY và C-TWY vào Spot 7."',
+      en: 'Chubu Ground 121.7: "NH102, vacate via A6, taxi via A-TWY and C-TWY to Spot 7. Follow marshaller."' },
+    { ch: 'RAMP INT',
+      ja: 'Ramp: "オンブロック！赤ビーコン消灯よし！輪止め装着・右舷GPU接続・左舷L1へPBB装着開始！"',
+      vi: 'Ramp Intercom: "On-block! Beacon đỏ OFF! Chèn bánh, cắm GPU mũi phải & nối PBB ngang vào cửa L1!"',
+      en: 'Ramp Intercom: "On-block! Red beacon OFF verified! Chocks inserted, starboard GPU connected, docking Port L1 PBB!"' },
+    { ch: 'OPS 131.4',
+      ja: 'Ramp: "5mブレーキ点検よし！右舷前部へハイリフト装着、後部バルク室へベルトローダー装着完了！"',
+      vi: 'Ops 131.4: "Thử phanh 5m OK! Đã áp sát High-Lift Loader hầm trước & Belt Loader hầm Bulk sau!"',
+      en: 'Ops 131.4: "5m brake-check complete! High-Lift Loader docked at Fwd hold and Belt Loader docked at Aft Bulk!"' },
+    { ch: 'FUEL / OPS',
+      ja: 'Fueler: "白ピット接続・赤アースよし！Jet A-1給油開始。フードローダー床面-19cm・アウトリガーよし！"',
+      vi: 'Fueler: "Nối hố Trắng & tiếp địa Đỏ OK! Bơm Jet A-1. Xe suất ăn hạ chân chống & căn sàn -19cm OK!"',
+      en: 'Fueler: "White hydrant pit & red bonding verified! Pumping Jet A-1. Catering outriggers set at -19cm sill!"' },
+    { ch: 'LOAD CTRL',
+      ja: 'Loadmaster: "LIR照合・コンター異常なし・全フロアロック施錠よし！最終Load Sheet機長提出済！"',
+      vi: 'Load Control: "Khớp LIR, không vượt Contour, đã gạt đủ khóa sàn Close & Lock! Đã giao Load Sheet & NOTOC!"',
+      en: 'Loadmaster: "LIR positions matched, contour clear, all floor locks engaged! Signed Load Sheet & NOTOC delivered!"' },
+    { ch: 'HEADSET',
+      ja: 'Headset: "全ドア閉鎖・PBB収納・全GSEがERA赤線外へ退避完了！バイパスピン挿入・ブレーキSET確認！"',
+      vi: 'Headset Man: "Đóng kín mọi cửa, thu PBB, rút sạch GSE ngoài vạch đỏ ERA! Đã cắm Bypass Pin & xác nhận phanh SET!"',
+      en: 'Headset Man: "All doors closed, PBB retracted, all GSE clear of red ERA! Bypass pin inserted, confirm brakes SET!"' },
+    { ch: 'NGO GND 121.7',
+      ja: 'Headset: "プッシュバック承認取得！ブレーキ解除願います。周囲クリア、エンジン2・1始動どうぞ！"',
+      vi: 'Headset Man: "Đã có phép Pushback! Mời nhả phanh đỗ. Xung quanh trống an toàn, mời nổ máy số 2 & số 1!"',
+      en: 'Headset Man: "Pushback approved! Release parking brake. Area clear, clear to start Engines 2 and 1!"' },
+    { ch: 'HEADSET',
+      ja: 'Headset: "トーバー切離し・バイパスピン抜去！左前方で提示します。行ってらっしゃいませ！(お見送り)"',
+      vi: 'Headset Man: "Đã tháo thanh kéo & rút chốt đỏ Bypass Pin! Mời nhìn bên trái, chúc chuyến bay thượng lộ bình an!"',
+      en: 'Headset Man: "Towbar disconnected, bypass pin removed! Showing pin on your forward-left. Have a safe flight!"' },
+    { ch: 'NGO TWR 118.45',
+      ja: 'Chubu Tower: "All Nippon 102, Runway 36 (3,500m), cleared for takeoff!"（中部滑走路36離陸許可！）',
+      vi: 'Chubu Tower 118.45: "ANA 102, Đường băng 36 (3.500m), cho phép cất cánh!"',
+      en: 'Chubu Tower 118.45: "All Nippon 102, Runway 36 (3,500m), cleared for takeoff!"' }
   ];
 
-  // Đám mây 3D trôi nhẹ trên bầu trời
+  // 3D Volumetric Clouds Spanning the 4.37km Island & Ise Bay
   export const A3D_CLOUDS = [
-    { x: -170, y: 78, z: -175, sx: 46, sz: 22, spd: 2.2 },
-    { x: -40, y: 86, z: -195, sx: 62, sz: 26, spd: 1.8 },
-    { x: 95, y: 74, z: -165, sx: 50, sz: 20, spd: 2.5 },
-    { x: 185, y: 90, z: -210, sx: 58, sz: 24, spd: 1.6 },
-    { x: -120, y: 82, z: -230, sx: 54, sz: 22, spd: 2.0 }
+    { x: -1450, y: 340, z: -920, sx: 220, sz: 95, spd: 5.2 },
+    { x: -480, y: 390, z: -1150, sx: 280, sz: 110, spd: 4.4 },
+    { x: 520, y: 360, z: -860, sx: 240, sz: 95, spd: 5.8 },
+    { x: 1380, y: 410, z: -1080, sx: 260, sz: 105, spd: 4.1 },
+    { x: -920, y: 375, z: 680, sx: 230, sz: 90, spd: 4.8 },
+    { x: 860, y: 355, z: 740, sx: 250, sz: 98, spd: 5.0 }
   ];
-
-  // Bộ tổng hợp âm thanh Web Audio thuần (100% offline: tiếng phản lực, động cơ GSE, còi cảnh báo, radio squelch)
 
 export const A3D_AIRPORTS = {
-    NGO: { id: 'NGO', nameJa: '中部国際 (NGO)', nameVi: 'Centrair NGO', rwy: '36/18', twr: 'Chubu Tower 118.45', island: true, snow: false, city: false, bridge: false, seaCol: [48, 108, 164], landCol: [220, 232, 210] },
-    HND: { id: 'HND', nameJa: '羽田空港 (HND)', nameVi: 'Tokyo Haneda HND', rwy: '34R/16L', twr: 'Tokyo Tower 118.1', island: true, snow: false, city: true, bridge: false, seaCol: [44, 96, 148], landCol: [212, 224, 206] },
-    NRT: { id: 'NRT', nameJa: '成田国際 (NRT)', nameVi: 'Narita NRT', rwy: '34L/16R', twr: 'Narita Tower 118.2', island: false, snow: false, city: false, bridge: false, seaCol: [104, 138, 84], landCol: [216, 232, 204] },
-    KIX: { id: 'KIX', nameJa: '関西国際 (KIX)', nameVi: 'Kansai KIX', rwy: '06R/24L', twr: 'Kansai Tower 118.2', island: true, snow: false, city: false, bridge: true, seaCol: [42, 102, 158], landCol: [218, 228, 212] },
-    CTS: { id: 'CTS', nameJa: '新千歳空港 (CTS)', nameVi: 'Shin-Chitose CTS (Tuyết)', rwy: '01L/19R', twr: 'Chitose Tower 118.8', island: false, snow: true, city: false, bridge: false, seaCol: [224, 236, 248], landCol: [242, 248, 255] }
+    NGO: { id: 'NGO', nameJa: '中部国際 セントレア (NGO · 実寸4.37km島)', nameVi: 'Chubu Centrair NGO (Đảo thật 4,37km)', nameEn: 'Chubu Centrair NGO (1:1 4.37km Island)', rwy: '36/18', twr: 'Chubu Tower 118.45', island: true, snow: false, city: false, bridge: true, seaCol: [28, 92, 148], landCol: [212, 224, 204] },
+    HND: { id: 'HND', nameJa: '羽田空港 (HND)', nameVi: 'Tokyo Haneda HND', nameEn: 'Tokyo Haneda (HND)', rwy: '34R/16L', twr: 'Tokyo Tower 118.1', island: true, snow: false, city: true, bridge: false, seaCol: [44, 96, 148], landCol: [212, 224, 206] },
+    NRT: { id: 'NRT', nameJa: '成田国際 (NRT)', nameVi: 'Narita NRT', nameEn: 'Tokyo Narita (NRT)', rwy: '34L/16R', twr: 'Narita Tower 118.2', island: false, snow: false, city: false, bridge: false, seaCol: [104, 138, 84], landCol: [216, 232, 204] },
+    KIX: { id: 'KIX', nameJa: '関西国際 (KIX)', nameVi: 'Kansai KIX', nameEn: 'Kansai Intl (KIX)', rwy: '06R/24L', twr: 'Kansai Tower 118.2', island: true, snow: false, city: false, bridge: true, seaCol: [42, 102, 158], landCol: [218, 228, 212] },
+    CTS: { id: 'CTS', nameJa: '新千歳空港 (CTS)', nameVi: 'Shin-Chitose CTS (Tuyết)', nameEn: 'New Chitose (CTS · Snow)', rwy: '01L/19R', twr: 'Chitose Tower 118.8', island: false, snow: true, city: false, bridge: false, seaCol: [224, 236, 248], landCol: [242, 248, 255] }
   };
 
 export const A3D_VIEWPOINTS = [
-    { id: 'flight_follow', key: '1', ja: '✈ 機体追従', vi: '✈ Theo máy bay', descJa: 'JP102機体を斜め後方から自動追従する3Dシネマティック視点', descVi: 'Camera 3D tự động bám theo chuyến bay JP102 từ hạ cánh đến cất cánh' },
-    { id: 'pilot', key: '2', ja: '🧑‍✈️ コックピット', vi: '🧑‍✈️ Buồng lái', descJa: '機長席（コックピット）からの実視野：進入PAPI灯・マーシャラー誘導・バイパスピン提示・離陸滑走を体験', descVi: 'Góc nhìn Cơ trưởng trong buồng lái: nhìn đèn PAPI khi hạ cánh, Marshaller vẫy gậy, cờ đỏ Bypass Pin và chạy đà cất cánh' },
-    { id: 'tower', key: '3', ja: '🗼 管制塔 (ATC)', vi: '🗼 Đài không lưu', descJa: '管制塔ガラスキャブ（地上30m）から滑走路・誘導路・エプロン全体を見渡す管制官視点', descVi: 'Đứng trên buồng kính Đài không lưu (cao 30m) quan sát toàn cảnh đường băng, đường lăn và sân đỗ' },
-    { id: 'marshaller', key: '4', ja: '🦺 マーシャラー', vi: '🦺 Marshaller', descJa: 'Spot 102 停止バー前方（目線高さ1.8m）から進入してくる機首と双発エンジンを見る誘導員視点', descVi: 'Tầm mắt nhân viên dẫn tàu (1.8m) ngay trước mũi máy bay tại vạch dừng Spot 102' },
-    { id: 'headset', key: '5', ja: '🎧 ヘッドセットマン', vi: '🎧 Headset Man', descJa: '前輪横を並走する地上整備士／ヘッドセットマン目線：プッシュバック・お見送り位置を体感', descVi: 'Tầm mắt nhân viên tai nghe đi cạnh bánh mũi khi kiểm tra vòng quanh, đẩy lùi và giơ cờ đỏ tiễn bay' },
-    { id: 'loadmaster', key: '6', ja: '📦 貨物室・LIR', vi: '📦 Loadmaster', descJa: '右舷貨物室横からの視点：ベルトローダー・給油車・翼下クリアランスを至近距離で確認', descVi: 'Đứng sát cửa hầm hàng phải Spot 102 quan sát băng chuyền hành lý, xe tra dầu và khoảng trống dưới cánh' },
-    { id: 'terminal', key: '7', ja: '🪟 展望デッキ', vi: '🪟 Sảnh quan sát', descJa: '旅客ターミナル展望デッキ＆PBBゲートからのパノラマ視点（背後に富士山を望む）', descVi: 'Góc nhìn từ đài quan sát nhà ga & ống lồng PBB hướng ra sân đỗ, đường băng và núi Phú Sĩ' },
-    { id: 'gse_cab', key: '8', ja: '🚜 GSE運転席', vi: '🚜 Khoang lái GSE', descJa: '地上支援車両（GSE）の運転席一人称視点：構内通路の白線・ERA赤線をドライバー目線で確認', descVi: 'Góc nhìn thứ nhất trong cabin tài xế xe GSE — cực thực tế khi lái xe ở Tab 2' },
-    { id: 'backing', key: 'B', ja: '🅿 牽引バック視点', vi: '🅿 Lùi chuồng đầu kéo', descJa: 'トレーラー牽引バック車庫入れ専用カメラ：TT頭・ヒッチ折れ角・荷台後端と枠線を一望', descVi: 'Góc nhìn chuyên dụng lùi rơ-moóc vào chuồng như xe đầu kéo: quan sát rõ đầu xe TT, góc gập moóc và đuôi moóc vào vạch' },
-    { id: 'orbit', key: '9', ja: '🔄 3D自由回転', vi: '🔄 Xoay 3D tự do', descJa: 'マウスドラッグで360度回転・ホイールでズームできる自由観察カメラ', descVi: 'Kéo chuột xoay tự do 360° & cuộn zoom mọi ngóc ngách sân bay' },
-    { id: 'top', key: '0', ja: '🗺 俯瞰マップ', vi: '🗺 Bản đồ từ trên', descJa: '空港全体と進入禁止区域の配置を真上から確認できる戦術マップ視点', descVi: 'Nhìn thẳng từ trên cao xuống toàn bộ bố cục sân bay & vùng cấm lái' }
+    { id: 'flight_follow', key: '1', ja: '✈ 機体追従', vi: '✈ Theo máy bay', en: '✈ Aircraft Follow',
+      descJa: '3,500m滑走路の着陸からスポット7駐機・離陸まで機体を自動追従する3Dシネマティック視点',
+      descVi: 'Camera 3D tự động bám theo tàu bay từ hạ cánh trên đường băng 3.500m tới Spot 7 và cất cánh',
+      descEn: 'Cinematic 3D chase camera tracking the aircraft across the 3,500m runway, taxiways, Spot 7, and climb-out' },
+    { id: 'pilot', key: '2', ja: '🧑‍✈️ コックピット', vi: '🧑‍✈️ Buồng lái', en: '🧑‍✈️ Cockpit HUD',
+      descJa: '機長席からの実視野：3,500m滑走路PAPI灯・誘導路・マーシャラー・左前方バイパスピン提示を体験',
+      descVi: 'Góc nhìn Cơ trưởng trong buồng lái: nhìn đèn PAPI đường băng 3.500m, Marshaller & cờ đỏ Bypass Pin',
+      descEn: 'Captain\'s first-person cockpit view: 3,500m runway PAPI, taxiway signs, marshaller wands & bypass pin salute' },
+    { id: 'tower', key: '3', ja: '🗼 管制塔 (86.7m)', vi: '🗼 Đài không lưu', en: '🗼 ATC Tower (86.7m)',
+      descJa: '高さ86.75mの中部管制塔キャブから4.37km空港島・3,500m滑走路・T1/T2/貨物地区を一望',
+      descVi: 'Từ buồng kính Đài không lưu Chubu (cao 86,75m) quan sát toàn đảo 4,37km, đường băng 3.500m, T1, T2 & Cargo',
+      descEn: 'Panoramic view from the 86.75m Centrair ATC Tower cab overlooking the 4.37km island, 3,500m runway & terminals' },
+    { id: 'marshaller', key: '4', ja: '🦺 マーシャラー', vi: '🦺 Marshaller', en: '🦺 Marshaller POV',
+      descJa: 'Spot 7 停止バー前方（目線1.8m）から進入してくる機首と両エンジンを見る誘導員視点',
+      descVi: 'Tầm mắt nhân viên dẫn tàu (1,8m) ngay trước mũi máy bay tại vạch dừng Spot 7',
+      descEn: 'Eye-level (1.8m) marshaller view ahead of Spot 7 stop bar facing the approaching nose and engines' },
+    { id: 'headset', key: '5', ja: '🎧 ヘッドセットマン', vi: '🎧 Headset Man', en: '🎧 Headset Man',
+      descJa: '前輪横を並走するヘッドセットマン目線：ウォークアラウンド・プッシュバック・お見送りを体感',
+      descVi: 'Tầm mắt nhân viên tai nghe đi cạnh bánh mũi khi kiểm tra vòng quanh, đẩy lùi & giơ cờ đỏ tiễn bay',
+      descEn: 'First-person Headset Man perspective beside the nose gear during walkaround, pushback, and bypass pin salute' },
+    { id: 'loadmaster', key: '6', ja: '📦 貨物室・LIR', vi: '📦 Loadmaster', en: '📦 Starboard GSE',
+      descJa: '右舷貨物室横からの視点：ハイリフト・ベルト・ハイドラント給油車・フードローダーを至近確認',
+      descVi: 'Đứng bên mạn phải Spot 7 quan sát cận cảnh High-Loader, Belt Loader, xe tra dầu Hydrant & xe suất ăn',
+      descEn: 'Close-up starboard ramp view of High-Lift Loader, Belt Loader, Hydrant Servicer, and Catering operations' },
+    { id: 'terminal', key: '7', ja: '🪟 スカイデッキ', vi: '🪟 Sky Deck 300m', en: '🪟 300m Sky Deck',
+      descJa: 'セントレア名物「300mセンターピア・スカイデッキ」先端付近から駐機機材と滑走路・伊勢湾を望む視点',
+      descVi: 'Đứng trên đài quan sát ngoài trời Centrair Sky Deck (Center Pier 300m) ngắm dàn tàu bay, đường băng & Vịnh Ise',
+      descEn: 'Observation view from Centrair\'s famous 300m Center Pier Sky Deck overlooking the apron, runway, and Ise Bay' },
+    { id: 'gse_cab', key: '8', ja: '🚜 GSE運転席', vi: '🚜 Cabin xe TT', en: '🚜 TT Driver Cab',
+      descJa: 'オープンキャブTT牽引車の運転席一人称視点：白線通路・ERA赤線・監視員合図をドライバー目線で確認',
+      descVi: 'Góc nhìn thứ nhất trên ghế lái xe kéo TT mui trần — quan sát vạch đường, ERA đỏ & giám sát viên cực thật',
+      descEn: 'First-person open-cab TT tractor driver view for airside lane markings, red ERA lines, and spotter signals' },
+    { id: 'backing', key: 'B', ja: '🅿 牽引バック視点', vi: '🅿 Lùi chuồng đầu kéo', en: '🅿 Trailer Backing',
+      descJa: 'トレーラー牽引バック車庫入れ専用カメラ：TT頭・ヒッチ折れ角・荷台後端とBAY 01枠線を一望',
+      descVi: 'Góc nhìn chuyên dụng lùi rơ-moóc vào chuồng như xe đầu kéo: thấy rõ góc gập moóc và vạch BAY 01',
+      descEn: 'Dedicated semi-trailer reverse bay-parking camera showing tractor, hitch angle, trailer tail, and BAY 01' },
+    { id: 'orbit', key: '9', ja: '🔄 3D自由回転', vi: '🔄 Xoay 3D tự do', en: '🔄 Free 3D Orbit',
+      descJa: 'マウスドラッグで360度回転・ホイールで最大3,800mまでズームできる自由観察カメラ',
+      descVi: 'Kéo chuột xoay 360° & cuộn bánh xe zoom mượt từ cận cảnh 18m tới toàn đảo 3.800m',
+      descEn: 'Free 360° orbit camera with smooth scroll zoom from 18m close-up out to 3,800m full-island scale' },
+    { id: 'top', key: '0', ja: '🗺 空港島全体俯瞰', vi: '🗺 Toàn cảnh đảo 1:1', en: '🗺 Full Island Map',
+      descJa: '中部国際空港の4.37km人工島・3,500m滑走路・T1/T2/沖留/貨物/連絡橋と交通流を一望する俯瞰視点',
+      descVi: 'Góc nhìn đại cảnh toàn bộ đảo sân bay NGO 4,37km, đường băng 3.500m, T1, T2, Cargo, cầu Skyway & luồng giao thông',
+      descEn: 'Full-scale aerial overview of Chubu Centrair\'s 4.37km island, 3,500m runway, T1, T2, Cargo, Skyway Bridge & live traffic' }
   ];
-
-  // Hàm thuần tính vị trí & hướng nhìn Camera cho từng vị trí công tác
 
 export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, orbitCam, phaseIdx, extra = null) {
     const ac = flightPose ? flightPose.ac : { x: 0, y: 0, z: 10, heading: Math.PI / 2, pitch: 0 };
@@ -1470,14 +1702,14 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
     if (camMode === 'pilot') {
       return {
         pos: acLocalToW(0, 4.7, 15.8),
-        target: acLocalToW(0, 3.3, 72.0),
+        target: acLocalToW(0, 3.3, 120.0),
         fov: 58,
         povKind: 'pilot'
       };
     }
     if (camMode === 'tower') {
       const lookAt = isFlightMode ? [ac.x, Math.max(1.5, ac.y + 2), ac.z] : [veh.x, 1.5, veh.z];
-      return { pos: [-115, 30.2, 71.5], target: lookAt, fov: 46, povKind: 'tower' };
+      return { pos: [-146, 82.5, 224], target: lookAt, fov: 46, povKind: 'tower' };
     }
     if (camMode === 'marshaller') {
       const targetPt = (isFlightMode && phaseIdx <= 1) ? [ac.x, Math.max(2, ac.y + 3), ac.z] : [0, 3.4, 14];
@@ -1491,13 +1723,11 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
       return { pos: [-6.8, 1.85, 29.5], target: [0.5, 3.2, 11.5], fov: 56, povKind: 'headset' };
     }
     if (camMode === 'loadmaster') {
-      // Đứng bên mạn PHẢI (-X) nhìn trực diện Low-Deck High-Lift Loader (Hầm trước AKH), Hydrant Fuel & Belt Loader (Hầm Bulk sau)!
       return { pos: [-22.5, 2.7, 11.5], target: [-2.0, 2.5, 9.5], fov: 56, povKind: 'loadmaster' };
     }
     if (camMode === 'terminal') {
-      // Đứng ngay mũi Đài quan sát ngoài trời Centrair Sky Deck (スカイデッキ) nhìn toàn cảnh Spot 7, PBB ngang & Vịnh Ise!
-      const look = isFlightMode ? [ac.x * 0.65, Math.max(2, ac.y * 0.7 + 2), Math.min(20, ac.z)] : [0, 2, -10];
-      return { pos: [0, 16.0, 47.0], target: look, fov: 54, povKind: 'terminal' };
+      const look = isFlightMode ? [ac.x * 0.65, Math.max(2, ac.y * 0.7 + 2), Math.min(20, ac.z)] : [0, 4, -180];
+      return { pos: [46, 17.5, -145], target: look, fov: 54, povKind: 'terminal' };
     }
     if (camMode === 'gse_cab') {
       const vch = Math.cos(veh.heading), vsh = Math.sin(veh.heading);
@@ -1509,7 +1739,6 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
       };
     }
     if (camMode === 'backing') {
-      // Dedicated semi-truck / TT trailer reverse bay-parking camera (supports smooth driveZoom!)
       const zMul = (extra && extra.driveZoom) ? extra.driveZoom : 1.0;
       const tr = (extra && extra.trailerPose) ? extra.trailerPose : veh;
       const bay = (extra && extra.backingBay) ? extra.backingBay : null;
@@ -1528,9 +1757,10 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
         const bay = extra.backingBay;
         const midX = (veh.x + bay.cx) * 0.5;
         const midZ = (veh.z + bay.cz) * 0.5;
-        return { pos: [midX, Math.min(180, 38 * zMul), midZ + 2.5], target: [midX, 0, midZ], fov: 48, povKind: 'top' };
+        return { pos: [midX, Math.min(220, 38 * zMul), midZ + 2.5], target: [midX, 0, midZ], fov: 48, povKind: 'top' };
       }
-      return { pos: [0, Math.min(340, 228 * zMul), 18], target: [0, 0, -6], fov: 52, povKind: 'top' };
+      // Full 1:1 Chubu Centrair 4.37km Island Aerial Panorama!
+      return { pos: [40, Math.min(3600, 1850 * zMul), 520], target: [40, 0, -210], fov: 52, povKind: 'top' };
     }
     if (camMode === 'orbit') {
       const c = orbitCam;
@@ -1552,15 +1782,13 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
         povKind: 'chase'
       };
     }
-    // Mặc định: flight_follow bám sát máy bay JP102
-    const dist = (phaseIdx === 0 || phaseIdx === 9) ? 74 : 56;
-    const elev = (phaseIdx === 0 || phaseIdx === 9) ? 24 : 22;
+    const isRwyPhase = (phaseIdx === 0 || phaseIdx === 1 || phaseIdx === 8 || phaseIdx === 9);
+    const dist = isRwyPhase ? 96 : 58;
+    const elev = isRwyPhase ? 28 : 22;
     return {
-      pos: [ac.x + dist * 0.56, Math.max(8, ac.y + elev), ac.z + dist * 0.80],
+      pos: [ac.x + dist * 0.58, Math.max(8, ac.y + elev), ac.z + dist * 0.82],
       target: [ac.x, ac.y + 3.2, ac.z],
       fov: 48,
       povKind: 'flight_follow'
     };
   }
-
-  // =========================================================================

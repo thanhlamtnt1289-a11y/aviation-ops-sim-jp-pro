@@ -2,6 +2,8 @@
 // + Realistic GSE Staging, 5m Brake-Check, Mechanical Lifts/Hoses/ULDs + Articulated 3D Ground Crew
 import * as THREE from 'three';
 import { convertAirportToCartesian } from '../data/airport_geo_data.js';
+import { AIRCRAFT_PROFILES } from '../data/aircraft.js';
+import { createDetailedAirliner3D } from './aircraftBuilder3D.js';
 import {
   AIRCRAFT_3D_SPECS,
   AIRLINE_LIVERIES,
@@ -1198,6 +1200,50 @@ export class TurnaroundScene3D {
       });
       this.airportGroup.add(sg);
     }
+
+    // LIVE AMBIENT AIRSIDE & TAXIWAY TRAFFIC + PARKED NEIGHBOR FLEET!
+    this.ambientTraffic = [];
+    const nonActiveSpots = g.spotsXYZ.filter(s => !this.activeSpot || s.id !== this.activeSpot.id);
+    nonActiveSpots.filter((_, i) => i % 2 === 1).slice(0, 5).forEach((sp, idx) => {
+      const profKey = sp.terminal === 'CARGO' ? 'B77F' : (sp.widebodyCapable !== false && idx % 2 === 0 ? 'B788' : 'B738');
+      const prof = AIRCRAFT_PROFILES[profKey] || AIRCRAFT_PROFILES.B738;
+      const liv = idx % 2 === 0 ? 'ANA' : 'JAL';
+      const parked = createDetailedAirliner3D({ ...(prof.visual3d || {}), liveryId: liv });
+      parked.position.set(sp.pos.x, 0.30, sp.pos.z);
+      parked.rotation.y = sp.rotY;
+      this.airportGroup.add(parked);
+    });
+
+    if (g.taxiwaysXYZ && g.taxiwaysXYZ.length > 0 && g.taxiwaysXYZ[0].pointsXYZ.length >= 2) {
+      const twyJet = createDetailedAirliner3D({ ...(AIRCRAFT_PROFILES.A320.visual3d || {}), liveryId: 'ANA' });
+      this.airportGroup.add(twyJet);
+      this.ambientTraffic.push({
+        mesh: twyJet,
+        pts: g.taxiwaysXYZ[0].pointsXYZ,
+        speed: 0.0085,
+        offset: 0.18,
+        y: 0.30,
+        latOff: 0
+      });
+    }
+    if (g.gseServiceRoadXYZ && g.gseServiceRoadXYZ.length >= 2) {
+      [
+        { mesh: buildTurnaroundGseMesh('dolly_train', 1.0), speed: 0.014, offset: 0.12, latOff: -2.8, rev: false },
+        { mesh: buildTurnaroundGseMesh('dolly_train', 1.0), speed: 0.013, offset: 0.62, latOff: 2.8, rev: true },
+        { mesh: buildTurnaroundGseMesh('fuel', 2.4), speed: 0.019, offset: 0.45, latOff: -2.8, rev: false }
+      ].forEach(cfg => {
+        const pts = cfg.rev ? [...g.gseServiceRoadXYZ].reverse() : g.gseServiceRoadXYZ;
+        this.airportGroup.add(cfg.mesh);
+        this.ambientTraffic.push({
+          mesh: cfg.mesh,
+          pts,
+          speed: cfg.speed,
+          offset: cfg.offset,
+          y: 0.50,
+          latOff: cfg.latOff
+        });
+      });
+    }
   }
 
   // -------------------------------------------------------------------
@@ -1582,6 +1628,16 @@ export class TurnaroundScene3D {
 
     this.waterUniforms.uTime.value = timeSec;
     if (this.radarDish) this.radarDish.rotation.y += dt * 1.4;
+    if (this.ambientTraffic && this.ambientTraffic.length) {
+      for (const item of this.ambientTraffic) {
+        const u = (timeSec * item.speed + item.offset) % 1.0;
+        const pose = this._samplePolyline(item.pts, u);
+        const nx = pose.x + Math.cos(pose.yaw) * (item.latOff || 0);
+        const nz = pose.z - Math.sin(pose.yaw) * (item.latOff || 0);
+        item.mesh.position.set(nx, item.y || 0.3, nz);
+        item.mesh.rotation.y = pose.yaw;
+      }
+    }
 
     const has = id => this.doneSteps.has(id);
     const beaconOn = !has('chock') || this.pushbackActive;

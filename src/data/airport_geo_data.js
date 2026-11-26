@@ -150,16 +150,23 @@ export const AIRPORT_GEO_DATA = {
     ],
     taxiways: [
       { id: 'TWY-A', widthM: 25, points: fNGO.poly([[190, -1730], [190, 1730]]) },
-      { id: 'TWY-B', widthM: 25, points: fNGO.poly([[266, -1540], [266, 1540]]) },
-      { id: 'TWY-A1', widthM: 23, points: fNGO.poly([[0, -1720], [190, -1720]]) },
-      { id: 'TWY-A4', widthM: 23, points: fNGO.poly([[0, -560], [266, -440]]) },
-      { id: 'TWY-A6', widthM: 23, points: fNGO.poly([[0, 440], [266, 560]]) },
+      { id: 'TWY-B', widthM: 25, points: fNGO.poly([[266, -1580], [266, 1600]]) },
+      { id: 'TWY-C', widthM: 25, points: fNGO.poly([[350, -1380], [350, 1520]]) },
+      { id: 'TWY-A1', widthM: 23, points: fNGO.poly([[0, -1720], [266, -1720]]) },
+      { id: 'TWY-A2', widthM: 23, points: fNGO.poly([[0, -1360], [190, -1260]]) },
+      { id: 'TWY-A3', widthM: 23, points: fNGO.poly([[0, -960], [266, -860]]) },
+      { id: 'TWY-A4', widthM: 23, points: fNGO.poly([[0, -560], [350, -430]]) },
+      { id: 'TWY-A5', widthM: 23, points: fNGO.poly([[0, -160], [350, -160]]) },
+      { id: 'TWY-A6', widthM: 23, points: fNGO.poly([[0, 220], [350, 320]]) },
+      { id: 'TWY-A7', widthM: 23, points: fNGO.poly([[0, 580], [350, 680]]) },
+      { id: 'TWY-A8', widthM: 23, points: fNGO.poly([[0, 980], [350, 1060]]) },
+      { id: 'TWY-A9', widthM: 23, points: fNGO.poly([[0, 1380], [266, 1380]]) },
       { id: 'TWY-A10', widthM: 23, points: fNGO.poly([[0, 1720], [190, 1720]]) }
     ],
     aprons: [
       { id: 'APRON-MAIN', points: fNGO.poly([[290, -960], [920, -960], [920, 920], [290, 920]]) },
-      { id: 'APRON-CARGO', points: fNGO.poly([[290, 940], [880, 940], [880, 1460], [290, 1460]]) },
-      { id: 'APRON-T2', points: fNGO.poly([[420, -1520], [960, -1520], [960, -980], [420, -980]]) }
+      { id: 'APRON-CARGO', points: fNGO.poly([[290, 940], [920, 940], [920, 1880], [290, 1880]]) },
+      { id: 'APRON-T2', points: fNGO.poly([[360, -1580], [960, -1580], [960, -980], [360, -980]]) }
     ],
     terminals: [
       fNGO.terminal('T1-MAIN', 'Terminal 1 Main', 765, 0, 130, 440, 24, 0, 0xe2e8f0),
@@ -167,22 +174,32 @@ export const AIRPORT_GEO_DATA = {
       fNGO.terminal('T1-PIER', 'T1 Center Pier (Tip 400m from RWY)', 550, 0, 300, 48, 18, 0, 0xdbeafe),
       fNGO.terminal('T1-NWING', 'T1 North Wing (Domestic #2-#10)', 705, 390, 52, 420, 17, -12, 0xe2e8f0),
       fNGO.terminal('T1-SWING', 'T1 South Wing (Intl #12-#24)', 705, -390, 52, 440, 17, 12, 0xe2e8f0),
-      fNGO.terminal('T2-LCC', 'Terminal 2 (LCC South)', 835, -1240, 88, 260, 14, 0, 0xf1f5f9),
-      fNGO.terminal('CARGO-SHED', 'Cargo Warehouse Zone (#101-#109)', 810, 1180, 110, 380, 16, 0, 0xcbd5e1)
+      fNGO.terminal('ACCESS-PLAZA', 'Access Plaza & Meitetsu Station', 960, 40, 110, 190, 19, 0, 0xdbeafe),
+      fNGO.terminal('PARKING-P1P2', 'Multi-Storey Parking P1 & P2', 1150, 40, 160, 420, 18, 0, 0xcbd5e1),
+      fNGO.terminal('FOD-HALL', 'Flight of Dreams (B787 ZA001)', 880, -860, 84, 92, 21, 0, 0xf1f5f9),
+      fNGO.terminal('T2-LCC', 'Terminal 2 (LCC South #71-#80)', 835, -1240, 88, 360, 14, 0, 0xf1f5f9),
+      fNGO.terminal('SKY-EXPO', 'Aichi Sky Expo Exhibition Halls', 1180, -1280, 195, 430, 17, 0, 0xdbe4ef),
+      fNGO.terminal('ARFF-FIRE', 'Airport Fire Station (ARFF)', 760, 910, 46, 56, 13, 0, 0xfecaca),
+      fNGO.terminal('CARGO-SHED', 'Cargo Warehouses 1–3 (#101-#119)', 815, 1260, 110, 560, 16, 0, 0xcbd5e1),
+      fNGO.terminal('JCG-BASE', 'Japan Coast Guard Base (N1-N6)', 790, 1740, 74, 190, 14, 0, 0xccfbf1)
     ],
     atcTower: { ...fNGO.pt(915, 135), alt: 4.6, heightM: 86.75 },
     gseServiceRoad: fNGO.poly([
-      [665, -860], [665, -62], [388, -62], [388, 62], [665, 62], [665, 1280]
+      [665, -1380], [665, -62], [388, -62], [388, 62], [665, 62], [665, 1680]
     ]),
     spots: [
       fNGO.spot('S05', 'Spot 5 (T1 Domestic)', 625, 290, 90, { terminal: 'T1', entryDR: 40, entryDA: 85 }),
       fNGO.spot('S06', 'Spot 6 (T1 Domestic)', 635, 195, 90, { terminal: 'T1', entryDR: 35, entryDA: 85 }),
       fNGO.spot('S07', 'Spot 7 (Center Pier N)', 585, 74, 180, { terminal: 'T1', entryDR: 80, entryDA: -12 }),
       fNGO.spot('S08', 'Spot 8 (Center Pier Tip N)', 475, 74, 180, { terminal: 'T1', entryDR: 85, entryDA: -12 }),
+      fNGO.spot('S14', 'Spot 14 (T1 North Widebody)', 625, 395, 90, { terminal: 'T1', entryDR: 40, entryDA: -85 }),
       fNGO.spot('S15', 'Spot 15 (Center Pier Tip S)', 475, -74, 0, { terminal: 'T1', entryDR: 85, entryDA: 12 }),
       fNGO.spot('S18', 'Spot 18 (T1 Intl South)', 635, -210, 90, { terminal: 'T1', entryDR: 35, entryDA: -85 }),
-      fNGO.spot('S71', 'Spot 71 (T2 LCC)', 745, -1200, 90, { terminal: 'T2', hasPbb: false, widebodyCapable: false, entryDR: 30, entryDA: 90 }),
-      fNGO.spot('S101', 'Spot 102 (North Cargo Apron)', 640, 1120, 90, { terminal: 'CARGO', hasPbb: false, entryDR: 55, entryDA: -80 })
+      fNGO.spot('S71', 'Spot 71 (T2 LCC)', 745, -1140, 90, { terminal: 'T2', hasPbb: false, widebodyCapable: false, entryDR: 30, entryDA: 90 }),
+      fNGO.spot('S74', 'Spot 74 (T2 LCC)', 745, -1300, 90, { terminal: 'T2', hasPbb: false, widebodyCapable: false, entryDR: 30, entryDA: -90 }),
+      fNGO.spot('S203', 'Spot 203 (North Remote)', 465, 680, 90, { terminal: 'REMOTE', hasPbb: false, entryDR: 45, entryDA: -85 }),
+      fNGO.spot('S302', 'Spot 302 (South Remote)', 465, -680, 90, { terminal: 'REMOTE', hasPbb: false, entryDR: 45, entryDA: 85 }),
+      fNGO.spot('S101', 'Spot 105 (North Cargo #101-#119)', 640, 1220, 90, { terminal: 'CARGO', hasPbb: false, entryDR: 55, entryDA: -80 })
     ]
   },
 

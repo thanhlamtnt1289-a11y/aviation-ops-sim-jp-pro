@@ -90,8 +90,8 @@ export function initWbModule(actions) {
   const scSel = document.getElementById('wb-scenario');
   if (!acSel || !scSel) return;
 
-  acSel.innerHTML = Object.values(AIRCRAFT_PROFILES).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-  scSel.innerHTML = WB_SCENARIOS.map(s => `<option value="${s.id}">${t(s.titleJa, s.titleVi)}</option>`).join('');
+  acSel.innerHTML = Object.values(AIRCRAFT_PROFILES).map(p => `<option value="${p.id}">${t(p.name, p.nameVi || p.name, p.nameEn || p.name)}</option>`).join('');
+  scSel.innerHTML = WB_SCENARIOS.map(s => `<option value="${s.id}">${t(s.titleJa, s.titleVi, s.titleEn)}</option>`).join('');
 
   acSel.onchange = () => selectWbAircraft(acSel.value);
   scSel.onchange = () => { wbState.scenarioId = scSel.value; renderWbScenarioInfo(); };
@@ -252,10 +252,10 @@ export function renderWbScenarioInfo() {
   document.getElementById('wb-solved-count').textContent = `${appState.wbSolved.length} / ${WB_SCENARIOS.length} Solved`;
   document.getElementById('wb-scenario-box').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-      <strong>${t(sc.titleJa, sc.titleVi)}</strong>
+      <strong>${t(sc.titleJa, sc.titleVi, sc.titleEn)}</strong>
       ${solved ? '<span class="badge badge-ok">SOLVED</span>' : '<span class="badge badge-neutral">PENDING</span>'}
     </div>
-    <div style="margin-top:4px;font-size:12.5px;">${t(sc.descJa, sc.descVi)}</div>
+    <div style="margin-top:4px;font-size:12.5px;">${t(sc.descJa, sc.descVi, sc.descEn)}</div>
   `;
 }
 
@@ -270,7 +270,7 @@ export function renderWbInputs() {
   if (specBar) {
     specBar.innerHTML = `
       <span class="efb-chip">${p.category}</span>
-      <span class="efb-chip">GSE: ${p.gseType}</span>
+      <span class="efb-chip">GSE: ${t(p.gseType, p.gseType, p.gseTypeEn || p.gseType)}</span>
       <span class="efb-chip">TAIL-STRIKE: ${p.perf.tailStrikePitchDeg}°</span>
       <span class="efb-chip">MAX FUEL: ${fmtWeight(p.maxFuel, u)} ${u}</span>
     `;
@@ -291,7 +291,7 @@ export function renderWbInputs() {
   const paxWrap = document.getElementById('wb-pax-inputs');
   paxWrap.innerHTML = p.paxZones.map(z => `
     <div class="field">
-      <label class="ja">${t(z.labelJa, z.labelVi)}</label>
+      <label class="ja">${t(z.labelJa, z.labelVi, z.labelEn)}</label>
       <input type="number" min="0" max="${z.maxPax + 20}" value="${(wbState.input.pax && wbState.input.pax[z.id]) || 0}" data-pax="${z.id}" ${z.maxPax === 0 ? 'disabled' : ''} />
       <span class="field-hint">Max ${z.maxPax} | Arm ${z.arm}m</span>
     </div>
@@ -306,11 +306,11 @@ export function renderWbInputs() {
     return `
       <div class="form-grid-2" style="margin-bottom:8px;padding:8px 10px;background:var(--bg-canvas);border:1px solid var(--border);border-radius:6px;">
         <div class="field">
-          <label class="ja">${t(h.labelJa, h.labelVi)} — ${t('手荷物', 'Hành lý')} (${u})</label>
+          <label class="ja">${t(h.labelJa, h.labelVi, h.labelEn)} — ${t('手荷物', 'Hành lý', 'Baggage')} (${u})</label>
           <input type="number" min="0" step="50" value="${toDisp(hv.bag)}" data-hold="${h.id}" data-kind="bag" />
         </div>
         <div class="field">
-          <label class="ja">${t('バラ貨物', 'Hàng rời')} (${u}) <span style="color:var(--text-muted);font-weight:400;">[Max ${fmtWeight(h.maxWeight, u)} ${u} | Arm ${h.arm}m]</span></label>
+          <label class="ja">${t('バラ貨物', 'Hàng rời', 'Loose Cargo')} (${u}) <span style="color:var(--text-muted);font-weight:400;">[Max ${fmtWeight(h.maxWeight, u)} ${u} | Arm ${h.arm}m]</span></label>
           <input type="number" min="0" step="50" value="${toDisp(hv.cargo)}" data-hold="${h.id}" data-kind="cargo" />
         </div>
       </div>
@@ -328,7 +328,7 @@ export function renderWbInputs() {
 
   const uldWrap = document.getElementById('wb-uld-inputs');
   if (p.uldPositions.length === 0) {
-    uldWrap.innerHTML = `<div style="grid-column:1/-1;font-size:12px;color:var(--text-secondary);padding:8px 10px;background:var(--bg-canvas);border:1px dashed var(--border-strong);border-radius:6px;">${t('バルク専用機（ULD非搭載・ベルトローダー対応）', 'Tàu bay xếp rời Bulk-only (dùng Belt Loader, không dùng ULD)')}</div>`;
+    uldWrap.innerHTML = `<div style="grid-column:1/-1;font-size:12px;color:var(--text-secondary);padding:8px 10px;background:var(--bg-canvas);border:1px dashed var(--border-strong);border-radius:6px;">${t('バルク専用機（ULD非搭載・ベルトローダー対応）', 'Tàu bay xếp rời Bulk-only (dùng Belt Loader, không dùng ULD)', 'Bulk-Only Aircraft (Belt Loader Only — No ULDs)')}</div>`;
   } else {
     uldWrap.innerHTML = p.uldPositions.map(pos => `
       <div class="field">
@@ -431,14 +431,14 @@ export function recalcAndRenderWb() {
   document.getElementById('wb-err-fwd-val').textContent = `+${fmtWeight(wbState.simError.unreportedFwdKg, u)} ${u}`;
 
   const presets = [
-    { id: 'normal', ja: '✓ 標準', vi: '✓ Chuẩn', danger: false },
-    { id: 'lmc_aft', ja: '⚠ 未報告LMC', vi: '⚠ Quên báo LMC', danger: true },
-    { id: 'tail_tip', ja: '🔴 尻もち', vi: '🔴 Sập đuôi', danger: true },
-    { id: 'nose_heavy', ja: '🔴 機首重', vi: '🔴 Nặng mũi', danger: true },
-    { id: 'over_mtow', ja: '🔴 MTOW超過', vi: '🔴 Vượt MTOW', danger: true }
+    { id: 'normal', ja: '✓ 標準', vi: '✓ Chuẩn', en: '✓ Nominal', danger: false },
+    { id: 'lmc_aft', ja: '⚠ 未報告LMC', vi: '⚠ Quên báo LMC', en: '⚠ Unreported LMC', danger: true },
+    { id: 'tail_tip', ja: '🔴 尻もち', vi: '🔴 Sập đuôi', en: '🔴 Tail-Tipping', danger: true },
+    { id: 'nose_heavy', ja: '🔴 機首重', vi: '🔴 Nặng mũi', en: '🔴 Nose-Heavy', danger: true },
+    { id: 'over_mtow', ja: '🔴 MTOW超過', vi: '🔴 Vượt MTOW', en: '🔴 Over MTOW', danger: true }
   ];
   const prEl = document.getElementById('wb-fault-presets');
-  prEl.innerHTML = presets.map(pr => `<button class="efb-btn ${pr.danger ? 'danger' : ''} ${wbState.activeFaultPreset === pr.id ? 'active' : ''}" data-preset="${pr.id}">${t(pr.ja, pr.vi)}</button>`).join('');
+  prEl.innerHTML = presets.map(pr => `<button class="efb-btn ${pr.danger ? 'danger' : ''} ${wbState.activeFaultPreset === pr.id ? 'active' : ''}" data-preset="${pr.id}">${t(pr.ja, pr.vi, pr.en)}</button>`).join('');
   prEl.querySelectorAll('button').forEach(b => { b.onclick = () => applyWbFaultPreset(b.dataset.preset); });
 
   const cb = document.getElementById('wb-conseq-badge');
@@ -447,24 +447,24 @@ export function recalcAndRenderWb() {
   document.getElementById('wb-conseq-svg-wrap').innerHTML = renderConsequenceAircraftSvg(p, conseq);
 
   document.getElementById('wb-conseq-list').innerHTML = conseq.consequences.length === 0
-    ? `<div class="conseq-card ok"><strong class="ja">${t('✓ 異常・誤計算リスクなし', '✓ An toàn — Không có nguy cơ tính sai')}</strong></div>`
+    ? `<div class="conseq-card ok"><strong class="ja">${t('✓ 異常・誤計算リスクなし', '✓ An toàn — Không có nguy cơ tính sai', '✓ Nominal — No Miscalculation or CG Hazard')}</strong></div>`
     : conseq.consequences.map(c => `
       <div class="conseq-card ${c.severity === 'SEVERE' ? 'warn' : ''}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
           <strong style="font-size:12px;font-family:var(--font-mono);">${c.id}</strong>
           <span class="badge ${c.severity === 'CRITICAL' ? 'badge-danger' : 'badge-warn'}">${c.severity}</span>
         </div>
-        <div class="ja" style="font-size:12.5px;">${t(c.ja, c.vi)}</div>
-        <div class="ja" style="font-size:11.5px;margin-top:5px;opacity:0.9;">🛡 ${t(c.sopJa, c.sopVi)}</div>
+        <div class="ja" style="font-size:12.5px;">${t(c.ja, c.vi, c.en)}</div>
+        <div class="ja" style="font-size:11.5px;margin-top:5px;opacity:0.9;">🛡 ${t(c.sopJa, c.sopVi, c.sopEn)}</div>
       </div>
     `).join('');
 
   document.getElementById('wb-alerts').innerHTML = res.violations.length === 0
-    ? `<div class="alert alert-ok">${t('すべての重量・貨物室・CG制限を満たしています。', 'Tất cả giới hạn trọng lượng, hầm hàng & CG đều hợp lệ.')}</div>`
-    : res.violations.map(v => `<div class="alert alert-danger"><strong>⚠ </strong>${t(v.ja, v.vi)}</div>`).join('');
+    ? `<div class="alert alert-ok">${t('すべての重量・貨物室・CG制限を満たしています。', 'Tất cả giới hạn trọng lượng, hầm hàng & CG đều hợp lệ.', 'All structural weight, hold, ULD, and CG envelope limits are satisfied.')}</div>`
+    : res.violations.map(v => `<div class="alert alert-danger"><strong>⚠ </strong>${t(v.ja, v.vi, v.en)}</div>`).join('');
 
   document.getElementById('wb-suggestions').innerHTML = res.suggestions.length > 0
-    ? `<div class="alert alert-warn"><strong>${t('調整アドバイス:', 'Gợi ý điều chỉnh:')}</strong><ul style="margin:6px 0 0 18px;padding:0;">${res.suggestions.map(s => `<li>${t(s.ja, s.vi)}</li>`).join('')}</ul></div>`
+    ? `<div class="alert alert-warn"><strong>${t('調整アドバイス:', 'Gợi ý điều chỉnh:', 'Load Adjustment Advice:')}</strong><ul style="margin:6px 0 0 18px;padding:0;">${res.suggestions.map(s => `<li>${t(s.ja, s.vi, s.en)}</li>`).join('')}</ul></div>`
     : '';
 
   const holdRows = Object.values(res.holdSummary).map(h => {
@@ -475,7 +475,7 @@ export function recalcAndRenderWb() {
 
   document.getElementById('wb-loadsheet-content').innerHTML = `
     <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;">
-      <span><strong>AC:</strong> ${p.name}</span>
+      <span><strong>AC:</strong> ${t(p.name, p.nameVi || p.name, p.nameEn || p.name)}</span>
       <span><strong>PAX:</strong> ${res.totalPaxCount}</span>
       <span><strong>THS:</strong> ${pf.stabTrimLabel} · <strong>V1/VR/V2:</strong> ${pf.v1Kt}/${pf.vrKt}/${pf.v2Kt}kt</span>
       <span><strong>STATUS:</strong> ${res.status}</span>
