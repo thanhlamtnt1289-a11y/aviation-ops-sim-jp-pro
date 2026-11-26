@@ -4,6 +4,7 @@ import {
   t, applyTheme, applyStaticI18n, updateProgressBadges
 } from './core/state.js';
 import { initCommandPalette } from './core/commandPalette.js';
+import { initJaPhraseWrap } from './core/jaPhraseWrap.js';
 import { renderDashboard } from './modules/dashboard.js';
 import {
   wbState, initWbModule, selectWbAircraft, loadWbScenario,
@@ -330,6 +331,7 @@ function bootstrap() {
   }
 
   registerPWA();
+  initJaPhraseWrap();
 }
 
 if (document.readyState === 'loading') {

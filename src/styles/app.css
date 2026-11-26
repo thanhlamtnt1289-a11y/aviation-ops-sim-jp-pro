@@ -30,11 +30,11 @@
       --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
       --surface-2: #F8FAFC;
       --sidebar-w: 264px;
-      --font-sans: "Be Vietnam Pro", "Noto Sans JP", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --font-sans: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Helvetica Neue", Arial, "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Hiragino Sans", "Yu Gothic UI", monospace;
     }
     html[lang="ja"] {
-      --font-sans: "Noto Sans JP", "Be Vietnam Pro", "Hiragino Sans", "Yu Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-sans: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic", "Meiryo", "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     /* Chế độ Glass-Cockpit Tương lai cho toàn ứng dụng (Dark EFB Mode) */
@@ -195,14 +195,23 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Ngắt dòng tiếng Nhật theo cụm từ, không ảnh hưởng tiếng Việt/Anh */
+    /* Ngắt dòng theo cụm từ cho cả 3 ngôn ngữ: không bao giờ cắt đôi một từ.
+       - Tiếng Việt/Anh: chỉ xuống dòng tại khoảng trắng.
+       - Tiếng Nhật: src/core/jaPhraseWrap.js chèn <wbr> giữa các cụm từ (文節),
+         keep-all chặn mọi điểm ngắt khác → "シミュレーション" không bị tách "シミ / ュレーション".
+       - break-word chỉ là lưới an toàn khi một cụm quá dài so với khung. */
+    body {
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      line-break: strict;
+    }
     html[lang="ja"] .ja {
       word-break: keep-all;
-      overflow-wrap: anywhere;
+      overflow-wrap: break-word;
       line-break: strict;
     }
     html[lang="vi"] .ja, html[lang="en"] .ja {
-      word-break: normal;
+      word-break: keep-all;
       overflow-wrap: break-word;
     }
 
@@ -439,6 +448,19 @@
     }
     .card + .card {
       margin-top: 16px;
+    }
+    /* Thẻ nằm trong lưới/flex đã có `gap` → bỏ margin-top để các thẻ thẳng hàng, không bị lệch */
+    [style*="display:grid"] > .card + .card,
+    [style*="display: grid"] > .card + .card,
+    [style*="display:flex"] > .card + .card,
+    [style*="display: flex"] > .card + .card,
+    .workspace-grid > .card + .card,
+    .dash-grid > .card + .card,
+    .form-grid > .card + .card,
+    .form-grid-2 > .card + .card,
+    .form-grid-3 > .card + .card,
+    .efb-gauges-grid > .card + .card {
+      margin-top: 0;
     }
     .card-title {
       margin: 0 0 12px;
@@ -1511,9 +1533,13 @@
 .nav-btn > span:nth-child(2) {
   flex: 1;
   min-width: 0;
+  /* Hiển thị đủ tên mục (tối đa 2 dòng), xuống dòng theo cụm từ thay vì cắt "…" */
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .nav-btn:hover {
   background: var(--bg-subtle);

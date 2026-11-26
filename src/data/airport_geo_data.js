@@ -164,8 +164,9 @@ export const AIRPORT_GEO_DATA = {
       { id: 'TWY-A10', widthM: 23, points: fNGO.poly([[0, 1720], [190, 1720]]) }
     ],
     aprons: [
-      { id: 'APRON-MAIN', points: fNGO.poly([[290, -960], [920, -960], [920, 920], [290, 920]]) },
-      { id: 'APRON-CARGO', points: fNGO.poly([[290, 940], [920, 940], [920, 1880], [290, 1880]]) },
+      { id: 'APRON-MAIN', points: fNGO.poly([[290, -960], [920, -960], [920, 480], [290, 480]]) },
+      // Cargo apron + district, aligned with the NGO 1:1 scene (scene x = along + 46, scene z = rightM − 580)
+      { id: 'APRON-CARGO', points: fNGO.poly([[290, 490], [650, 490], [650, 1380], [290, 1380]]) },
       { id: 'APRON-T2', points: fNGO.poly([[360, -1580], [960, -1580], [960, -980], [360, -980]]) }
     ],
     terminals: [
@@ -179,11 +180,18 @@ export const AIRPORT_GEO_DATA = {
       fNGO.terminal('FOD-HALL', 'Flight of Dreams (B787 ZA001)', 880, -860, 84, 92, 21, 0, 0xf1f5f9),
       fNGO.terminal('T2-LCC', 'Terminal 2 (LCC South #71-#80)', 835, -1240, 88, 360, 14, 0, 0xf1f5f9),
       fNGO.terminal('SKY-EXPO', 'Aichi Sky Expo Exhibition Halls', 1180, -1280, 195, 430, 17, 0, 0xdbe4ef),
-      fNGO.terminal('ARFF-FIRE', 'Airport Fire Station (ARFF)', 760, 910, 46, 56, 13, 0, 0xfecaca),
-      fNGO.terminal('CARGO-SHED', 'Cargo Warehouses 1–3 (#101-#119)', 815, 1260, 110, 560, 16, 0, 0xcbd5e1),
+      fNGO.terminal('ARFF-FIRE', 'Airport Fire Station (ARFF)', 662, 444, 40, 50, 13, 0, 0xfecaca),
+      // North Cargo District (same buildings as NGO_CARGO_DISTRICT in airports.js)
+      fNGO.terminal('CARGO-ICT1', "Int'l Cargo Terminal 1 (第1国際貨物上屋)", 697, 649, 78, 270, 15.5, 0, 0xe4e9ef),
+      fNGO.terminal('CARGO-ICT2', "Int'l Cargo Terminal 2 (第2国際貨物上屋)", 688, 861, 60, 115, 13.5, 0, 0xe4e9ef),
+      fNGO.terminal('CARGO-ICT3', "Int'l Cargo Terminal 3 (第3国際貨物上屋)", 690, 1004, 63, 130, 13.5, 0, 0xe4e9ef),
+      fNGO.terminal('CARGO-DOM-AIR', 'Domestic Airline Cargo Shed (国内エアライン上屋)', 669, 1111, 22, 45, 9.5, 0, 0xe4e9ef),
+      fNGO.terminal('CARGO-DOM-FWD', 'Domestic Forwarder Shed (国内フォワーダー上屋)', 704, 1109, 20, 40, 9.5, 0, 0xe4e9ef),
+      fNGO.terminal('CARGO-OFFICE', 'Cargo Office Building (貨物事務棟)', 790, 584, 28, 64, 19, 0, 0xdbe4ef),
       fNGO.terminal('JCG-BASE', 'Japan Coast Guard Base (N1-N6)', 790, 1740, 74, 190, 14, 0, 0xccfbf1)
     ],
-    atcTower: { ...fNGO.pt(915, 135), alt: 4.6, heightM: 86.75 },
+    // Centrair Tower stands NORTH-EAST of T1 (scene (330, 175))
+    atcTower: { ...fNGO.pt(755, 284), alt: 4.6, heightM: 86.75 },
     gseServiceRoad: fNGO.poly([
       [665, -1380], [665, -62], [388, -62], [388, 62], [665, 62], [665, 1680]
     ]),
@@ -199,7 +207,7 @@ export const AIRPORT_GEO_DATA = {
       fNGO.spot('S74', 'Spot 74 (T2 LCC)', 745, -1300, 90, { terminal: 'T2', hasPbb: false, widebodyCapable: false, entryDR: 30, entryDA: -90 }),
       fNGO.spot('S203', 'Spot 203 (North Remote)', 465, 680, 90, { terminal: 'REMOTE', hasPbb: false, entryDR: 45, entryDA: -85 }),
       fNGO.spot('S302', 'Spot 302 (South Remote)', 465, -680, 90, { terminal: 'REMOTE', hasPbb: false, entryDR: 45, entryDA: 85 }),
-      fNGO.spot('S101', 'Spot 105 (North Cargo #101-#119)', 640, 1220, 90, { terminal: 'CARGO', hasPbb: false, entryDR: 55, entryDA: -80 })
+      fNGO.spot('S101', 'Spot 105 (North Cargo #101-#119)', 600, 719, 90, { terminal: 'CARGO', hasPbb: false, entryDR: 55, entryDA: -80 })
     ]
   },
 

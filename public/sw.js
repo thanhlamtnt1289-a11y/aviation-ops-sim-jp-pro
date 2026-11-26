@@ -1,5 +1,5 @@
 // Aviation Ops Sim JP Pro — Offline-First Service Worker (PWA)
-const CACHE_NAME = 'aviation-ops-sim-jp-pro-v18';
+const CACHE_NAME = 'aviation-ops-sim-jp-pro-v20';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -16,6 +16,7 @@ const CORE_ASSETS = [
   './src/main.js',
   './src/core/state.js',
   './src/core/commandPalette.js',
+  './src/core/jaPhraseWrap.js',
   './src/data/aircraft.js',
   './src/data/airports.js',
   './src/data/airport_geo_data.js',
@@ -25,6 +26,7 @@ const CORE_ASSETS = [
   './src/engines/wbEngine.js',
   './src/engines/audioEngine.js',
   './src/three3d/aircraftBuilder3D.js',
+  './src/three3d/gseLibrary3D.js',
   './src/three3d/aircraft_3d_models.js',
   './src/three3d/crewBuilder3D.js',
   './src/three3d/AirportScene3D.js',

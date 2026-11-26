@@ -1752,9 +1752,9 @@ export function renderUldBuildupUI() {
   if (hudBot) {
     hudBot.innerHTML = `
       <div style="display:flex;gap:5px;flex-wrap:wrap;">
-        <button class="btn btn-sm" data-uld-cam="iso">🎥 3D斜め</button>
-        <button class="btn btn-sm" data-uld-cam="front">📐 正面コンター</button>
-        <button class="btn btn-sm" data-uld-cam="top">🗺 真上(偏荷重)</button>
+        <button class="btn btn-sm" data-uld-cam="iso">🎥 ${t('3D斜め', '3D chéo', '3D Iso')}</button>
+        <button class="btn btn-sm" data-uld-cam="front">📐 ${t('正面コンター', 'Contour chính diện', 'Front Contour')}</button>
+        <button class="btn btn-sm" data-uld-cam="top">🗺 ${t('真上(偏荷重)', 'Nhìn từ trên (lệch tải)', 'Top View (Off-center Load)')}</button>
         <button class="btn btn-sm ${uldSimState.showContour ? 'btn-primary' : ''}" id="uld-toggle-contour">
           📏 ${t('コンター枠', 'Khung Contour', 'Contour Gauge')}
         </button>

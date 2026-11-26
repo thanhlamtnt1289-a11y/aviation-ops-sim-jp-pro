@@ -1,15 +1,18 @@
 // Full 1:1 Chubu Centrair (NGO / RJGG) 4,370m × 1,920m Island + 3,500m × 60m Runway + Multi-Lane Airside/Flight/Skyway Traffic
 import * as THREE from 'three';
 import { AIRCRAFT_PROFILES } from '../data/aircraft.js';
-import { A3D_AIRPORTS, A3D_SPOTS, A3D_CLOUDS, A3D_FLIGHT_PHASES, computeFlightCyclePose, computeViewpointCamera } from '../data/airports.js';
+import { A3D_AIRPORTS, A3D_SPOTS, A3D_CLOUDS, A3D_FLIGHT_PHASES, NGO_CARGO_DISTRICT, computeFlightCyclePose, computeViewpointCamera } from '../data/airports.js';
 import { createDetailedAirliner3D } from './aircraftBuilder3D.js';
+import { registerProceduralFallback } from './aircraft_3d_models.js';
+registerProceduralFallback(createDetailedAirliner3D);
 import {
   AIRCRAFT_3D_SPECS,
   createProceduralAirliner3D,
   createJetBlastHazardZone3D,
   animateJetBlastZone3D,
   animateAircraft3D,
-  resolveAircraft3DType
+  resolveAircraft3DType,
+  createFleetAircraft3D
 } from './aircraft_3d_models.js';
 import {
   createOpenCabTowingTractor3D,
@@ -17,10 +20,8 @@ import {
   createArticulatedCrew3D,
   animateCrewSignal
 } from './crewBuilder3D.js';
-import {
-  computeWingHuggingEraPolyline,
-  buildTurnaroundGseMesh
-} from './TurnaroundScene3D.js';
+import { computeWingHuggingEraPolyline } from './TurnaroundScene3D.js';
+import { buildGse, buildTurnaroundGseMesh } from './gseLibrary3D.js';
 
 function makeRunwayTexture(rwyPair = '36/18', isSnow = false) {
   const c = document.createElement('canvas');
@@ -225,6 +226,11 @@ function makeFrontPrioritySignTexture() {
 }
 
 function createGseMesh(kind, opts = {}) {
+  // Mọi xe GSE dùng chung thư viện gseLibrary3D.js → cùng tỷ lệ, màu, cabin, bánh xe, đèn xoay
+  if (kind !== 'musky_train') {
+    const libKind = kind === 'tractor' ? 'tractor' : kind;
+    return buildGse(libKind, opts.deckY || 2.8, { ...opts, uldCode: opts.uldType || opts.uldCode });
+  }
   const g = new THREE.Group();
   const addBox = (w, h, d, col, x, y, z, metal = 0.25, rough = 0.4) => {
     const m = new THREE.Mesh(
@@ -237,50 +243,7 @@ function createGseMesh(kind, opts = {}) {
     g.add(m);
     return m;
   };
-  if (kind === 'lowloader') {
-    const w = opts.wide ? 3.5 : 3.0;
-    addBox(w, 0.55, 8.2, 0xeef2f8, 0, 0.48, 0, 0.35, 0.4);
-    addBox(0.5, 1.3, 1.3, 0x0284c7, -w * 0.46, 1.25, 2.0, 0.3, 0.4);
-    const liftGroup = new THREE.Group();
-    liftGroup.position.y = opts.deckY ?? 2.05;
-    const bridge = new THREE.Mesh(new THREE.BoxGeometry(w * 0.86, 0.24, 2.9), new THREE.MeshStandardMaterial({ color: 0xd7dfe9, metalness: 0.5, roughness: 0.35 }));
-    bridge.position.set(0, 0, 2.5);
-    liftGroup.add(bridge);
-    const plat = new THREE.Mesh(new THREE.BoxGeometry(w, 0.24, 4.6), new THREE.MeshStandardMaterial({ color: 0xc8d2de, metalness: 0.5, roughness: 0.35 }));
-    plat.position.set(0, 0, -1.6);
-    liftGroup.add(plat);
-    const railL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.68, 4.5), new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4 }));
-    railL.position.set(-w * 0.48, 0.44, -1.6);
-    liftGroup.add(railL);
-    const railR = railL.clone();
-    railR.position.x = w * 0.48;
-    liftGroup.add(railR);
-    const uld = new THREE.Mesh(
-      new THREE.BoxGeometry(opts.uldType === 'PMC' ? 2.7 : 1.9, opts.uldType === 'AKH' ? 1.15 : 1.6, 2.0),
-      new THREE.MeshStandardMaterial({ color: opts.uldType === 'PMC' ? 0x3870b2 : 0xdbe4ef, metalness: 0.55, roughness: 0.28 })
-    );
-    uld.position.set(0, 0.72, -1.2);
-    uld.castShadow = true;
-    liftGroup.add(uld);
-    g.add(liftGroup);
-    g.userData.liftGroup = liftGroup;
-    g.userData.uldMesh = uld;
-    addBox(0.6, 1.4, 3.0, 0x334155, 0, 1.15, -1.6, 0.5, 0.5);
-  } else if (kind === 'ramp_bus') {
-    addBox(2.85, 2.75, 10.4, 0xf1f5f9, 0, 1.78, 0, 0.25, 0.3);
-    addBox(2.90, 1.05, 9.4, 0x38bdf8, 0, 2.18, 0, 0.8, 0.1);
-    addBox(2.88, 0.48, 10.4, opts.accent || 0x1b4f9c, 0, 1.12, 0, 0.2, 0.4);
-  } else if (kind === 'patrol_suv') {
-    // Yellow Airport Operations Patrol Car (黄パト / 場周道路パトロールカー)
-    addBox(2.05, 0.92, 4.7, 0xfacc15, 0, 0.82, 0, 0.32, 0.35);
-    addBox(1.92, 0.78, 2.45, 0xfef08a, 0, 1.58, -0.15, 0.25, 0.35);
-    addBox(1.96, 0.58, 2.25, 0x38bdf8, 0, 1.58, -0.12, 0.8, 0.12);
-    addBox(2.08, 0.24, 4.72, 0xffffff, 0, 0.84, 0, 0.2, 0.4);
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.22, 0.38), new THREE.MeshBasicMaterial({ color: 0xf59e0b }));
-    bar.position.set(0, 2.08, -0.1);
-    g.add(bar);
-    g.userData.beacon = bar;
-  } else if (kind === 'musky_train') {
+  {
     // 4-Car Meitetsu 2000 Series "μ-SKY" Limited Express (Centrair Airport Line Blue & White!)
     for (let ci = 0; ci < 4; ci++) {
       const cz = (ci - 1.5) * 20.6;
@@ -289,21 +252,6 @@ function createGseMesh(kind, opts = {}) {
       addBox(2.91, 0.72, 17.8, 0x0f172a, 0, 2.65, cz, 0.8, 0.12);
       addBox(2.75, 0.35, 19.2, 0x94a3b8, 0, 4.15, cz, 0.45, 0.4);
     }
-  } else if (kind === 'deice') {
-    addBox(2.7, 2.2, 7.0, 0xf59e0b, 0, 1.45, 0, 0.3, 0.38);
-    addBox(2.1, 1.3, 3.6, 0xf8fafc, 0, 3.1, -0.5, 0.25, 0.35);
-    const boom = addBox(6.4, 0.38, 0.38, 0xea580c, 3.2, 4.6, 0, 0.4, 0.4);
-    g.userData.boom = boom;
-    const spray = new THREE.Mesh(
-      new THREE.ConeGeometry(1.6, 6.5, 12, 1, true),
-      new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.36, side: THREE.DoubleSide })
-    );
-    spray.rotation.z = -Math.PI / 2;
-    spray.position.set(9.2, 4.3, 0);
-    g.add(spray);
-  } else {
-    addBox(2.1, 1.25, 3.8, 0xf59e0b, 0, 0.95, 0, 0.3, 0.4);
-    addBox(1.7, 1.0, 1.7, 0x93c5fd, 0, 2.0, -0.35, 0.75, 0.12);
   }
   return g;
 }
@@ -974,27 +922,27 @@ export class AirportScene3D {
       addDecal(texPriority, 7.2, 7.2, ex, 0.11, ez);
     });
 
-    // 9C. 86.75m Chubu ATC Control Tower ([-158..-134, 215..239], center = -146, 227)
-    //     Camera POV sits at [-146, 82.5, 224]; FrontSide glass cylinder (r=6.8) lets camera look out unobstructed!
-    addBox(24, 10, 24, 0xd2dae4, -146, 5.0, 227);
+    // 9C. 86.75m Centrair ATC Tower — NORTH-EAST of T1 (Wikipedia: 第1ターミナルの北東) [318..342, 163..187], center (330, 175)
+    //     Camera POV sits at [330, 82.5, 172]; FrontSide glass cylinder (r=6.8) lets camera look out unobstructed!
+    addBox(24, 10, 24, 0xd2dae4, 330, 5.0, 175);
     const shaft = new THREE.Mesh(
       new THREE.CylinderGeometry(4.8, 7.2, 68, 16),
       new THREE.MeshStandardMaterial({ color: 0xeef2f7, roughness: 0.38 })
     );
-    shaft.position.set(-146, 44.0, 227);
+    shaft.position.set(330, 44.0, 175);
     shaft.castShadow = true;
     this.staticGroup.add(shaft);
     const cab = new THREE.Mesh(
       new THREE.CylinderGeometry(8.2, 6.2, 7.2, 12),
       new THREE.MeshPhysicalMaterial({ color: 0x1e4e79, roughness: 0.12, metalness: 0.78, clearcoat: 1.0, side: THREE.FrontSide })
     );
-    cab.position.set(-146, 81.6, 227);
+    cab.position.set(330, 81.6, 175);
     this.staticGroup.add(cab);
     const cap = new THREE.Mesh(
       new THREE.CylinderGeometry(7.2, 8.8, 2.0, 12),
       new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.35 })
     );
-    cap.position.set(-146, 86.2, 227);
+    cap.position.set(330, 86.2, 175);
     this.staticGroup.add(cap);
 
     // 9D. Access Plaza, Meitetsu Centrair Station, Airport Hotels & P1/P2 Multi-Storey Car Parks (z = 210..480)
@@ -1041,11 +989,8 @@ export class AirportScene3D {
       this.staticGroup.add(fLamp);
     });
 
-    // Cargo Warehouses 1 & 2 ([545..880, 72..155]) & International Cargo Warehouse 3 ([910..1290, 72..155])
-    addBox(335, 14.5, 83, 0xcbd5e1, 712.5, 7.25, 113.5);
-    addBox(339, 2.0, 86, 0x334155, 712.5, 15.5, 113.5);
-    addBox(380, 14.5, 83, 0xd6dee8, 1100, 7.25, 113.5);
-    addBox(384, 2.0, 86, 0x1e3a5f, 1100, 15.5, 113.5);
+    // North Cargo District (貨物地区): Int'l Cargo Terminals 1–3, domestic sheds, canopies, truck yard, gate
+    this._buildNgoCargoDistrict(addBox, addDecal);
 
     // Jet A-1 Aviation Fuel Farm ([1330..1510, 150..290]) — 8 Cylindrical White Storage Tanks!
     addBox(180, 1.8, 140, 0x94a3b8, 1420, 0.9, 220);
@@ -1071,11 +1016,11 @@ export class AirportScene3D {
 
   initDynamicActors() {
     // 1. Primary Interactive Neighbor Stands: Spot 6 (-68, 10: JAL B738) & Spot 14 (98, 10: ANA B788 — clear of 300m Pier at x=46!)
-    this.spot6Ac = createDetailedAirliner3D({ ...AIRCRAFT_PROFILES.B738.visual3d, liveryId: 'JAL' });
+    this.spot6Ac = createFleetAircraft3D('B738', 'JAL');
     this.spot6Ac.position.set(-68, 0, 10);
     this.dynamicGroup.add(this.spot6Ac);
 
-    this.spot14Ac = createDetailedAirliner3D({ ...AIRCRAFT_PROFILES.B788.visual3d, liveryId: 'ANA' });
+    this.spot14Ac = createFleetAircraft3D('B788', 'ANA');
     this.spot14Ac.position.set(98, 0, 10);
     this.dynamicGroup.add(this.spot14Ac);
 
@@ -1108,7 +1053,7 @@ export class AirportScene3D {
         { prof: 'B77F', liveryId: 'ANA', x: 990, z: 4, yaw: 0 }                // North Cargo #109 (B777F Freighter!)
       ].forEach(cfg => {
         const p = AIRCRAFT_PROFILES[cfg.prof] || AIRCRAFT_PROFILES.A320;
-        const ac = createDetailedAirliner3D({ ...(p.visual3d || {}), liveryId: cfg.liveryId });
+        const ac = createFleetAircraft3D(cfg.prof, cfg.liveryId, p.visual3d);
         ac.position.set(cfg.x, 0, cfg.z);
         ac.rotation.y = cfg.yaw;
         this.parkedFleetGroup.add(ac);
@@ -1222,7 +1167,7 @@ export class AirportScene3D {
 
     // 86.75m Chubu ATC Tower Rotating Surface-Movement Radar Bar
     this.radarBar = new THREE.Mesh(new THREE.BoxGeometry(7.2, 1.1, 0.9), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 }));
-    this.radarBar.position.set(-146, 88.2, 227);
+    this.radarBar.position.set(330, 88.2, 175);
     this.dynamicGroup.add(this.radarBar);
 
     // 3. SYNCHRONIZED MULTI-LANE AIRSIDE, FLIGHT & SKYWAY TRAFFIC ACTORS!
@@ -1235,20 +1180,20 @@ export class AirportScene3D {
         return mesh;
       };
       // Airliner Traffic: A-TWY Widebody (JAL B788), C-TWY Narrowbody (ANA A320), & Ise Bay Parallel Approach Jet!
-      addT('twyAJet', createDetailedAirliner3D({ ...AIRCRAFT_PROFILES.B788.visual3d, liveryId: 'JAL' }));
-      addT('twyCJet', createDetailedAirliner3D({ ...AIRCRAFT_PROFILES.A320.visual3d, liveryId: 'ANA' }));
-      addT('bayJet', createDetailedAirliner3D({ ...AIRCRAFT_PROFILES.B738.visual3d, liveryId: 'ANA' }));
+      addT('twyAJet', createFleetAircraft3D('B788', 'JAL'));
+      addT('twyCJet', createFleetAircraft3D('A320', 'ANA'));
+      addT('bayJet', createFleetAircraft3D('B738', 'ANA'));
 
       // 2.8km GSE Spine Road Multi-Lane Left-Hand Traffic (z = 52.6 Eastbound +X & z = 47.4 Westbound -X)
       addT('spineBusE1', createGseMesh('ramp_bus', { accent: 0x1b4f9c }));
       addT('spineBusE2', createGseMesh('ramp_bus', { accent: 0x0284c7 }));
       addT('spineDollyE1', buildTurnaroundGseMesh('dolly_train', 1.0));
-      addT('spineDollyE2', buildTurnaroundGseMesh('dolly_train', 1.0));
+      addT('spineDollyE2', buildTurnaroundGseMesh('dolly_train', 1.0, { uldCode: 'AKE' }));
       addT('spineCatE', buildTurnaroundGseMesh('catering', 3.2));
 
       addT('spineBusW1', createGseMesh('ramp_bus', { accent: 0xdc2626 }));
       addT('spineFuelW', buildTurnaroundGseMesh('fuel', 2.5));
-      addT('spineDollyW1', buildTurnaroundGseMesh('dolly_train', 1.0));
+      addT('spineDollyW1', buildTurnaroundGseMesh('dolly_train', 1.0, { uldCode: 'PMC' }));
       addT('spineDollyW2', buildTurnaroundGseMesh('dolly_train', 1.0));
 
       // Behind-Stand Road (z = -38) GSE Convoy — Obeys Spotter Hold during Spot 7 Pushback!
@@ -1448,7 +1393,8 @@ export class AirportScene3D {
 
     // Volumetric Clouds across the 4.37km Island & Ise Bay
     this.cloudGroup = new THREE.Group();
-    const cloudMat = new THREE.MeshStandardMaterial({ color: 0xf8fbff, roughness: 0.95, transparent: true, opacity: 0.85 });
+    // Soft high cumulus (unlit, semi-transparent) — no dark grey blobs floating in POV shots
+    const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false });
     A3D_CLOUDS.forEach((cl, ci) => {
       const cGrp = new THREE.Group();
       const s1 = new THREE.Mesh(new THREE.SphereGeometry(cl.sx * 0.34, 10, 8), cloudMat);
@@ -1456,13 +1402,152 @@ export class AirportScene3D {
       const s2 = s1.clone(); s2.position.set(-cl.sx * 0.25, 4.5, 8); s2.scale.set(1.1, 0.35, 0.7);
       const s3 = s1.clone(); s3.position.set(cl.sx * 0.24, 3.2, -6); s3.scale.set(1.0, 0.32, 0.65);
       cGrp.add(s1, s2, s3);
-      cGrp.position.set(cl.x, cl.y + (ci % 2) * 18, cl.z);
+      cGrp.position.set(cl.x, cl.y + 650 + (ci % 2) * 60, cl.z);
+      cGrp.scale.set(1.6, 0.7, 1.6);
       cGrp.userData = { base: cl };
       this.cloudGroup.add(cGrp);
     });
     this.dynamicGroup.add(this.cloudGroup);
 
     this.setActiveFleetAircraft('A320');
+  }
+
+  _buildNgoCargoDistrict(addBox, addDecal) {
+    const grp = new THREE.Group();
+    grp.name = 'ngo_cargo_district';
+    this.staticGroup.add(grp);
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0xe4e9ef, roughness: 0.62, metalness: 0.18, emissive: 0x1d232b });
+    const panelMat = new THREE.MeshStandardMaterial({ color: 0xcfd7e1, roughness: 0.55, metalness: 0.3 });
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x8e9aab, roughness: 0.5, metalness: 0.45 });
+    const doorMat = new THREE.MeshStandardMaterial({ color: 0x3a4555, roughness: 0.7, metalness: 0.35 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x5b87b5, roughness: 0.15, metalness: 0.6 });
+    const canopyMat = new THREE.MeshStandardMaterial({ color: 0xf3f5f8, roughness: 0.45, metalness: 0.35, side: THREE.DoubleSide });
+    const box = (w, h, d, m, x, y, z, parent = grp) => {
+      const me = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+      me.position.set(x, y, z);
+      me.castShadow = h > 1;
+      me.receiveShadow = true;
+      parent.add(me);
+      return me;
+    };
+    const sign = (text1, text2, w, x, y, z, rotY) => {
+      const c = document.createElement('canvas');
+      c.width = 1024; c.height = 192;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#0b2e59'; ctx.fillRect(0, 0, 1024, 192);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '800 74px "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif';
+      ctx.fillText(text1, 512, 70);
+      ctx.font = '700 40px "Be Vietnam Pro", "Helvetica Neue", Arial, sans-serif';
+      ctx.fillText(text2, 512, 150);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 4;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 0.1875), new THREE.MeshBasicMaterial({ map: tex }));
+      m.position.set(x, y, z);
+      m.rotation.y = rotY;
+      grp.add(m);
+    };
+
+    NGO_CARGO_DISTRICT.forEach(b => {
+      const w = b.x2 - b.x1, d = b.z2 - b.z1, cx = (b.x1 + b.x2) / 2, cz = (b.z1 + b.z2) / 2;
+      if (b.kind === 'truckyard') {
+        // Painted truck bays + parked 10t trucks
+        addBox(w, 0.05, d, 0x5b6472, cx, 0.07, cz, { roughness: 0.85 });
+        for (let x = b.x1 + 8; x < b.x2 - 4; x += 6.5) addBox(0.25, 0.04, 15, 0xf8fafc, x, 0.1, b.z1 + 10);
+        for (let x = b.x1 + 8; x < b.x2 - 4; x += 6.5) addBox(0.25, 0.04, 15, 0xf8fafc, x, 0.1, b.z2 - 10);
+        if (!this.compact) {
+          for (let i = 0; i < 10; i++) {
+            const tr = buildGse('cargo_truck');
+            tr.position.set(b.x1 + 11.25 + i * 6.5 * 4, 0, i % 2 ? b.z2 - 10 : b.z1 + 10);
+            tr.rotation.y = i % 2 ? 0 : Math.PI;
+            if (tr.position.x < b.x2 - 6) grp.add(tr);
+          }
+        }
+        sign('トラック待機場', 'TRUCK WAITING AREA', 26, cx, 6.5, b.z2 + 1, 0);
+        return;
+      }
+      if (b.kind === 'gate') {
+        box(w, b.h, 8, wallMat, cx, b.h / 2, cz);
+        box(w + 2, 0.6, 12, roofMat, cx, b.h + 0.3, cz);
+        const bar = box(14, 0.18, 0.18, new THREE.MeshStandardMaterial({ color: 0xef4444 }), cx - 20, 1.1, cz + 2);
+        bar.castShadow = false;
+        addBox(14, 0.05, 0.3, 0xf8fafc, cx - 20, 0.1, cz + 6);
+        sign('北ゲート', 'NORTH GATE · CARGO AREA', 12, cx, b.h + 2.2, cz + 6.2, 0);
+        return;
+      }
+      // Building body (2-storey steel shed with ribbed cladding)
+      box(w, b.h, d, wallMat, cx, b.h / 2, cz);
+      box(w + 0.6, 0.9, d + 0.6, roofMat, cx, b.h + 0.45, cz);
+      for (let x = b.x1 + 6; x < b.x2 - 3; x += 6) {
+        box(0.35, b.h - 1, 0.25, panelMat, x, (b.h - 1) / 2, b.z1 - 0.15); // airside ribs
+      }
+      if (b.kind === 'office') {
+        for (let fl = 0; fl < 4; fl++) box(w - 2, 1.6, 0.2, glassMat, cx, 3 + fl * 4.4, b.z1 - 0.12);
+        sign('貨物事務棟', 'CARGO OFFICE · LAWSON 1F', 30, cx, b.h + 3.2, b.z2 + 0.6, 0);
+        return;
+      }
+      // Airside roll-up doors (ULD in/out) every ~12m + apron-side sign
+      const nDoors = Math.max(1, Math.floor((w - 10) / 12));
+      for (let i = 0; i < nDoors; i++) {
+        const dx = b.x1 + 8 + i * ((w - 16) / Math.max(1, nDoors - 1 || 1));
+        box(7.5, 6.0, 0.3, doorMat, nDoors === 1 ? cx : dx, 3.0, b.z1 - 0.2);
+      }
+      sign(b.ja, b.sign, Math.min(60, w * 0.55), cx, b.h - 2.6, b.z1 - 0.45, Math.PI);
+      if (b.canopy) {
+        // 20m landside canopy (庇) sheltering 10t trucks at the docks
+        box(w - 4, 0.45, 20, canopyMat, cx, 7.2, b.z2 + 10);
+        for (let x = b.x1 + 6; x <= b.x2 - 6; x += 18) box(0.5, 7.0, 0.5, panelMat, x, 3.5, b.z2 + 19.5);
+        // dock doors + trucks backed in
+        for (let x = b.x1 + 8; x < b.x2 - 6; x += 8) box(3.2, 3.6, 0.25, doorMat, x, 2.8, b.z2 + 0.15);
+        if (!this.compact) {
+          for (let x = b.x1 + 16, n = 0; x < b.x2 - 10 && n < 6; x += 32, n++) {
+            const tr = buildGse('cargo_truck');
+            tr.position.set(x, 0, b.z2 + 7.2);
+            tr.rotation.y = 0; // cab faces landside (+Z), box at the dock door
+            grp.add(tr);
+          }
+        }
+        sign(b.ja, b.sign, Math.min(60, w * 0.55), cx, b.h - 2.6, b.z2 + 0.45, 0);
+      }
+      // Airside build-up / staging lane: ULD dollies (AKE & PMC), forklifts
+      if (!this.compact && (b.kind === 'intl' || b.kind === 'dom')) {
+        const n = Math.min(10, Math.floor(w / 14));
+        for (let i = 0; i < n; i++) {
+          const code = i % 3 === 0 ? 'PMC' : 'AKE';
+          const dl = buildGse('uld_dolly', 0.5, { uldCode: code });
+          dl.position.set(b.x1 + 8 + i * ((w - 16) / Math.max(1, n - 1)), 0, b.z1 - 9);
+          grp.add(dl);
+        }
+        const fl = buildGse('forklift');
+        fl.position.set(cx + 6, 0, b.z1 - 3.5);
+        fl.rotation.y = Math.PI;
+        grp.add(fl);
+      }
+      // Yellow airside/landside boundary line in front of each shed
+      addBox(w, 0.04, 0.35, 0xfacc15, cx, 0.1, b.z1 - 16);
+    });
+
+    // 無ナンバー車両通行帯 — unregistered-vehicle lane to the Aichi Logistics District (forwarder sheds)
+    addBox(9, 0.05, 150, 0x4a5568, 1250, 0.07, 230, { roughness: 0.85 });
+    for (let z = 160; z < 305; z += 12) addBox(0.3, 0.04, 6, 0xf8fafc, 1250, 0.1, z);
+    if (addDecal) {
+      const tex = makeRoadMarkingTexture('無ナンバー車両通行帯', '#4a5568', '#ffffff');
+      addDecal(tex, 8.5, 2.6, 1250, 0.12, 200, Math.PI / 2);
+    }
+    sign('至 愛知県企業庁総合物流地区', 'TO AICHI LOGISTICS DISTRICT (FORWARDERS)', 22, 1250, 7, 300, 0);
+    // A freighter being worked at #103: main-deck loader at the aft port main-deck door + ULD dolly train
+    if (!this.compact) {
+      const mdl = buildGse('mdl', 5.3);
+      mdl.position.set(673.6, 0, -6.5);
+      mdl.rotation.y = -Math.PI / 2;
+      grp.add(mdl);
+      const train = buildGse('dolly_train', 1.0, { uldCode: 'PMC' });
+      train.position.set(690, 0, -6.5);
+      train.rotation.y = -Math.PI / 2;
+      grp.add(train);
+    }
   }
 
   createPbbMesh(rotX, doorX, doorZ, doorH) {
@@ -1496,24 +1581,82 @@ export class AirportScene3D {
     if (this.builtFleetId === key && this.activeAc) return;
     if (this.activeAc) this.dynamicGroup.remove(this.activeAc);
     this.builtFleetId = key;
-    if (acId !== 'DHC8' && acId !== 'B77F') {
-      const resolved = resolveAircraft3DType(acId);
-      const spec = AIRCRAFT_3D_SPECS[resolved];
-      this.activeAc = createProceduralAirliner3D(acId, liveryId);
-      const s = (resolved === 'B77W') ? 0.72 : (resolved === 'B789' ? 0.78 : 0.90);
-      this.activeAc.scale.setScalar(s);
-      this.activeBlastZone = createJetBlastHazardZone3D(spec);
-      this.activeBlastZone.visible = false;
-      this.activeAc.add(this.activeBlastZone);
-    } else {
-      const prof = AIRCRAFT_PROFILES[acId] || AIRCRAFT_PROFILES.A320;
-      this.activeAc = createDetailedAirliner3D({ ...(prof.visual3d || {}), liveryId });
-      this.activeBlastZone = createJetBlastHazardZone3D(AIRCRAFT_3D_SPECS.B789);
-      this.activeBlastZone.visible = false;
-      this.activeAc.add(this.activeBlastZone);
-    }
+    // Unified pipeline: every jet uses the same sculpted GLB + livery shader (only DHC8 turboprop is procedural)
+    this.activeAc = createFleetAircraft3D(acId, liveryId);
+    const spec = this.activeAc.userData.spec || AIRCRAFT_3D_SPECS.A320;
+    // Spot 7 sits beside the 300m Center Pier (wall at x = 28.75): narrow-bodies are 1:1, wide-bodies
+    // are fitted so the wingtip keeps ≥ 5m clearance from the pier (the only non-1:1 aircraft in the scene).
+    const s = Math.min(1, (28.75 - 5.0) / (spec.wingspanM * 0.5));
+    this.activeAc.scale.setScalar(s);
+    this.activeAcScale = s;
+    this.activeBlastZone = createJetBlastHazardZone3D(spec);
+    this.activeBlastZone.visible = false;
+    this.activeAc.add(this.activeBlastZone);
     this.activeAc.position.set(0, 0, 10);
     this.dynamicGroup.add(this.activeAc);
+    this._computeSpot7Layout(spec, s);
+  }
+
+  // All Spot 7 GSE / crew / chock / cone / PBB positions derived from the active aircraft's real door
+  // attach points → every vehicle docks at the correct door for EVERY aircraft type.
+  _computeSpot7Layout(spec, s) {
+    const ap = spec.attachPoints;
+    const Z0 = 10;
+    const r = spec.fuseRadius * s;
+    const W = id => Z0 + ap[id].z * s;
+    const noseZ = Z0 + spec.lengthM * 0.5 * s;
+    const tailZ = Z0 - spec.lengthM * 0.5 * s;
+    const halfSpan = spec.wingspanM * 0.5 * s;
+    const isBeltOnly = spec.gseCargoType === 'belt';
+    const beltDoor = isBeltOnly ? 'cargoFwd' : 'bulkDoor';
+    const L = {
+      s, r, noseZ, tailZ, halfSpan, isBeltOnly,
+      noseGearZ: W('noseGear'),
+      mainGearZ: Z0 + spec.mainGearZOffset * s,
+      mainGearX: spec.mainGearTrackX * s,
+      loader: { x: -r - 4.05, z: W('cargoFwd') },
+      belt: { x: -r - 4.0, z: W(beltDoor) },
+      gpu: { x: -r - 3.4, z: W('gpuPort') },
+      cat: { x: -r - 3.75, z: W('doorR1') },
+      fuel: { x: ap.fuelPort.dockX * s, z: W('fuelPort') },
+      lav: { x: -r - 2.9, z: W('lavPort') },
+      water: { x: r + 2.9, z: W('waterPort') },
+      tugCoupleZ: W('noseGear') + 7.1,
+      doorL1: { x: r + 0.25, z: W('doorL1'), h: ap.doorL1.y * s - 1.25 },
+      cargoSill: ap.cargoFwd.y * s
+    };
+    L.loaderStandby = { x: L.loader.x - 12.5, z: L.loader.z + 3.5 };
+    L.dolly = { x: L.loader.x - 6.8, z: L.loader.z - 0.5 };
+    L.beltStandby = { x: L.belt.x - 12.0, z: L.belt.z - 4.3 };
+    L.beltTractor = { x: L.belt.x - 6.2, z: L.belt.z - 0.6 };
+    L.gpuStandby = { x: -r - 15.5, z: noseZ + 6.5 };
+    L.catStandby = { x: -r - 16.5, z: L.cat.z + 7.5 };
+    L.fuelStandby = { x: L.fuel.x - 8.0, z: L.fuel.z - 26 };
+    L.lavStandby = { x: L.lav.x - 10, z: L.lav.z - 8 };
+    L.waterStandby = { x: L.water.x + 11, z: L.water.z - 7 };
+    L.tugStandby = { x: r + 12.5, z: noseZ + 8 };
+    this.spot7Layout = L;
+
+    // Chocks: nose gear fore/aft + both main gears
+    if (this.chocksGroup) {
+      const ch = this.chocksGroup.children;
+      const pts = [[0, L.noseGearZ + 0.85], [-L.mainGearX, L.mainGearZ + 1.1], [L.mainGearX, L.mainGearZ + 1.1]];
+      ch.forEach((c, i) => { if (pts[i]) c.position.set(pts[i][0], 0.21, pts[i][1]); });
+    }
+    // Cones: nose, both wingtips, both engine intakes
+    if (this.conesGroup) {
+      const eX = spec.engineSpanX * s, eZ = Z0 + (spec.engineZOffset + 3.2) * s;
+      const tipZ = L.mainGearZ - 3.0 * s;
+      const pts = [[0, noseZ + 2.5], [-(halfSpan + 1.0), tipZ], [halfSpan + 1.0, tipZ], [-eX, eZ], [eX, eZ]];
+      this.conesGroup.children.forEach((c, i) => { if (pts[i]) c.position.set(pts[i][0], 0.58, pts[i][1]); });
+    }
+    // PBB docks the real door L1 (port side)
+    if (this.spot7Pbb) {
+      const ud = this.spot7Pbb.userData;
+      ud.doorX = L.doorL1.x; ud.doorZ = L.doorL1.z; ud.doorH = Math.max(2.4, L.doorL1.h);
+      if (ud.leg) { ud.leg.scale.y = ud.doorH / 3.6; }
+      this.updatePbbExt(this.spot7Pbb, 1.0);
+    }
   }
 
   handlePointerHover(e) {
@@ -1666,24 +1809,30 @@ export class AirportScene3D {
 
   _animateSpot7GseFleet(isFlight, isOps3d, state, flightPose, tSec) {
     const lerp = (a, b, u) => a + (b - a) * Math.max(0, Math.min(1, u));
+    const ease = u => { const x = Math.max(0, Math.min(1, u)); return x * x * (3 - 2 * x); };
     const ph = state.flightPhaseIdx;
     const p = state.flightProgress || 0;
+    const L = this.spot7Layout;
+    const PI = Math.PI;
 
     const stage = (mesh, x, z, yaw) => {
       mesh.visible = !this.compact;
       mesh.position.set(x, 0, z);
       mesh.rotation.y = yaw;
     };
+    // Drive a vehicle from its ESA standby box to its docking point (u: 0 = standby, 1 = docked)
+    const drive = (mesh, from, to, yaw, u) => stage(mesh, lerp(from.x, to.x, ease(u)), lerp(from.z, to.z, ease(u)), yaw);
 
-    stage(this.spot7Gpu, -17.5, 34.5, Math.PI * 0.5);
-    stage(this.spot7Catering, -20.5, 30.5, 0);
-    stage(this.spot7DollyTrain, -20.0, 21.5, 0);
-    stage(this.spot7Belt, -17.8, -10.5, Math.PI / 2);
-    stage(this.spot7BeltTractor, -21.2, -13.5, 0);
-    stage(this.spot7Hydrant, -18.2, -17.5, 0);
-    stage(this.spot7Lav, -15.2, -18.5, Math.PI / 2);
-    stage(this.spot7Water, 16.5, -14.5, -Math.PI / 2);
-    stage(this.spot7Tug, 14.5, 36.5, -Math.PI / 2);
+    // Default: every vehicle waits in its ESA standby box outside the ERA
+    stage(this.spot7Gpu, L.gpuStandby.x, L.gpuStandby.z, PI * 0.5);
+    stage(this.spot7Catering, L.catStandby.x, L.catStandby.z, PI / 2);
+    stage(this.spot7DollyTrain, L.dolly.x - 6.0, L.dolly.z + 3.0, 0);
+    stage(this.spot7Belt, L.beltStandby.x, L.beltStandby.z, PI / 2);
+    stage(this.spot7BeltTractor, L.beltTractor.x - 6.0, L.beltTractor.z - 3.0, 0);
+    stage(this.spot7Hydrant, L.fuelStandby.x, L.fuelStandby.z, 0);
+    stage(this.spot7Lav, L.lavStandby.x, L.lavStandby.z, PI / 2);
+    stage(this.spot7Water, L.waterStandby.x, L.waterStandby.z, -PI / 2);
+    stage(this.spot7Tug, L.tugStandby.x, L.tugStandby.z, -PI / 2);
 
     const gpuUd = this.spot7Gpu.userData;
     const catUd = this.spot7Catering.userData;
@@ -1692,9 +1841,12 @@ export class AirportScene3D {
     const lavUd = this.spot7Lav.userData;
     const watUd = this.spot7Water.userData;
     const tugUd = this.spot7Tug.userData;
+    const ldUd = this.spot7Loader.userData;
+    const sillLift = Math.max(0.85, L.cargoSill - 0.12);
 
     if (gpuUd.cableGrp) gpuUd.cableGrp.visible = false;
     if (catUd.vanGroup) catUd.vanGroup.position.y = catUd.restY;
+    if (catUd.scissorPivot) catUd.scissorPivot.scale.y = 1;
     if (catUd.outriggers) catUd.outriggers.forEach(o => { o.group.visible = false; });
     if (beltUd.boomGroup) beltUd.boomGroup.rotation.x = -beltUd.restAng;
     if (beltUd.bags) beltUd.bags.forEach(b => { b.visible = false; });
@@ -1703,23 +1855,38 @@ export class AirportScene3D {
     if (lavUd.serviceHose) lavUd.serviceHose.visible = false;
     if (watUd.serviceHose) watUd.serviceHose.visible = false;
 
+    const loaderAt = (u, liftY, uldZ) => {
+      this.spot7Loader.visible = (!L.isBeltOnly || isOps3d) && !this.compact;
+      drive(this.spot7Loader, L.loaderStandby, L.loader, PI / 2, u);
+      ldUd.liftGroup.position.y = liftY;
+      ldUd.uldMesh.position.z = uldZ;
+    };
+    const dockBelt = (u, dir) => {
+      drive(this.spot7Belt, L.beltStandby, L.belt, PI / 2, u);
+      drive(this.spot7BeltTractor, { x: L.beltTractor.x - 6.0, z: L.beltTractor.z - 3.0 }, L.beltTractor, 0, u);
+      if (u >= 0.92 && beltUd.boomGroup) {
+        beltUd.boomGroup.rotation.x = -beltUd.dockAng;
+        beltUd.bags.forEach((b, bi) => {
+          b.visible = true;
+          const v = ((bi * 0.25 + tSec * 0.28 * dir) % 1.0 + 1.0) % 1.0;
+          b.position.z = 0.55 + v * (beltUd.boomLen - 1.1);
+        });
+      }
+    };
+    const dockGpu = u => {
+      drive(this.spot7Gpu, L.gpuStandby, L.gpu, PI * 0.35, u);
+      if (gpuUd.cableGrp) gpuUd.cableGrp.visible = u >= 0.95;
+    };
+
     if (this.compact) {
-      this.spot7Loader.position.set(-6.4, 0, 18.5);
-      this.spot7Loader.rotation.y = Math.PI / 2;
+      loaderAt(1, 0.85, -1.2);
       return { cargoOpen: false, galleyOpen: false };
     }
 
     if (isOps3d) {
       const ho = state.handsOn;
-      this.spot7Loader.visible = true;
-      this.spot7Loader.position.set(-6.4, 0, 18.5);
-      this.spot7Loader.rotation.y = Math.PI / 2;
-      this.spot7Loader.userData.liftGroup.position.y = 0.65 + ho.loaderH * 1.45;
-      this.spot7Loader.userData.uldMesh.position.z = ho.uldLoaded ? 3.8 : -1.2;
-      if (!ho.beaconOn && ho.chocksOn) {
-        stage(this.spot7Gpu, -5.4, 26.2, Math.PI * 0.35);
-        if (gpuUd.cableGrp) gpuUd.cableGrp.visible = true;
-      }
+      loaderAt(1, 0.65 + ho.loaderH * (sillLift - 0.65), ho.uldLoaded ? 3.8 : -1.2);
+      if (!ho.beaconOn && ho.chocksOn) dockGpu(1);
       return { cargoOpen: ho.loaderH > 0.2, galleyOpen: false };
     }
 
@@ -1727,109 +1894,83 @@ export class AirportScene3D {
       const drvSc = state.ngoLiveAc || null;
       const isDep = drvSc && (drvSc.mode === 'pushback' || drvSc.mode === 'taxi_cross' || drvSc.mode === 'runup');
       if (!isDep) {
-        this.spot7Loader.visible = true;
-        this.spot7Loader.position.set(-6.4, 0, 18.5);
-        this.spot7Loader.rotation.y = Math.PI / 2;
-        stage(this.spot7Gpu, -5.4, 26.2, Math.PI * 0.35);
-        if (gpuUd.cableGrp) gpuUd.cableGrp.visible = true;
-        stage(this.spot7Belt, -5.8, -6.2, Math.PI / 2);
+        loaderAt(1, sillLift, -1.2);
+        dockGpu(1);
+        dockBelt(1, 1);
       } else {
-        this.spot7Loader.position.set(-18.5, 0, 22.0);
-        this.spot7Loader.rotation.y = Math.PI / 2;
+        loaderAt(0, 0.85, -1.2);
         if (drvSc.mode === 'pushback' && flightPose === null) {
-          const noseX = drvSc.x + Math.cos(drvSc.heading) * 20.5;
-          const noseZ = drvSc.z + Math.sin(drvSc.heading) * 20.5;
-          stage(this.spot7Tug, noseX, noseZ, Math.PI / 2 - (drvSc.heading + Math.PI));
+          const nz = L.tugCoupleZ - 10;
+          const noseX = drvSc.x + Math.cos(drvSc.heading) * nz;
+          const noseZ = drvSc.z + Math.sin(drvSc.heading) * nz;
+          stage(this.spot7Tug, noseX, noseZ, PI / 2 - (drvSc.heading + PI));
         }
       }
       return { cargoOpen: !isDep, galleyOpen: false };
     }
 
     let cargoOpen = false, galleyOpen = false;
-    this.spot7Loader.visible = true;
 
     if (ph <= 1 || ph >= 9) {
-      this.spot7Loader.position.set(-18.5, 0, 22.0);
-      this.spot7Loader.rotation.y = Math.PI / 2;
-      this.spot7Loader.userData.liftGroup.position.y = 0.85;
-      this.spot7Loader.userData.uldMesh.position.z = -1.2;
+      loaderAt(0, 0.85, -1.2);
     } else if (ph === 2) {
-      const app = Math.min(1, p * 1.6);
-      stage(this.spot7Gpu, lerp(-17.5, -5.4, app), lerp(34.5, 26.2, app), Math.PI * 0.35);
-      if (gpuUd.cableGrp) gpuUd.cableGrp.visible = app >= 0.95;
-      this.spot7Loader.position.set(-18.5, 0, 22.0);
+      // Chocks on → GPU connects first (beacon OFF)
+      dockGpu(Math.min(1, p * 1.6));
+      loaderAt(0, 0.85, -1.2);
     } else if (ph === 3 || ph === 5) {
+      // Unload (3) / Load (5): high-lift loader + ULD dolly train at fwd hold, belt loader at bulk
       cargoOpen = true;
       const app = ph === 3 ? Math.min(1, p * 2.0) : 1.0;
-      stage(this.spot7Gpu, -5.4, 26.2, Math.PI * 0.35);
-      if (gpuUd.cableGrp) gpuUd.cableGrp.visible = true;
-
-      this.spot7Loader.position.set(lerp(-18.5, -6.4, app), 0, 18.5);
-      this.spot7Loader.rotation.y = Math.PI / 2;
+      dockGpu(1);
       const cyc = (tSec * 0.28) % 1.0;
       const liftFrac = cyc < 0.45 ? (cyc / 0.45) : (cyc < 0.7 ? 1.0 : Math.max(0, 1 - (cyc - 0.7) / 0.3));
-      this.spot7Loader.userData.liftGroup.position.y = app >= 0.95 ? (0.72 + liftFrac * 1.45) : 0.85;
-      this.spot7Loader.userData.uldMesh.position.z = (app >= 0.95 && cyc >= 0.42 && cyc < 0.72)
+      const uldZ = (app >= 0.95 && cyc >= 0.42 && cyc < 0.72)
         ? (ph === 5 ? (-1.2 + ((cyc - 0.42) / 0.3) * 4.2) : (3.0 - ((cyc - 0.42) / 0.3) * 4.2))
         : -1.2;
-
-      stage(this.spot7DollyTrain, lerp(-20.0, -12.8, app), 18.0, 0);
-      stage(this.spot7Belt, lerp(-17.8, -5.8, app), -6.2, Math.PI / 2);
-      stage(this.spot7BeltTractor, lerp(-21.2, -12.0, app), -6.8, 0);
-      if (app >= 0.92 && beltUd.boomGroup) {
-        beltUd.boomGroup.rotation.x = -beltUd.dockAng;
-        const dir = ph === 5 ? 1 : -1;
-        beltUd.bags.forEach((b, bi) => {
-          b.visible = true;
-          const u = ((bi * 0.25 + tSec * 0.28 * dir) % 1.0 + 1.0) % 1.0;
-          b.position.z = 0.55 + u * (beltUd.boomLen - 1.1);
-        });
-      }
+      loaderAt(app, app >= 0.95 ? (0.72 + liftFrac * (sillLift - 0.72)) : 0.85, uldZ);
+      if (!L.isBeltOnly) drive(this.spot7DollyTrain, { x: L.dolly.x - 6.0, z: L.dolly.z + 3.0 }, L.dolly, 0, app);
+      dockBelt(app, ph === 5 ? 1 : -1);
     } else if (ph === 4) {
+      // Servicing: catering R1, hydrant fuel under starboard wing, lav & potable water at aft panels
       cargoOpen = true;
       galleyOpen = true;
       const app = Math.min(1, p * 2.0);
-      stage(this.spot7Gpu, -5.4, 26.2, Math.PI * 0.35);
-      if (gpuUd.cableGrp) gpuUd.cableGrp.visible = true;
-
-      this.spot7Loader.position.set(-6.4, 0, 18.5);
-      this.spot7Loader.rotation.y = Math.PI / 2;
-      this.spot7Loader.userData.liftGroup.position.y = 2.10;
-
-      stage(this.spot7Catering, lerp(-20.5, -5.6, app), 22.8, Math.PI / 2);
+      dockGpu(1);
+      loaderAt(1, sillLift, -1.2);
+      drive(this.spot7Catering, L.catStandby, L.cat, PI / 2, app);
       if (app >= 0.92 && catUd.vanGroup) {
-        const liftAmt = Math.min(1, (p - 0.45) * 2.5);
-        catUd.vanGroup.position.y = lerp(catUd.restY, catUd.dockFloorY, liftAmt);
+        const liftAmt = Math.min(1, Math.max(0, (p - 0.45) * 2.5));
+        const dockY = Math.max(catUd.restY, L.doorL1.h + 0.98); // van floor 19cm below R1 sill
+        catUd.vanGroup.position.y = lerp(catUd.restY, dockY, liftAmt);
         catUd.scissorPivot.scale.y = Math.max(0.3, catUd.vanGroup.position.y - 0.92);
         catUd.outriggers.forEach(o => { o.group.visible = true; o.group.scale.x = 1.0; });
       }
-
-      stage(this.spot7Hydrant, lerp(-18.2, -10.5, app), lerp(-17.5, 8.8, app), 0);
+      drive(this.spot7Hydrant, L.fuelStandby, L.fuel, 0, app);
       if (app >= 0.92 && fuelUd.fuelHookups) {
         fuelUd.fuelHookups.visible = true;
         fuelUd.liftDeck.position.y = fuelUd.dockDeckY;
       }
-
-      stage(this.spot7Lav, lerp(-15.2, -5.4, app), -10.2, Math.PI / 2);
+      drive(this.spot7Lav, L.lavStandby, L.lav, PI / 2, app);
       if (app >= 0.92 && lavUd.serviceHose) { lavUd.serviceHose.visible = true; lavUd.serviceLift.position.y = lavUd.dockLiftY; }
-
-      stage(this.spot7Water, lerp(16.5, 5.6, app), -7.8, -Math.PI / 2);
+      drive(this.spot7Water, L.waterStandby, L.water, -PI / 2, app);
       if (app >= 0.92 && watUd.serviceHose) { watUd.serviceHose.visible = true; watUd.serviceLift.position.y = watUd.dockLiftY; }
     } else if (ph === 6) {
-      stage(this.spot7Gpu, lerp(-5.4, -17.5, p), lerp(26.2, 34.5, p), Math.PI * 0.5);
-      this.spot7Loader.position.set(lerp(-6.4, -18.5, p), 0, lerp(18.5, 22.0, p));
-      this.spot7Loader.userData.liftGroup.position.y = 0.85;
-      stage(this.spot7Belt, lerp(-5.8, -17.8, p), lerp(-6.2, -10.5, p), Math.PI / 2);
-      stage(this.spot7Tug, lerp(14.5, 0, Math.min(1, p * 1.4)), lerp(36.5, 31.2, p), Math.PI);
+      // Departure prep: GSE withdraws to ESA, pushback tug couples to nose gear
+      dockGpu(1 - p);
+      loaderAt(1 - p, 0.85, -1.2);
+      dockBelt(1 - p, 1);
+      const tugU = Math.min(1, p * 1.4);
+      stage(this.spot7Tug, lerp(L.tugStandby.x, 0, ease(tugU)), lerp(L.tugStandby.z, L.tugCoupleZ, ease(tugU)), tugU > 0.6 ? PI : -PI / 2 + (PI / 2) * ease((tugU - 0.2) / 0.4));
     } else if (ph === 7 && flightPose) {
-      this.spot7Loader.position.set(-18.5, 0, 22.0);
+      loaderAt(0, 0.85, -1.2);
       const ac = flightPose.ac;
-      const noseX = ac.x + Math.cos(ac.heading) * 21.2;
-      const noseZ = ac.z + Math.sin(ac.heading) * 21.2;
-      stage(this.spot7Tug, noseX, noseZ, Math.PI / 2 - (ac.heading + Math.PI));
+      const nz = L.tugCoupleZ - 10;
+      const noseX = ac.x + Math.cos(ac.heading) * nz;
+      const noseZ = ac.z + Math.sin(ac.heading) * nz;
+      stage(this.spot7Tug, noseX, noseZ, PI / 2 - (ac.heading + PI));
       if (tugUd.beacon) tugUd.beacon.visible = Math.floor(tSec * 4.5) % 2 === 0;
     } else if (ph === 8) {
-      this.spot7Loader.position.set(-18.5, 0, 22.0);
+      loaderAt(0, 0.85, -1.2);
       const u = Math.min(1, p * 2.5);
       stage(this.spot7Tug, lerp(-16, -24, u), lerp(-58, -38, u), 0);
     }
@@ -1850,21 +1991,23 @@ export class AirportScene3D {
     this.crewFueler.visible = false;
 
     const demoSig = state.marshallerDemoSignal;
+    const L = this.spot7Layout;
+    const tipX = L.halfSpan + 1.5, tipZ = L.mainGearZ - 1.5;
 
     if (!isFlight) {
-      this.crewMarshaller.position.set(0, 0, 33.0);
+      this.crewMarshaller.position.set(0, 0, L.noseZ + 6.0);
       this.crewMarshaller.rotation.y = Math.PI;
       animateCrewSignal(this.crewMarshaller, demoSig || (acPose.beaconOn ? 'm_stop' : 'm_chocks'), tSec);
 
-      this.crewWingL.position.set(22.2, 0, 8.5);
+      this.crewWingL.position.set(tipX, 0, tipZ);
       this.crewWingL.rotation.y = Math.PI;
       animateCrewSignal(this.crewWingL, 'watchman_clear', tSec);
 
-      this.crewWingR.position.set(-22.2, 0, 8.5);
+      this.crewWingR.position.set(-tipX, 0, tipZ);
       this.crewWingR.rotation.y = Math.PI;
       animateCrewSignal(this.crewWingR, 'watchman_clear', tSec);
 
-      this.crewHeadset.position.set(-5.2, 0, 24.5);
+      this.crewHeadset.position.set(-(L.r + 1.6), 0, L.noseGearZ + 0.4);
       this.crewHeadset.rotation.y = Math.PI * 0.65;
       animateCrewSignal(this.crewHeadset, isOps3d ? 'point_and_call' : 'm_allclear', tSec);
 
@@ -1879,108 +2022,109 @@ export class AirportScene3D {
     const p = state.flightProgress || 0;
 
     if (ph === 0) {
-      this.crewMarshaller.position.set(11.5, 0, 36.5);
+      this.crewMarshaller.position.set(11.5, 0, L.noseZ + 8.5);
       this.crewMarshaller.rotation.y = Math.PI;
       animateCrewSignal(this.crewMarshaller, demoSig || 'm_stop', tSec);
 
-      this.crewWingL.position.set(15.5, 0, 35.5);
+      this.crewWingL.position.set(15.5, 0, L.noseZ + 7.5);
       this.crewWingL.rotation.y = Math.PI;
       animateCrewSignal(this.crewWingL, 'm_stop', tSec);
 
-      this.crewWingR.position.set(-15.5, 0, 35.5);
+      this.crewWingR.position.set(-15.5, 0, L.noseZ + 7.5);
       this.crewWingR.rotation.y = Math.PI;
       animateCrewSignal(this.crewWingR, 'm_stop', tSec);
 
-      this.crewHeadset.position.set(-12.5, 0, 36.5);
+      this.crewHeadset.position.set(-12.5, 0, L.noseZ + 8.5);
       this.crewHeadset.rotation.y = Math.PI;
       animateCrewSignal(this.crewHeadset, 'point_and_call', tSec);
     } else if (ph === 1) {
-      this.crewMarshaller.position.set(0, 0, 33.5);
+      this.crewMarshaller.position.set(0, 0, L.noseZ + 6.5);
       this.crewMarshaller.rotation.y = Math.PI;
       const mSig = demoSig || (p < 0.72 ? 'm_straight' : (p < 0.92 ? 'm_slow' : 'm_stop'));
       animateCrewSignal(this.crewMarshaller, mSig, tSec);
 
-      this.crewWingL.position.set(22.5, 0, 8.0);
+      this.crewWingL.position.set(tipX, 0, tipZ);
       this.crewWingL.rotation.y = Math.PI;
       animateCrewSignal(this.crewWingL, 'watchman_clear', tSec);
 
-      this.crewWingR.position.set(-22.5, 0, 8.0);
+      this.crewWingR.position.set(-tipX, 0, tipZ);
       this.crewWingR.rotation.y = Math.PI;
       animateCrewSignal(this.crewWingR, 'watchman_clear', tSec);
 
-      this.crewHeadset.position.set(-13.5, 0, 35.5);
+      this.crewHeadset.position.set(-13.5, 0, L.noseZ + 7.5);
       this.crewHeadset.rotation.y = Math.PI * 0.75;
       animateCrewSignal(this.crewHeadset, 'm_stop', tSec);
     } else if (ph === 2) {
-      this.crewMarshaller.position.set(0, 0, 33.5);
+      this.crewMarshaller.position.set(0, 0, L.noseZ + 6.5);
       this.crewMarshaller.rotation.y = Math.PI;
       animateCrewSignal(this.crewMarshaller, demoSig || 'm_chocks', tSec);
 
-      this.crewHeadset.position.set(-3.2, 0, 24.8);
+      this.crewHeadset.position.set(-(L.r + 1.2), 0, L.noseGearZ + 0.6);
       this.crewHeadset.rotation.y = Math.PI * 0.55;
       animateCrewSignal(this.crewHeadset, 'point_and_call', tSec);
 
-      this.crewWingL.position.set(12.0, 0, 23.5);
+      this.crewWingL.position.set(L.r + 8.0, 0, L.noseGearZ - 1.0);
       this.crewWingL.rotation.y = -Math.PI * 0.5;
       animateCrewSignal(this.crewWingL, 'point_and_call', tSec);
 
-      this.crewWingR.position.set(-8.5, 0, 26.5);
+      this.crewWingR.position.set(-(L.r + 6.5), 0, L.noseGearZ + 2.0);
       this.crewWingR.rotation.y = Math.PI * 0.4;
       animateCrewSignal(this.crewWingR, 'guideman_beckon', tSec);
     } else if (ph >= 3 && ph <= 5) {
-      this.crewMarshaller.position.set(12.5, 0, 25.5);
+      this.crewMarshaller.position.set(L.r + 10.5, 0, L.noseGearZ + 1.0);
       this.crewMarshaller.rotation.y = -Math.PI * 0.5;
       animateCrewSignal(this.crewMarshaller, demoSig || 'point_and_call', tSec);
 
-      this.crewHeadset.position.set(-4.2, 0, 25.5);
+      this.crewHeadset.position.set(-(L.r + 2.2), 0, L.noseGearZ + 1.0);
       this.crewHeadset.rotation.y = Math.PI * 0.45;
       animateCrewSignal(this.crewHeadset, 'point_and_call', tSec);
 
-      this.crewWingL.position.set(8.5, 0, -6.5);
+      this.crewWingL.position.set(L.water.x + 3.0, 0, L.water.z - 2.0);
       this.crewWingL.rotation.y = -Math.PI * 0.65;
       animateCrewSignal(this.crewWingL, ph === 4 ? 'point_and_call' : 'spotter_clear', tSec);
 
-      this.crewWingR.position.set(-9.5, 0, ph === 4 ? 25.5 : 21.8);
+      this.crewWingR.position.set(-(L.r + 7.5), 0, ph === 4 ? L.cat.z + 2.0 : L.loader.z + 3.3);
       this.crewWingR.rotation.y = -Math.PI * 0.75;
       animateCrewSignal(this.crewWingR, p < 0.45 ? 'guideman_beckon' : 'point_and_call', tSec);
 
       this.crewLoadmaster.visible = (ph === 3 || ph === 5);
-      this.crewLoadmaster.position.set(-12.2, 0, 12.8);
+      this.crewLoadmaster.position.set(L.loader.x - 5.8, 0, L.loader.z - 5.7);
       this.crewLoadmaster.rotation.y = Math.PI * 0.42;
       animateCrewSignal(this.crewLoadmaster, 'point_and_call', tSec);
 
       this.crewFueler.visible = (ph === 4);
-      this.crewFueler.position.set(-13.4, 0, 9.2);
+      this.crewFueler.position.set(L.fuel.x - 2.9, 0, L.fuel.z + 0.4);
       this.crewFueler.rotation.y = Math.PI * 0.45;
       animateCrewSignal(this.crewFueler, 'point_and_call', tSec);
     } else if (ph === 6) {
       const ang = p * Math.PI * 1.4;
-      this.crewHeadset.position.set(-Math.cos(ang) * 6.5, 0, 14 + Math.sin(ang) * 14);
+      this.crewHeadset.position.set(-Math.cos(ang) * (L.r + 3.5), 0, 10 + Math.sin(ang) * (L.noseZ - 8));
       this.crewHeadset.rotation.y = Math.atan2(this.crewHeadset.position.x, 10 - this.crewHeadset.position.z);
       animateCrewSignal(this.crewHeadset, 'point_and_call', tSec);
 
-      this.crewMarshaller.position.set(13.5, 0, 34.5);
+      this.crewMarshaller.position.set(13.5, 0, L.noseZ + 6.0);
       animateCrewSignal(this.crewMarshaller, demoSig || 'm_allclear', tSec);
-      this.crewWingL.position.set(22.5, 0, 8.0);
+      this.crewWingL.position.set(tipX, 0, tipZ);
       animateCrewSignal(this.crewWingL, 'watchman_clear', tSec);
-      this.crewWingR.position.set(-22.5, 0, 8.0);
+      this.crewWingR.position.set(-tipX, 0, tipZ);
       animateCrewSignal(this.crewWingR, 'watchman_clear', tSec);
     } else if (ph === 7 && flightPose) {
       const ac = flightPose.ac;
       const yaw3d = Math.PI / 2 - ac.heading;
-      const noseX = ac.x + Math.cos(ac.heading) * 19.5;
-      const noseZ = ac.z + Math.sin(ac.heading) * 19.5;
+      const noseOff = L.noseZ - 10 - 1.5;
+      const noseX = ac.x + Math.cos(ac.heading) * noseOff;
+      const noseZ = ac.z + Math.sin(ac.heading) * noseOff;
       const portDX = -Math.sin(ac.heading), portDZ = Math.cos(ac.heading);
 
       this.crewHeadset.position.set(noseX + portDX * 5.2, 0, noseZ + portDZ * 5.2);
       this.crewHeadset.rotation.y = yaw3d + Math.PI;
       animateCrewSignal(this.crewHeadset, 'walk_escort', tSec);
 
-      this.crewWingL.position.set(ac.x + portDX * 21.5, 0, ac.z + portDZ * 21.5);
+      this.crewWingL.position.set(ac.x + portDX * tipX, 0, ac.z + portDZ * tipX);
       this.crewWingL.rotation.y = yaw3d + Math.PI;
       animateCrewSignal(this.crewWingL, 'walk_escort', tSec);
 
-      this.crewWingR.position.set(ac.x - portDX * 21.5, 0, ac.z - portDZ * 21.5);
+      this.crewWingR.position.set(ac.x - portDX * tipX, 0, ac.z - portDZ * tipX);
       this.crewWingR.rotation.y = yaw3d + Math.PI;
       animateCrewSignal(this.crewWingR, 'walk_escort', tSec);
 
@@ -2004,13 +2148,13 @@ export class AirportScene3D {
         animateCrewSignal(cr, 'wave_off', tSec);
       });
     } else {
-      this.crewMarshaller.position.set(11.5, 0, 36.5);
+      this.crewMarshaller.position.set(11.5, 0, L.noseZ + 8.5);
       animateCrewSignal(this.crewMarshaller, demoSig || 'wave_off', tSec);
-      this.crewHeadset.position.set(-12.5, 0, 36.5);
+      this.crewHeadset.position.set(-12.5, 0, L.noseZ + 8.5);
       animateCrewSignal(this.crewHeadset, 'wave_off', tSec);
-      this.crewWingL.position.set(15.5, 0, 35.5);
+      this.crewWingL.position.set(15.5, 0, L.noseZ + 7.5);
       animateCrewSignal(this.crewWingL, 'wave_off', tSec);
-      this.crewWingR.position.set(-15.5, 0, 35.5);
+      this.crewWingR.position.set(-15.5, 0, L.noseZ + 7.5);
       animateCrewSignal(this.crewWingR, 'wave_off', tSec);
     }
   }
@@ -2248,16 +2392,58 @@ export class AirportScene3D {
         backingBay: isBack ? (state.backingBay || { cx: 218, cz: 26 }) : null,
         trailerPose: isBack && Array.isArray(state.cartPoses) && state.cartPoses[0] ? state.cartPoses[0] : state.veh
       };
+      const L = this.spot7Layout;
+      const spec = (this.activeAc && this.activeAc.userData.spec) || AIRCRAFT_3D_SPECS.A320;
+      const sc = this.activeAcScale || 1;
+      const crewPos = c => (c && c.visible ? [c.position.x, c.position.z] : null);
+      camExtra.acInfo = { halfL: spec.lengthM * 0.5 * sc, cockpitY: (spec.bellyClearanceM + spec.fuseRadius * 1.45) * sc };
+      camExtra.noseZ = L ? L.noseZ : 29;
+      camExtra.cargoDoor = L ? [L.loader.x + 4.0, Math.max(1.6, L.cargoSill), L.loader.z] : null;
+      camExtra.crew = {
+        marshaller: crewPos(this.crewMarshaller),
+        headset: crewPos(this.crewHeadset),
+        loadmaster: crewPos(this.crewLoadmaster)
+      };
       targetCam = computeViewpointCamera(state.camMode, isFlight, flightPose, state.veh, state.cam, state.flightPhaseIdx, camExtra);
     }
 
+    // ---- Camera rig: time-based damping + short eased cut between viewpoints (no fly-through) ----
+    const nowMs = now || performance.now();
+    const dt = this._lastCamMs ? Math.min(0.1, Math.max(0.001, (nowMs - this._lastCamMs) / 1000)) : 0.016;
+    this._lastCamMs = nowMs;
+    const tp = targetCam.pos, tt = targetCam.target;
+    tp[1] = Math.max(1.3, tp[1]); // never below eye height / ground
+    const modeKey = `${state.camMode}|${state.subtab}`;
     if (!this.smoothCam || state.dragging) {
-      this.smoothCam = { pos: [...targetCam.pos], target: [...targetCam.target], fov: targetCam.fov };
-    } else {
-      const k = 0.16;
+      this.smoothCam = { pos: [...tp], target: [...tt], fov: targetCam.fov };
+      this._camTrans = null;
+    } else if (modeKey !== this._camModeKey) {
+      const jump = Math.hypot(tp[0] - this.smoothCam.pos[0], tp[1] - this.smoothCam.pos[1], tp[2] - this.smoothCam.pos[2]);
+      // Far jumps (e.g. island overview → marshaller) cut instantly; near ones blend in 0.6s
+      this._camTrans = jump > 450 ? null : { from: { pos: [...this.smoothCam.pos], target: [...this.smoothCam.target], fov: this.smoothCam.fov }, t: 0, dur: 0.6 };
+      if (!this._camTrans) this.smoothCam = { pos: [...tp], target: [...tt], fov: targetCam.fov };
+    }
+    this._camModeKey = modeKey;
+    if (this._camTrans) {
+      const tr = this._camTrans;
+      tr.t += dt;
+      const u0 = Math.min(1, tr.t / tr.dur);
+      const u = u0 * u0 * (3 - 2 * u0);
       for (let i = 0; i < 3; i++) {
-        this.smoothCam.pos[i] += (targetCam.pos[i] - this.smoothCam.pos[i]) * k;
-        this.smoothCam.target[i] += (targetCam.target[i] - this.smoothCam.target[i]) * k;
+        this.smoothCam.pos[i] = tr.from.pos[i] + (tp[i] - tr.from.pos[i]) * u;
+        this.smoothCam.target[i] = tr.from.target[i] + (tt[i] - tr.from.target[i]) * u;
+      }
+      this.smoothCam.fov = tr.from.fov + (targetCam.fov - tr.from.fov) * u;
+      if (u0 >= 1) this._camTrans = null;
+    } else if (!state.dragging) {
+      // Attached first-person views are rigid; follow / overview cameras ease gently
+      const pk = targetCam.povKind;
+      const rate = (pk === 'pilot' || pk === 'gse_cab' || pk === 'headset' || pk === 'marshaller' || pk === 'loadmaster') ? 16
+        : (pk === 'orbit' ? 12 : (pk === 'flight_follow' || pk === 'chase' || pk === 'backing' ? 4.5 : 6));
+      const k = 1 - Math.exp(-rate * dt);
+      for (let i = 0; i < 3; i++) {
+        this.smoothCam.pos[i] += (tp[i] - this.smoothCam.pos[i]) * k;
+        this.smoothCam.target[i] += (tt[i] - this.smoothCam.target[i]) * Math.min(1, k * 1.6);
       }
       this.smoothCam.fov += (targetCam.fov - this.smoothCam.fov) * k;
     }
@@ -2272,11 +2458,16 @@ export class AirportScene3D {
     this.camera.lookAt(...this.smoothCam.target);
     if (this.skyMesh) this.skyMesh.position.set(this.camera.position.x, 0, this.camera.position.z);
 
+    // First-person crew POV: hide that crew member's own body/arms so they never block the lens
+    const povOwner = { marshaller: this.crewMarshaller, headset: this.crewHeadset, loadmaster: this.crewLoadmaster }[targetCam.povKind];
+    const hideOwner = Boolean(povOwner && povOwner.visible);
+    if (hideOwner) povOwner.visible = false;
     if (this.composer && state.gfxQuality !== 'low') {
       this.composer.render();
     } else {
       this.renderer.render(this.scene, this.camera);
     }
+    if (hideOwner) povOwner.visible = true;
 
     if (this.hudCanvas && !this.compact) {
       this.renderHudOverlay(state, W, H, dpr, targetCam.povKind, flightPose, now);
@@ -2353,22 +2544,29 @@ export class AirportScene3D {
       state.handsOn.fods.filter(f => !f.cleared).forEach(f => {
         drawTag([f.x, 1.8, f.z], `⚠ CLICK FOD ${f.id}`, 'rgba(225,29,72,0.95)', '#FEF08A', 2);
       });
-      drawTag([10, 6.2, 21.5], 'CLICK: PBB Dock', 'rgba(14,116,144,0.88)', '#FFF', 1);
-      drawTag([-6.4, 4.5, 18.5], 'CLICK: High-Loader', 'rgba(14,116,144,0.88)', '#FFF', 1);
+      drawTag([this.spot7Layout ? this.spot7Layout.doorL1.x + 8 : 10, 6.2, this.spot7Layout ? this.spot7Layout.doorL1.z : 21.5], 'CLICK: PBB Dock', 'rgba(14,116,144,0.88)', '#FFF', 1);
+      drawTag([this.spot7Loader.position.x, 4.5, this.spot7Loader.position.z], 'CLICK: High-Loader', 'rgba(14,116,144,0.88)', '#FFF', 1);
     } else if (state.subtab === 'flight' && flightPose) {
       const ph = A3D_FLIGHT_PHASES[state.flightPhaseIdx];
       const phTag = lang === 'ja' ? ph.tagJa : (lang === 'en' ? (ph.tagEn || ph.id.toUpperCase()) : ph.tagVi);
       if (povKind !== 'pilot') {
         drawTag([flightPose.ac.x, flightPose.ac.y + 12.8, flightPose.ac.z], `✈ ${state.fleetAircraftId} (${ap.id} Spot 7) · ${phTag}`, 'rgba(14,116,144,0.92)', '#FFF', 2);
       }
+      // Pin each role label onto the nearest real 3D crew member (greedy, ≤ 18m) so labels never float in empty space
+      const meshes = [this.crewMarshaller, this.crewWingL, this.crewWingR, this.crewHeadset, this.crewLoadmaster, this.crewFueler]
+        .filter(m => m && m.visible).map(m => ({ x: m.position.x, z: m.position.z, used: false }));
       (flightPose.crew || []).forEach(cr => {
         const lbl = lang === 'ja' ? cr.labelJa : (lang === 'en' ? (cr.labelEn || cr.labelVi) : cr.labelVi);
-        drawTag([cr.x, 3.2, cr.z], `🦺 ${lbl}`, cr.pin ? 'rgba(220,38,38,0.94)' : 'rgba(15,23,42,0.86)', cr.pin ? '#FEF08A' : '#E2E8F0', cr.pin ? 2 : 1);
+        let best = null, bestD = 18;
+        meshes.forEach(m => { const d = Math.hypot(m.x - cr.x, m.z - cr.z); if (!m.used && d < bestD) { bestD = d; best = m; } });
+        if (!best) return; // no crew member there → no orphan label
+        best.used = true;
+        drawTag([best.x, 3.2, best.z], `🦺 ${lbl}`, cr.pin ? 'rgba(220,38,38,0.94)' : 'rgba(15,23,42,0.86)', cr.pin ? '#FEF08A' : '#E2E8F0', cr.pin ? 2 : 1);
       });
     }
     if (povKind !== 'pilot' && povKind !== 'gse_cab') {
       drawTag([0, 4.5, -580], `${ap.id} RWY ${ap.rwy} (3,500m × 60m)`, 'rgba(185,28,28,0.90)', '#FFF', 2);
-      drawTag([-146, 92, 227], `${ap.twr} (86.75m)`, 'rgba(15,23,42,0.88)', '#FFF', 1);
+      drawTag([330, 92, 175], `${ap.twr} (86.75m)`, 'rgba(15,23,42,0.88)', '#FFF', 1);
       drawTag([46, 19.5, -145], '300m CENTER PIER · SKY DECK (#8–#18)', 'rgba(27,79,156,0.90)', '#FFF', 1);
       drawTag([-762, 18, 131], 'T2 LCC (#71–#80)', 'rgba(2,132,199,0.88)', '#FFF', 1);
       drawTag([-495, 24, 185], 'FLIGHT OF DREAMS', 'rgba(15,23,42,0.88)', '#FDE68A', 1);
