@@ -1,5 +1,5 @@
 // Aviation Ops Sim JP Pro — Offline-First Service Worker (PWA)
-const CACHE_NAME = 'aviation-ops-sim-jp-pro-v23';
+const CACHE_NAME = 'aviation-ops-sim-jp-pro-v24';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -57,19 +57,29 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Cache-first with background refresh; also caches Three.js ESM CDN modules for 100% offline reuse!
+// Network-first for the app's own code/pages (so a new deploy shows up on the next open),
+// cache-first for heavy static assets (GLB models, vendor libs, images). Offline → cache fallback.
+const HEAVY = /\.(glb|gltf|png|jpe?g|webp|svg|woff2?|mp3|wav)$|\/vendor\//i;
+
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  const putCache = resp => {
+    if (resp && (resp.status === 200 || resp.type === 'cors')) {
+      const clone = resp.clone();
+      caches.open(CACHE_NAME).then(c => c.put(req, clone)).catch(() => {});
+    }
+    return resp;
+  };
+  if (url.origin === location.origin && !HEAVY.test(url.pathname)) {
+    event.respondWith(
+      fetch(req, { cache: 'no-cache' }).then(putCache).catch(() =>
+        caches.match(req).then(c => c || caches.match('./index.html')))
+    );
+    return;
+  }
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      const networkFetch = fetch(event.request).then(resp => {
-        if (resp && (resp.status === 200 || resp.type === 'cors')) {
-          const clone = resp.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
-        }
-        return resp;
-      }).catch(() => cached);
-      return cached || networkFetch;
-    })
+    caches.match(req).then(cached => cached || fetch(req).then(putCache).catch(() => cached))
   );
 });
