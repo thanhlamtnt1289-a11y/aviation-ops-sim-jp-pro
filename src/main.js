@@ -35,7 +35,7 @@ const MODULE_TITLES = {
   pax: ['B. 旅客サービス（搭乗手続・手荷物・PRM）', 'B. Dịch vụ Hành khách (Check-in, Hành lý, PRM)', 'B. Passenger Service (Check-in, Baggage, PRM)'],
   cargo: ['C. 3D ULDビルドアップ実技ゲーム・航空貨物・IATA危険物', 'C. Trò chơi Đóng hàng ULD 3D thực tế, Hàng hóa & IATA DGR', 'C. Realistic 3D ULD Build-up Sim, Air Cargo & IATA DGR'],
   safety: ['E. 安全管理・FOD・コンプライアンス（JCAB/SMS）', 'E. An toàn Sân đỗ, FOD & Luật JCAB/SMS', 'E. Safety, FOD & Compliance (JCAB/SMS)'],
-  quiz: ['F. 特定技能 ＆ NGO車両運転講習 総合試験（160問）', 'F. Ôn thi Kỹ năng Đặc định & Bằng lái Sân đỗ NGO (160 câu)', 'F. SSW & NGO Airside Driving Exam Suite (160 Qs)'],
+  quiz: ['F. 特定技能 ＆ NGO車両運転講習 総合試験（342問）', 'F. Ôn thi Kỹ năng Đặc định & Bằng lái Sân đỗ NGO (342 câu)', 'F. SSW & NGO Airside Driving Exam Suite (342 Qs)'],
   ops: ['H. マーシャリング・ライトガン・MCA無線・音声辞典', 'H. Marshalling, Light Gun, MCA Radio & Từ điển', 'H. Marshalling, Light Gun, MCA Radio & Dictionary']
 };
 

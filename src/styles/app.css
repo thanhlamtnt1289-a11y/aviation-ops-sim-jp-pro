@@ -2246,3 +2246,13 @@ body.level-basic .pro-only { display: none !important; }
 }
 .roadmap-item:hover { border-color: var(--accent-border); }
 .roadmap-item.exam { border-style: dashed; font-weight: 700; }
+
+/* Source line under quiz explanations */
+.q-src { display:block; margin-top:6px; font-size:11px; color:var(--text-secondary); word-break:keep-all; overflow-wrap:break-word; }
+
+/* Quiz topic chips grouped by stage */
+.qz-topic-groups { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+.qz-topic-row { display:grid; grid-template-columns:170px 1fr; gap:10px; align-items:start; }
+.qz-topic-label { font-size:11px; font-weight:700; letter-spacing:.02em; color:var(--text-secondary); padding-top:7px; word-break:keep-all; overflow-wrap:break-word; }
+.qz-topic-chips { display:flex; gap:6px; flex-wrap:wrap; }
+@media (max-width: 720px) { .qz-topic-row { grid-template-columns:1fr; gap:4px; } .qz-topic-label { padding-top:0; } }
