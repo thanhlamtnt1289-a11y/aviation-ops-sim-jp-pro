@@ -200,7 +200,7 @@ export const QUIZ_BANK_TG2 = [
   },
   {
     id: 'T2Q008', topic: 'tg2_loadcontrol', level: 2,
-    qJa: '到着機の取卸し時、前部貨物室（FWD Hold）より先に後部貨物室（AFT Hold）から一気に出すべきでない（または前部から降ろすべきでない）など「取卸順序」が指定される主な理由は？',
+    qJa: '到着機の取卸し時、「後部貨物室にまだ重い搭載物が残っている状態で前部貨物室だけを先に空にしない」など、LIRで取卸順序が厳しく指定される主な理由は？',
     qVi: 'Khi dỡ hàng tàu đến, tại sao LIR thường quy định chặt chẽ thứ tự dỡ hầm trước/hầm sau (ví dụ không dỡ hết khoang trước khi khoang sau còn nặng)?',
     qEn: 'Why does an offload LIR specify strict hold/position unloading sequences (such as not emptying the forward hold while the aft hold remains heavy)?',
     optsJa: [
@@ -738,23 +738,23 @@ export const QUIZ_BANK_TG2 = [
     optsJa: [
       'ピット蓋が開いていても中に整備員がいなければ、そのままタイヤで跨いで通過してよい',
       '金属製のピット蓋は高強度なため、ハイリフト車のアウトリガーを真上に降ろすと安定する',
-      '白枠のハイドラントピット上は給油作業以外の時間帯であればGSEの標準駐車枠となる',
+      'ハイドラントピットの上は、給油作業が行われていない時間帯であればGSEの駐車枠として使える',
       'ピット蓋上への駐停車やアウトリガー設置を禁じ、緊急遮断弁のアクセスを確保する'
     ],
     optsVi: [
       'Kể cả khi nắp hố đang mở, nếu không thấy kỹ thuật viên bên trong thì cứ lái xe băng qua',
       'Nắp hố thép chịu lực cao nên hạ chân chống xe High-Lift đè thẳng lên nắp sẽ vững chắc hơn',
-      'Ô hố trắng Hydrant là vị trí đỗ tiêu chuẩn cho xe hành lý khi không có hoạt động tra dầu',
+      'Nắp hố Hydrant có thể dùng làm chỗ đỗ xe GSE trong lúc không có hoạt động tra dầu',
       'Cấm đỗ xe hay đặt chân chống lên nắp hố ngầm để tránh sập nắp và giữ lối van ngắt khẩn'
     ],
     optsEn: [
       'Drive straight over open utility pit covers whenever no technician is working inside',
       'Lower hydraulic loader outriggers directly onto steel pit covers for firmer ground support',
-      'Use white hydrant fuel pits as standard baggage-tractor parking outside fueling windows',
+      'Hydrant pits may be used as GSE parking whenever no fueling is in progress',
       'Never park or set outriggers on pit covers to avoid damage and preserve shutoff access'
     ],
     ans: 3,
-    expJa: '地下ピット（白＝燃料、青＝GPU電力、黄＝PC-Air、赤＝アース等）の上への駐停車は、緊急時の燃料遮断弁（Emergency Shut-off）操作を妨げ、また蓋破損によるFOD・陥没事故を招きます。',
+    expJa: '地下ピット（給油・GPU電力・PC-Air等）の上への駐停車は、緊急時の燃料遮断弁（Emergency Shut-off）操作を妨げ、また蓋破損によるFOD・陥没事故を招きます。',
     expVi: 'Đỗ xe đè lên nắp hố ngầm làm hỏng nắp tạo FOD và đặc biệt cản trở tiếp cận van ngắt nhiên liệu khẩn cấp khi có sự cố cháy nổ lúc tra dầu.',
     expEn: 'Parking over utility pits risks structural cover failure and blocks rapid access to emergency fuel shutoff valves or electrical disconnects.'
   },
@@ -876,27 +876,27 @@ export const QUIZ_BANK_TG2 = [
     qVi: 'Để tránh nguy cơ luồng phản lực (ジェットブラスト / Jet Blast) thổi bay người và thiết bị nhẹ khi băng qua đường nội bộ sau đuôi tàu bay, trưởng nhóm phải quán triệt quy tắc nào?',
     qEn: 'To protect ramp crew and light equipment from sudden jet blast when crossing behind taxiing aircraft, what rule must supervisors enforce?',
     optsJa: [
-      '自走中・稼働中の航空機後方100m以内では横断せず、監視員の停止合図を厳守させる',
+      '衝突防止灯が点灯しエンジン稼働中の機体後方は横断せず、監視員の停止合図を厳守させる',
       'エンジン後方から10m以上離れていればブラストは届かないため、素早く横断させてよい',
       'ライトバンや積載済みドーリーは重量があるため、エンジン真後ろでもそのまま通過できる',
       '地上監視員が赤色停止合図を出していても、前方が空いていれば運転手判断で駆け抜ける'
     ],
     optsVi: [
-      'Không vượt hay dừng trong vùng 100 m sau tàu đang nổ máy/lăn và tuân lệnh giám sát viên',
+      'Không băng qua phía sau tàu đang bật đèn chống va chạm/nổ máy, tuân lệnh dừng của giám sát viên',
       'Chỉ cần cách đuôi tàu từ 10 m trở ra là hết gió phản lực nên có thể cho xe chạy vọt qua',
       'Xe tải nhẹ hoặc đoàn dolly đang chở hàng đủ nặng để chạy cắt ngay sau ống xả động cơ',
       'Dù giám sát viên đang phất cờ đỏ chặn lại, tài xế vẫn được tự ý chạy qua nếu thấy làn trống'
     ],
     optsEn: [
-      'Never cross or stop within 100 m behind live aircraft and always obey spotter stop signals',
+      'Never cross behind aircraft with anti-collision lights on or engines running; obey spotter stops',
       'Allow rapid crossing once 10 meters behind the tail because jet blast fades quickly past it',
       'Permit light vans and loaded dollies to cross directly behind running exhaust due to weight',
       'Override a spotter’s red stop flag whenever the driver judges the service lane looks clear'
     ],
     ans: 0,
-    expJa: '離陸・タキシング開始時のエンジン出力上昇（Breakaway Thrust）によるジェットブラストは車両を横転させるほどの威力があります。NGO等のサービスレーンでは後方100m以上の離隔と監視員指示厳守が必須です。',
-    expVi: 'Lực đẩy khi tàu bay bắt đầu lăn (Breakaway Thrust) tạo luồng Jet Blast cực mạnh đủ lật xe hoặc thổi bay hàng hóa. Luôn giữ khoảng cách chuẩn (≥100 m) và tuân lệnh giám sát viên.',
-    expEn: 'Breakaway jet blast during taxi-out can overturn carts and injure crew; strict adherence to 100 m clearance and spotter stop commands is essential.'
+    expJa: '離陸・タキシング開始時のエンジン出力上昇（Breakaway Thrust）によるジェットブラストは車両を横転させるほどの威力があります。衝突防止灯（ビーコン）点灯中の機体後方は横断せず、各空港が定めるブラスト危険区域と監視員の指示を厳守します。',
+    expVi: 'Lực đẩy khi tàu bay bắt đầu lăn (Breakaway Thrust) tạo luồng Jet Blast cực mạnh đủ lật xe hoặc thổi bay hàng hóa. Không băng qua phía sau tàu đang bật đèn beacon, tuân thủ vùng nguy hiểm jet blast do từng sân bay quy định và lệnh của giám sát viên.',
+    expEn: 'Breakaway jet blast during taxi-out can overturn carts and injure crew; never cross behind an aircraft showing its beacon, and follow the blast-hazard zones published by each airport and spotter stop commands.'
   },
   {
     id: 'T2Q033', topic: 'tg2_irregular', level: 2,
