@@ -28,7 +28,7 @@ export function initCommandPalette(actions) {
       { cat: 'NAV', label: t('C. 3D ULDビルドアップ実技ゲーム（PMC/PLA/PGA/AKE/AKH・手積み/フォークリフト）', 'C. Trò chơi Đóng hàng ULD 3D thực tế (PMC/PLA/PGA/AKE/AKH · Xếp tay & Xe nâng)', 'C. Realistic 3D ULD Build-up Simulator (PMC/PLA/PGA/AKE/AKH · Hand & Forklift)'), keys: 'uld buildup pmc pla pga pag ake akh forklift pallet spreader contour game', run: () => actions.openUldBuildup() },
       { cat: 'NAV', label: t('C. 航空貨物・ULD規格・IATA危険物 (DGR)', 'C. Hàng hóa Hàng không, Chuẩn ULD & IATA DGR', 'C. Air Cargo, ULD Specs & IATA DGR'), keys: 'cargo awb uld dgr dangerous goods ti', run: () => actions.go('cargo') },
       { cat: 'NAV', label: t('E. 安全管理・FOD・コンプライアンス (JCAB/SMS)', 'E. An toàn Sân đỗ, FOD & Luật JCAB/SMS', 'E. Safety, FOD & Compliance (JCAB/SMS)'), keys: 'safety fod sms jcab law shell heinrich', run: () => actions.go('safety') },
-      { cat: 'NAV', label: t('F. 特定技能・NGO運転 総合試験 (160問)', 'F. Ôn thi Kỹ năng Đặc định & Lái xe NGO (160 câu)', 'F. SSW & NGO Driving Exam Bank (160 Qs)'), keys: 'quiz exam test srs tokutei jeae', run: () => actions.go('quiz') },
+      { cat: 'NAV', label: t('F. 特定技能・NGO運転 総合試験 (342問)', 'F. Ôn thi Kỹ năng Đặc định & Lái xe NGO (342 câu)', 'F. SSW & NGO Driving Exam Bank (342 Qs)'), keys: 'quiz exam test srs tokutei jeae', run: () => actions.go('quiz') },
       { cat: 'NAV', label: t('H. マーシャリング・無線・ライトガン・音声辞典', 'H. Marshalling, Headset, Light Gun & Từ điển', 'H. Marshalling, Headset, Light Gun & Dictionary'), keys: 'marshalling headset pushback dictionary', run: () => actions.go('ops') }
     ];
 

@@ -1,5 +1,5 @@
 // Aviation Ops Sim JP Pro — Offline-First Service Worker (PWA)
-const CACHE_NAME = 'aviation-ops-sim-jp-pro-v22';
+const CACHE_NAME = 'aviation-ops-sim-jp-pro-v23';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -24,6 +24,7 @@ const CORE_ASSETS = [
   './src/data/centrairNgo.js',
   './src/data/quizBank.js',
   './src/data/quizBankTg2.js',
+  './src/data/quizBankS2Official.js',
   './src/data/dictionary.js',
   './src/engines/wbEngine.js',
   './src/engines/audioEngine.js',

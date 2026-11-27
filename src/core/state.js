@@ -17,7 +17,7 @@ export const DEFAULT_STATE = {
   uldSolved: [],
   safetyChecked: {},
   safetyReports: [],
-  quizStats: { answered: 0, correct: 0, bestExam: null, bestNgoExam: null },
+  quizStats: { answered: 0, correct: 0, bestExam: null, bestNgoExam: null, bestTg2Exam: null },
   srsWrong: {},
   airport3dSolved: [],
   opsBestMarshal: 0,

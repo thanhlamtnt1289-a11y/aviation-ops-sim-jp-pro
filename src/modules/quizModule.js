@@ -1,29 +1,62 @@
-// Module F: Unified 200-Question Exam Suite (90 SSW-1 + 60 SSW-2 + 50 NGO Centrair Airside Driving License)
+// Module F: Unified Exam Suite — SSW-1 bank + SSW-2 official-textbook bank + SSW-2 applied bank + NGO Centrair Airside Driving
 // Pure Trilingual: Japanese (ja) · Vietnamese (vi) · English (en) — Zero Language Mixing!
 import { QUIZ_TOPICS, QUIZ_BANK, renderQuizVisualSvg } from '../data/quizBank.js';
 import { QUIZ_BANK_TG2 } from '../data/quizBankTg2.js';
+import { QUIZ_BANK_S2 } from '../data/quizBankS2Official.js';
 import { NGO_DRIVING_QUIZ, renderNgoVisualSvg } from '../data/centrairNgo.js';
 import { appState, saveState, updateProgressBadges, t } from '../core/state.js';
 
-export const ALL_QUESTIONS = [...QUIZ_BANK, ...QUIZ_BANK_TG2, ...NGO_DRIVING_QUIZ];
+// Options are stored with the correct answer mostly in slot A; shuffle them once per question with a
+// deterministic seed (question id) so the answer position is spread evenly and stays stable across reloads.
+function hashId(id) { let h = 2166136261; for (const c of String(id)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function shuffleOptions(q) {
+  if (!Array.isArray(q.optsJa) || q.optsJa.length < 2) return q;
+  let seed = hashId(q.id);
+  const rnd = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+  const order = q.optsJa.map((_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+  const pick = arr => (Array.isArray(arr) ? order.map(i => arr[i]) : arr);
+  return { ...q, optsJa: pick(q.optsJa), optsVi: pick(q.optsVi), optsEn: pick(q.optsEn), ans: order.indexOf(q.ans) };
+}
+const BANK_TG1 = QUIZ_BANK.map(shuffleOptions);
+const BANK_S2 = QUIZ_BANK_S2.map(shuffleOptions);
+const BANK_TG2 = QUIZ_BANK_TG2.map(shuffleOptions);
+const BANK_NGO = NGO_DRIVING_QUIZ.map(shuffleOptions);
+export const ALL_QUESTIONS = [...BANK_TG1, ...BANK_S2, ...BANK_TG2, ...BANK_NGO];
 
 const UNIFIED_TOPICS = {
   all: { ja: `全分野 (${ALL_QUESTIONS.length}問)`, vi: `Tất cả (${ALL_QUESTIONS.length} câu)`, en: `All Topics (${ALL_QUESTIONS.length} Qs)` },
   ngo_driving: { ja: '🚗 NGOセントレア車両運転講習 (50問)', vi: '🚗 Bằng lái Sân đỗ NGO Centrair (50 câu)', en: '🚗 NGO Centrair Airside Driving (50 Qs)' },
   stage_tg1: { ja: '① 特定技能1号', vi: '① Kỹ năng đặc định số 1', en: '① SSW (i)' },
   stage_tg2: { ja: '④ 特定技能2号（総合）', vi: '④ Kỹ năng đặc định số 2 (tổng hợp)', en: '④ SSW (ii) (all topics)' },
-  tg2_loadcontrol: { ja: '2号：ロードコントロール・LIR/W&B', vi: 'Số 2: Load Control · LIR / W&B', en: 'SSW-2: Load Control · LIR / W&B' },
-  tg2_leadership: { ja: '2号：作業責任者・現場統括', vi: 'Số 2: Trưởng nhóm (作業責任者)', en: 'SSW-2: Ramp Supervision & Leadership' },
-  tg2_safety_sms: { ja: '2号：SMS・ヒヤリハット・安全', vi: 'Số 2: SMS · Near-miss · An toàn', en: 'SSW-2: SMS, Near-Miss & Ramp Safety' },
-  tg2_irregular: { ja: '2号：イレギュラー・緊急対応', vi: 'Số 2: Xử lý bất thường & Khẩn cấp', en: 'SSW-2: Irregular Ops & Emergencies' },
-  tg2_winter_wx: { ja: '2号：防除雪氷・悪天候対策', vi: 'Số 2: Chống băng tuyết & Thời tiết xấu', en: 'SSW-2: De-icing & Adverse Weather' },
-  tg2_dgr_advanced: { ja: '2号：危険物(DGR)実務管理', vi: 'Số 2: DGR Nâng cao & NOTOC', en: 'SSW-2: Advanced DGR & NOTOC' },
+  s2_ramp: { ja: '2号テキスト：ランプ・イン／アウト（誘導）', vi: 'Số 2 (giáo trình): Dẫn tàu vào/ra (Ramp in/out)', en: 'SSW-2 textbook: Ramp In/Out' },
+  s2_load: { ja: '2号テキスト：搭載・取り降ろし', vi: 'Số 2 (giáo trình): Xếp dỡ hàng & Load plan', en: 'SSW-2 textbook: Loading & Load Planning' },
+  s2_gse: { ja: '2号テキスト：客室・GSE器材', vi: 'Số 2 (giáo trình): Khoang khách & Thiết bị GSE', en: 'SSW-2 textbook: Cabin Work & GSE' },
+  s2_safety: { ja: '2号テキスト：安全管理', vi: 'Số 2 (giáo trình): Quản lý an toàn', en: 'SSW-2 textbook: Safety Management' },
+  s2_quality: { ja: '2号テキスト：品質管理', vi: 'Số 2 (giáo trình): Quản lý chất lượng', en: 'SSW-2 textbook: Quality Management' },
+  s2_rules: { ja: '2号テキスト：制限区域安全管理規程', vi: 'Số 2 (giáo trình): Quy định an toàn khu hạn chế', en: 'SSW-2 textbook: Restricted Area Rules' },
+  s2_pax: { ja: '2号テキストvol.2：旅客サービス', vi: 'Số 2 (giáo trình vol.2): Phục vụ hành khách', en: 'SSW-2 textbook vol.2: Passenger Service' },
+  s2_fuel: { ja: '2号テキストvol.2：燃料搭載', vi: 'Số 2 (giáo trình vol.2): Tra nạp nhiên liệu', en: 'SSW-2 textbook vol.2: Fueling' },
+  tg2_loadcontrol: { ja: '2号応用：ロードコントロール・LIR/W&B', vi: 'Số 2 (nâng cao): Load Control · LIR / W&B', en: 'SSW-2 applied: Load Control · LIR / W&B' },
+  tg2_leadership: { ja: '2号応用：作業責任者・現場統括', vi: 'Số 2 (nâng cao): Trưởng nhóm (作業責任者)', en: 'SSW-2 applied: Ramp Supervision & Leadership' },
+  tg2_safety_sms: { ja: '2号応用：SMS・ヒヤリハット・安全', vi: 'Số 2 (nâng cao): SMS · Near-miss · An toàn', en: 'SSW-2 applied: SMS, Near-Miss & Ramp Safety' },
+  tg2_irregular: { ja: '2号応用：イレギュラー・緊急対応', vi: 'Số 2 (nâng cao): Xử lý bất thường & Khẩn cấp', en: 'SSW-2 applied: Irregular Ops & Emergencies' },
+  tg2_winter_wx: { ja: '2号応用：防除雪氷・悪天候対策', vi: 'Số 2 (nâng cao): Chống băng tuyết & Thời tiết xấu', en: 'SSW-2 applied: De-icing & Adverse Weather' },
+  tg2_dgr_advanced: { ja: '2号応用：危険物(DGR)実務管理', vi: 'Số 2 (nâng cao): DGR Nâng cao & NOTOC', en: 'SSW-2 applied: Advanced DGR & NOTOC' },
   turnaround: { ja: 'ターンアラウンド・GSE', vi: 'Turnaround & GSE', en: 'Turnaround & GSE' },
   pax: { ja: '旅客サービス', vi: 'Dịch vụ Hành khách', en: 'Passenger Service' },
   cargo: { ja: '貨物・ULDビルドアップ・危険物', vi: 'Hàng hóa, ULD Buildup & DGR', en: 'Cargo, ULD Buildup & DGR' },
   wb: { ja: '重量重心計算 (W&B)', vi: 'Weight & Balance', en: 'Weight & Balance' },
   safety: { ja: '法令・安全 (SMS/SHELL/FOD)', vi: 'Pháp luật & An toàn (SMS/SHELL)', en: 'Law & Safety (SMS/SHELL/FOD)' }
 };
+
+const TOPIC_GROUPS = [
+  { ja: '総合', vi: 'Tổng hợp', en: 'Overview', ids: ['all', 'stage_tg1', 'stage_tg2', 'ngo_driving'] },
+  { ja: '1号 分野別', vi: 'Số 1 theo chủ đề', en: 'SSW-1 topics', ids: ['turnaround', 'pax', 'cargo', 'wb', 'safety'] },
+  { ja: '2号 公式テキスト', vi: 'Số 2 · Giáo trình chính thức', en: 'SSW-2 · Official textbook', ids: ['s2_ramp', 's2_load', 's2_gse', 's2_safety', 's2_quality', 's2_rules', 's2_pax', 's2_fuel'] },
+  { ja: '2号 応用（テキスト外）', vi: 'Số 2 · Nâng cao (ngoài giáo trình)', en: 'SSW-2 · Applied (beyond textbook)', ids: ['tg2_loadcontrol', 'tg2_leadership', 'tg2_safety_sms', 'tg2_irregular', 'tg2_winter_wx', 'tg2_dgr_advanced'] }
+];
+const TOPIC_PREFIX_RE = /^(2号テキスト(vol\.2)?：|2号応用：|Số 2 \((giáo trình( vol\.2)?|nâng cao)\): |SSW-2 (textbook( vol\.2)?|applied): )/;
 
 export const quizState = {
   mode: 'practice', // 'practice' | 'srs' | 'exam'
@@ -50,7 +83,7 @@ export function stopQuizTimer() {
 // Roadmap stage exams: ① 1号 = turnaround + passengers + safety · ④ 2号 = all tg2_* + cargo + wb
 const STAGE_TOPICS = {
   stage_tg1: ['turnaround', 'pax', 'safety'],
-  stage_tg2: ['tg2_loadcontrol', 'tg2_leadership', 'tg2_safety_sms', 'tg2_irregular', 'tg2_winter_wx', 'tg2_dgr_advanced', 'cargo', 'wb']
+  stage_tg2: ['s2_ramp', 's2_load', 's2_gse', 's2_safety', 's2_quality', 's2_rules', 's2_pax', 's2_fuel', 'tg2_loadcontrol', 'tg2_leadership', 'tg2_safety_sms', 'tg2_irregular', 'tg2_winter_wx', 'tg2_dgr_advanced', 'cargo', 'wb']
 };
 export function questionsForTopic(tp) {
   if (tp === 'all') return ALL_QUESTIONS;
@@ -95,7 +128,8 @@ function getQOpts(q) {
   return q.optsVi;
 }
 function getQExp(q) {
-  return t(q.expJa, q.expVi, q.expEn || q.expVi);
+  const exp = t(q.expJa, q.expVi, q.expEn || q.expVi);
+  return q.src ? `${exp}<span class="q-src">📖 ${t('出典', 'Nguồn', 'Source')}: ${q.src}</span>` : exp;
 }
 
 function getFilteredQuestions() {
@@ -148,7 +182,9 @@ function finishTimedExam() {
   const pct = quizState.examQuestions.length > 0 ? Math.round((correct / quizState.examQuestions.length) * 100) : 0;
   appState.quizStats.answered += quizState.examQuestions.length;
   appState.quizStats.correct += correct;
-  if (quizState.examType === 'ngo') {
+  if (quizState.examType === 'tg2') {
+    if (appState.quizStats.bestTg2Exam == null || pct > appState.quizStats.bestTg2Exam) appState.quizStats.bestTg2Exam = pct;
+  } else if (quizState.examType === 'ngo') {
     if (appState.quizStats.bestNgoExam === null || pct > appState.quizStats.bestNgoExam) appState.quizStats.bestNgoExam = pct;
   } else {
     if (appState.quizStats.bestExam === null || pct > appState.quizStats.bestExam) appState.quizStats.bestExam = pct;
@@ -187,6 +223,21 @@ export function renderQuizModule() {
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
               <button class="btn btn-primary" id="qz-start-ngo-30">🚗 ${t('NGO運転 30問模試（25分）', 'Thi thử Bằng lái NGO 30 câu (25 phút)', 'NGO Driving 30-Q Exam (25 min)')}</button>
               <button class="btn" id="qz-start-ngo-50">🏆 ${t('NGO運転 全50問完全模試（40分）', 'Thi toàn bộ 50 câu NGO (40 phút)', 'Full 50-Q NGO Exam (40 min)')}</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">
+              <span class="ja">④ ${t('特定技能2号 評価試験テキスト準拠 模擬試験', 'Thi thử Kỹ năng đặc định số 2 (theo giáo trình chính thức)', 'SSW (ii) Mock Exam — Official Textbook')}</span>
+              <span class="badge badge-accent">PASS ≥ 70%</span>
+            </div>
+            <p class="ja" style="font-size:13px;color:var(--text-secondary);margin-top:0;">
+              ${t(`「特定技能2号評価試験テキスト グランドハンドリング」vol.1・vol.2に基づく${QUIZ_BANK_S2.length}問からランダム出題。各問に出典（章・ページ）付き。`,
+                  `Đề ngẫu nhiên từ ${QUIZ_BANK_S2.length} câu soạn theo giáo trình chính thức 特定技能2号 グランドハンドリング vol.1 và vol.2. Mỗi câu ghi rõ nguồn (mục, trang).`,
+                  `Randomized from ${QUIZ_BANK_S2.length} questions based on the official SSW (ii) Ground Handling textbook vol.1 and vol.2, each with its source section and page.`)}
+            </p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+              <button class="btn btn-primary" id="qz-start-tg2-30">④ ${t('2号 30問模試（40分）', 'Đề số 2 · 30 câu (40 phút)', 'SSW-2 30-Q Exam (40 min)')}</button>
+              <button class="btn" id="qz-start-tg2-all">🏆 ${t('2号 全問模試', 'Đề số 2 · toàn bộ câu', 'SSW-2 Full Exam')}</button>
             </div>
           </div>
           <div class="card">
@@ -358,15 +409,24 @@ export function renderQuizModule() {
         <span class="badge badge-neutral">${t(`正答率 ${acc}%`, `Đúng ${acc}%`, `Accuracy ${acc}%`)}</span>
         <span class="badge badge-warn">NGO: ${appState.quizStats.bestNgoExam !== null ? appState.quizStats.bestNgoExam + '%' : '—'}</span>
         <span class="badge badge-ok">SSW: ${appState.quizStats.bestExam !== null ? appState.quizStats.bestExam + '%' : '—'}</span>
+        <span class="badge badge-ok">2号: ${appState.quizStats.bestTg2Exam != null ? appState.quizStats.bestTg2Exam + '%' : '—'}</span>
       </div>
     </div>
 
     ${quizState.mode === 'practice' ? `
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-        ${Object.entries(UNIFIED_TOPICS).map(([tpId, tp]) => {
-          const cnt = questionsForTopic(tpId).length;
-          return `<button class="btn btn-sm ${quizState.topic === tpId ? 'btn-primary' : ''}" data-qtop="${tpId}">${t(tp.ja, tp.vi, tp.en)}${tpId === 'all' || tpId === 'ngo_driving' ? '' : ` (${cnt})`}</button>`;
-        }).join('')}
+      <div class="qz-topic-groups">
+        ${TOPIC_GROUPS.map(g => `
+          <div class="qz-topic-row">
+            <span class="qz-topic-label">${t(g.ja, g.vi, g.en)}</span>
+            <div class="qz-topic-chips">
+              ${g.ids.filter(id => UNIFIED_TOPICS[id]).map(tpId => {
+                const tp = UNIFIED_TOPICS[tpId];
+                const cnt = questionsForTopic(tpId).length;
+                const label = t(tp.ja, tp.vi, tp.en).replace(TOPIC_PREFIX_RE, '');
+                return `<button class="btn btn-sm ${quizState.topic === tpId ? 'btn-primary' : ''}" data-qtop="${tpId}">${label}${tpId === 'all' || tpId === 'ngo_driving' ? '' : ` (${cnt})`}</button>`;
+              }).join('')}
+            </div>
+          </div>`).join('')}
       </div>
     ` : ''}
 
@@ -387,13 +447,17 @@ export function renderQuizModule() {
     b.onclick = () => { quizState.topic = b.dataset.qtop; quizState.idx = 0; renderQuizModule(); };
   });
   const s15 = document.getElementById('qz-start-15');
-  if (s15) s15.onclick = () => startTimedExam(QUIZ_BANK, 15, 15, 'ssw');
+  if (s15) s15.onclick = () => startTimedExam(BANK_TG1, 15, 15, 'ssw');
   const s30 = document.getElementById('qz-start-30');
-  if (s30) s30.onclick = () => startTimedExam(QUIZ_BANK, 30, 30, 'ssw');
+  if (s30) s30.onclick = () => startTimedExam(BANK_TG1, 30, 30, 'ssw');
+  const g30 = document.getElementById('qz-start-tg2-30');
+  if (g30) g30.onclick = () => startTimedExam(BANK_S2, 30, 40, 'tg2');
+  const gAll = document.getElementById('qz-start-tg2-all');
+  if (gAll) gAll.onclick = () => startTimedExam(BANK_S2, BANK_S2.length, Math.round(QUIZ_BANK_S2.length * 1.3), 'tg2');
   const n30 = document.getElementById('qz-start-ngo-30');
-  if (n30) n30.onclick = () => startTimedExam(NGO_DRIVING_QUIZ, 30, 25, 'ngo');
+  if (n30) n30.onclick = () => startTimedExam(BANK_NGO, 30, 25, 'ngo');
   const n50 = document.getElementById('qz-start-ngo-50');
-  if (n50) n50.onclick = () => startTimedExam(NGO_DRIVING_QUIZ, 50, 40, 'ngo');
+  if (n50) n50.onclick = () => startTimedExam(BANK_NGO, 50, 40, 'ngo');
   const backMenu = document.getElementById('qz-back-menu');
   if (backMenu) backMenu.onclick = () => { quizState.examActive = false; quizState.examFinished = false; renderQuizModule(); };
   const fin = document.getElementById('qz-finish-exam');

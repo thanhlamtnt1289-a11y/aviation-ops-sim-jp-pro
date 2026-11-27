@@ -624,27 +624,27 @@ export const QUIZ_BANK_TG2 = [
     qVi: 'Khi áp dụng quy luật Heinrich (1:29:300) vào Hệ thống quản lý an toàn SMS trên sân đỗ, trưởng nhóm cần tập trung mạnh nhất vào khâu nào?',
     qEn: 'Applying Heinrich’s Law (1:29:300) within airport ramp SMS (Safety Management System), where should a supervisor focus prevention efforts?',
     optsJa: [
-      '底辺の300件のヒヤリハットを積極収集し、根本原因を先手で潰すこと',
+      '底辺の300件のマイナー・エラーや29件のヒヤリハットを集め、根本原因を先手で潰すこと',
       '重大事故（1件）が発生した段階で初めて専門の調査委員会を立ち上げること',
-      '軽微な物損（29件）は統計から除外し、部署の安全達成率を高く維持すること',
+      'ヒヤリハット（29件）は統計から除外し、部署の安全達成率を高く維持すること',
       '書面での報告手続きを廃止し、ベテラン作業員の口頭指導と勘のみに委ねること'
     ],
     optsVi: [
-      'Tích cực thu thập, chia sẻ và triệt tiêu nguyên nhân của 300 vụ suýt xảy ra (ヒヤリハット)',
+      'Thu thập 300 lỗi nhỏ (マイナー・エラー) và 29 sự cố suýt xảy ra (ヒヤリハット) ở đáy tháp, xử lý tận gốc từ sớm',
       'Chờ khi tai nạn nghiêm trọng (1 vụ) xảy ra rồi mới thành lập hội đồng điều tra chuyên trách',
-      'Loại bỏ 29 vụ va chạm nhẹ khỏi bảng thống kê để giữ tỷ lệ chỉ số an toàn đạt mức cao',
+      'Loại 29 vụ suýt xảy ra (ヒヤリハット) khỏi bảng thống kê để giữ tỷ lệ chỉ số an toàn đạt mức cao',
       'Bỏ quy trình ghi chép báo cáo sự cố, chỉ dựa vào kinh nghiệm và nhắc nhở miệng của người cũ'
     ],
     optsEn: [
-      'Collect, share, and eliminate root causes of the 300 near-misses at the pyramid base',
+      'Collect the 300 minor errors and 29 near-miss incidents at the base and remove root causes early',
       'Wait until 1 major accident occurs before convening a formal safety investigation board',
-      'Exclude the 29 minor damage cases from metrics to keep departmental safety scores high',
+      'Exclude the 29 near-miss incidents from metrics to keep departmental safety scores high',
       'Eliminate written hazard reports and rely purely on veteran intuition and verbal advice'
     ],
     ans: 0,
-    expJa: '1件の重大事故の背後には29件の軽微な事故と300件のヒヤリハットが存在します。底辺のヒヤリハットを潰すことが重大機体損傷や人身災害を防ぐ最も確実な方法です。',
-    expVi: 'Đằng sau 1 tai nạn thảm khốc luôn có 29 va chạm nhẹ và 300 tình huống suýt xảy ra (ヒヤリハット). Dập tắt từ 300 vụ suýt xảy ra là cốt lõi của SMS.',
-    expEn: 'Every major accident is preceded by 29 minor incidents and 300 near-misses. Addressing the 300 near-misses prevents catastrophic aircraft damage and injuries.'
+    expJa: '教材ではアクシデント1件の背後に、インシデント（ヒヤリハット）29件とマイナー・エラー300件があるとしています。目立たないマイナー・エラーやヒヤリハットにこそ光を当てて対策することが、重大事故を防ぐ最も確実な方法です。',
+    expVi: 'Theo giáo trình, đằng sau 1 tai nạn (アクシデント) có 29 sự cố suýt xảy ra (インシデント/ヒヤリハット) và 300 lỗi nhỏ (マイナー・エラー). Tập trung xử lý các lỗi nhỏ và ヒヤリハット là cách chắc chắn nhất để ngăn tai nạn lớn.',
+    expEn: 'Per the textbook, behind 1 accident lie 29 incidents (near-misses) and 300 minor errors. Focusing on these frequent minor errors and near-misses is the surest way to prevent serious accidents.'
   },
   {
     id: 'T2Q024', topic: 'tg2_safety_sms', level: 2,
@@ -754,9 +754,9 @@ export const QUIZ_BANK_TG2 = [
       'Never park or set outriggers on pit covers to avoid damage and preserve shutoff access'
     ],
     ans: 3,
-    expJa: '地下ピット（給油・GPU電力・PC-Air等）の上への駐停車は、緊急時の燃料遮断弁（Emergency Shut-off）操作を妨げ、また蓋破損によるFOD・陥没事故を招きます。',
-    expVi: 'Đỗ xe đè lên nắp hố ngầm làm hỏng nắp tạo FOD và đặc biệt cản trở tiếp cận van ngắt nhiên liệu khẩn cấp khi có sự cố cháy nổ lúc tra dầu.',
-    expEn: 'Parking over utility pits risks structural cover failure and blocks rapid access to emergency fuel shutoff valves or electrical disconnects.'
+    expJa: 'ピットの上に駐停車すると蓋の破損やFODにつながり、緊急時の燃料遮断弁などの操作も妨げます。羽田の制限区域規程では、ピット周囲を駐車禁止区域（NPA）として色分け表示しています（白＝ハイドラント、青＝エアコン、赤＝電力・給油アースリング等、黄＝避雷アースリング）。',
+    expVi: 'Đỗ xe đè lên nắp hố ngầm có thể làm hỏng nắp, tạo FOD và cản trở thao tác van ngắt nhiên liệu khẩn cấp. Theo quy định khu hạn chế sân bay Haneda, quanh các hố được kẻ vùng cấm đỗ (NPA) theo màu: trắng = Hydrant, xanh dương = điều hòa, đỏ = điện / dây tiếp đất tra dầu, vàng = tiếp đất chống sét.',
+    expEn: 'Parking over a pit can break the cover, create FOD and block emergency fuel shutoff access. Under the Haneda restricted-area rules, pits are surrounded by colour-coded No Parking Areas (NPA): white = hydrant, blue = air-conditioning, red = power / fueling earth ring, yellow = lightning earth ring.'
   },
   {
     id: 'T2Q028', topic: 'tg2_safety_sms', level: 2,
@@ -876,27 +876,27 @@ export const QUIZ_BANK_TG2 = [
     qVi: 'Để tránh nguy cơ luồng phản lực (ジェットブラスト / Jet Blast) thổi bay người và thiết bị nhẹ khi băng qua đường nội bộ sau đuôi tàu bay, trưởng nhóm phải quán triệt quy tắc nào?',
     qEn: 'To protect ramp crew and light equipment from sudden jet blast when crossing behind taxiing aircraft, what rule must supervisors enforce?',
     optsJa: [
-      '衝突防止灯が点灯しエンジン稼働中の機体後方は横断せず、監視員の停止合図を厳守させる',
+      '接近機があれば停止線で待機し、通過後は後方100m以上（約2スポット分）離れてから横断させる',
       'エンジン後方から10m以上離れていればブラストは届かないため、素早く横断させてよい',
       'ライトバンや積載済みドーリーは重量があるため、エンジン真後ろでもそのまま通過できる',
       '地上監視員が赤色停止合図を出していても、前方が空いていれば運転手判断で駆け抜ける'
     ],
     optsVi: [
-      'Không băng qua phía sau tàu đang bật đèn chống va chạm/nổ máy, tuân lệnh dừng của giám sát viên',
+      'Nếu có tàu bay đang tới thì dừng chờ ở vạch dừng; sau khi tàu qua, chỉ băng qua khi đã cách đuôi ≥100 m (khoảng 2 bãi đỗ)',
       'Chỉ cần cách đuôi tàu từ 10 m trở ra là hết gió phản lực nên có thể cho xe chạy vọt qua',
       'Xe tải nhẹ hoặc đoàn dolly đang chở hàng đủ nặng để chạy cắt ngay sau ống xả động cơ',
       'Dù giám sát viên đang phất cờ đỏ chặn lại, tài xế vẫn được tự ý chạy qua nếu thấy làn trống'
     ],
     optsEn: [
-      'Never cross behind aircraft with anti-collision lights on or engines running; obey spotter stops',
+      'Hold at the stop line for approaching aircraft; after it passes, cross only once it is 100 m+ away (about 2 stands)',
       'Allow rapid crossing once 10 meters behind the tail because jet blast fades quickly past it',
       'Permit light vans and loaded dollies to cross directly behind running exhaust due to weight',
       'Override a spotter’s red stop flag whenever the driver judges the service lane looks clear'
     ],
     ans: 0,
-    expJa: '離陸・タキシング開始時のエンジン出力上昇（Breakaway Thrust）によるジェットブラストは車両を横転させるほどの威力があります。衝突防止灯（ビーコン）点灯中の機体後方は横断せず、各空港が定めるブラスト危険区域と監視員の指示を厳守します。',
-    expVi: 'Lực đẩy khi tàu bay bắt đầu lăn (Breakaway Thrust) tạo luồng Jet Blast cực mạnh đủ lật xe hoặc thổi bay hàng hóa. Không băng qua phía sau tàu đang bật đèn beacon, tuân thủ vùng nguy hiểm jet blast do từng sân bay quy định và lệnh của giám sát viên.',
-    expEn: 'Breakaway jet blast during taxi-out can overturn carts and injure crew; never cross behind an aircraft showing its beacon, and follow the blast-hazard zones published by each airport and spotter stop commands.'
+    expJa: '航空機直後の横断はジェットブラストで車両ごと吹き飛ばされる危険があります。接近機の前方は横断せず停止線で待機し、通過後は後方100m以上（約2スポット分）の離隔を取ってから横断します（NGO教材2 J03-6／SSW2テキスト10-3：地上走行中の航空機後方100m以内は走行禁止）。',
+    expVi: 'Băng qua ngay sau đuôi tàu bay có thể bị luồng phản lực (ジェットブラスト) thổi bay cả xe. Không cắt ngang phía trước tàu đang tới, dừng chờ ở vạch dừng, và chỉ băng qua khi tàu đã cách ≥100 m (khoảng 2 bãi đỗ) (Giáo trình NGO 2 J03-6 / SSW2 10-3: cấm chạy trong phạm vi 100 m phía sau tàu bay đang lăn).',
+    expEn: 'Crossing right behind an aircraft risks being blown over by jet blast. Never cross in front of an approaching aircraft; wait at the stop line, then cross only after it is at least 100 m (about 2 stands) away (NGO Text 2 J03-6; SSW2 text 10-3: no driving within 100 m behind a taxiing aircraft).'
   },
   {
     id: 'T2Q033', topic: 'tg2_irregular', level: 2,
