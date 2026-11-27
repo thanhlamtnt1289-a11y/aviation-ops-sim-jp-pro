@@ -91,7 +91,7 @@ export function renderFieldDrillsModule() {
               'Khi mất liên lạc bộ đàm với Đài kiểm soát (TWR) trên đường băng/đường lăn, bắt buộc phải tuân thủ tín hiệu đèn Light Gun.',
               'If radio contact with Control Tower (TWR) is lost on a runway or taxiway, you must strictly obey ATC Light Gun signals.')}
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px;">
+        <div class="ops-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px;">
           ${NGO_LIGHT_GUN_SIGNALS.map(s => `
             <div class="card" style="margin-bottom:0;">
               ${renderLightGunLamp(s)}
@@ -174,7 +174,7 @@ export function renderFieldDrillsModule() {
         </div>
         <div class="card">
           <div class="card-title"><span class="ja">🔤 ${t('世界共通フォネティックコード表 (クリックで発音)', 'Bảng ICAO Phonetic Code (Click để nghe phát âm)', 'ICAO Phonetic Alphabet (Click to Speak)')}</span></div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:6px;max-height:460px;overflow-y:auto;">
+          <div class="ops-phon-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:6px;max-height:460px;overflow-y:auto;">
             ${ICAO_PHONETIC_CODE.map(([ch, word, kana]) => `
               <button class="btn btn-sm" data-phon="${kana}" style="justify-content:space-between;padding:6px 8px;height:auto;">
                 <strong style="font-family:var(--font-mono);color:var(--accent);">${ch}</strong>
@@ -259,7 +259,7 @@ export function renderFieldDrillsModule() {
         <button class="btn btn-sm ${opsState.marshalMode === 'drill' ? 'btn-primary' : ''}" id="m-mode-drill">${t('瞬時判別ドリル', 'Bài tập phản xạ', 'Reflex Drill')}</button>
       </div>
       ${opsState.marshalMode === 'study' ? `
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px;">
+        <div class="ops-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px;">
           ${OPS_MARSHALLING_SIGNALS.map(s => `
             <div class="card" style="margin-bottom:0;">
               <div style="margin-bottom:8px;">${renderQuizVisualSvg(s.id)}</div>
@@ -360,7 +360,7 @@ export function renderFieldDrillsModule() {
         <div class="card-title"><span class="ja">${t('日・英・越 3言語航空専門辞典 (音声付)', 'Từ điển Hàng không 3 Ngôn ngữ Nhật–Anh–Việt (Phát âm)', 'Trilingual Aviation & NGO Dictionary (JA · EN · VI + Audio)')}</span><span class="badge badge-accent">${filtered.length}/${FULL_DICTIONARY.length}</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
           <input type="text" id="ops-dict-search" value="${opsState.dictQuery}" placeholder="${t('日本語・読み・English・Tiếng Việt で検索…', 'Tìm kiếm tiếng Nhật, Kana, tiếng Anh, tiếng Việt…', 'Search Japanese, Kana, English, or Vietnamese…')}" style="flex:1;min-width:220px;padding:7px 10px;border:1px solid var(--border-strong);border-radius:6px;" />
-          <div style="display:flex;gap:4px;flex-wrap:wrap;">${cats.map(([id, lbl]) => `<button class="btn btn-sm ${opsState.dictCat === id ? 'btn-primary' : ''}" data-dcat="${id}">${lbl}</button>`).join('')}</div>
+          <div class="h-scroll-row" style="display:flex;gap:4px;flex-wrap:wrap;">${cats.map(([id, lbl]) => `<button class="btn btn-sm ${opsState.dictCat === id ? 'btn-primary' : ''}" data-dcat="${id}">${lbl}</button>`).join('')}</div>
         </div>
         <div class="table-wrap" style="max-height:520px;overflow-y:auto;">
           <table><thead><tr><th>日本語 / 読み</th><th>English</th><th>Tiếng Việt</th><th>🔊</th></tr></thead><tbody>
