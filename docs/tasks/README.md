@@ -15,7 +15,7 @@ Xong thì báo Claude: **"review PR T0x"** — Claude sẽ kiểm tra, sửa n�
 | ID | Task | Giao cho | Ưu tiên | Trạng thái |
 |---|---|---|---|---|
 | [T01](T01-tg2-question-bank.md) | Ngân hàng 60 câu hỏi 特定技能2号 (JA/VI/EN) | **Gemini** | Cao | ✅ Đã gộp (PR #4) |
-| [T02](T02-responsive-mobile.md) | Giao diện chuẩn iPhone / iPad cho mọi màn hình | **Antigravity** | Cao | Chờ làm |
+| [T02](T02-responsive-mobile.md) | Viết lại giao diện iPhone / iPad: dễ nhìn, dễ bấm | **Antigravity** | Cao | Chờ làm |
 | [T03](T03-glossary-consistency.md) | Rà soát thuật ngữ 3 ngôn ngữ thống nhất toàn app | **Gemini** | Trung bình | Chờ làm |
 | [T04](T04-distractor-length.md) | Cân độ dài phương án nhiễu (TG1 110 câu + NGO 50 câu) | **Gemini** | Cao | Chờ làm |
 
