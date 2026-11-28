@@ -22,7 +22,7 @@ Người dùng chính học trên **iPhone và iPad** (PWA cài lên màn hình 
 | iPad (dọc / ngang) | 820 × 1180 / 1180 × 820 |
 
 ## Phạm vi file
-- **Chủ yếu:** `src/styles/app.css` — được tái cấu trúc lại phần responsive; nên tách phần mobile ra `src/styles/mobile.css` (nhớ thêm vào `index.html`, `public/sw.js` và tăng `CACHE_NAME`).
+- **Chủ yếu:** `src/styles/app.css` — được tái cấu trúc lại phần responsive; nên tách phần mobile ra `src/styles/mobile.css` (nhớ thêm vào `index.html`, `sw.js` (thư mục gốc) và tăng `CACHE_NAME`).
 - **Được sửa markup / JS giao diện** (thêm class, wrapper, nút bật/tắt; không đổi id, không đổi logic nghiệp vụ): `index.html`, `src/main.js`, `src/core/roadmap.js`, `src/modules/*.js`.
 - **Không sửa:** `src/three3d/*`, `src/data/*`, `src/engines/*`, `src/core/state.js` (trừ khi thêm 1 cờ giao diện), nội dung câu hỏi.
 

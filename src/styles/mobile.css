@@ -1279,3 +1279,17 @@
     transform: translateX(0);
   }
 }
+
+/* Review fix (Claude): flex children in the Turnaround header must be allowed to shrink, otherwise the
+   airport chip row pushes the card 25px past the screen edge and clips the stand <select> and 3D view. */
+@media (max-width: 900px) {
+  #ta-top-bar .card > div > div,
+  #turnaround-mount .card > div > div { min-width: 0; max-width: 100%; }
+  #turnaround-mount select,
+  #turnaround-mount canvas { max-width: 100%; }
+}
+@media (max-width: 900px) {
+  /* Turnaround camera/tool groups: wrap inside the card instead of running 400px off-screen */
+  .ta-3d-toolbar .ta-tool-grp { min-width: 0; max-width: 100%; flex-wrap: wrap; }
+  .ta-3d-toolbar .ta-tool-grp .h-scroll-row { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scroll-snap-type: x proximity; }
+}

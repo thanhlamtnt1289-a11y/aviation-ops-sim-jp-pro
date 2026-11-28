@@ -11,7 +11,7 @@
 - **Kiến trúc kỹ thuật:**
   - **100% Vanilla ES Modules + Three.js PBR** (không phụ thuộc framework nặng hay CDN bên ngoài).
   - Hoạt động ở **2 chế độ song song**:
-    1. **PWA Web App (`index.html` + `src/` + `public/sw.js`)** — triển khai tự động lên GitHub Pages qua `.github/workflows/`.
+    1. **PWA Web App (`index.html` + `src/` + `sw.js` (thư mục gốc))** — triển khai tự động lên GitHub Pages qua `.github/workflows/`.
     2. **100% Offline Single-File (`offline-singlefile.html`)** — nhúng toàn bộ 26 ES modules, CSS, Three.js (`vendor/three.module.min.js`) và 4 model máy bay `.glb` (`vendor/models/*.glb`) vào duy nhất 1 file `.html` để mở trực tiếp không cần Internet hay server.
 
 ---
@@ -22,7 +22,7 @@
 - `index.html` — Điểm vào chính của PWA, khai báo font chữ và load `src/main.js`.
 - `offline-singlefile.html` — Bản đóng gói offline 1 file duy nhất (~3.96 MB), **bắt buộc phải build lại** sau mỗi lần sửa code bằng `python3 scripts/build_singlefile.py`.
 - `scripts/build_singlefile.py` — Script Python tự động đóng gói toàn bộ `src/`, `vendor/`, `public/` thành `offline-singlefile.html`.
-- `public/sw.js` — Service Worker cache tài nguyên offline (`CACHE_NAME = 'aviation-ops-sim-jp-pro-v21'`, cần tăng version `v22`, `v23`... khi cập nhật).
+- `sw.js` (thư mục gốc) — Service Worker cache tài nguyên offline (`CACHE_NAME = 'aviation-ops-sim-jp-pro-v21'`, cần tăng version `v22`, `v23`... khi cập nhật).
 
 ### Lõi ứng dụng (`src/core/`, `src/engines/`, `src/main.js`)
 - `src/main.js` — Khởi tạo app, điều hướng các module/tab, thanh chuyển đổi 3 ngôn ngữ (`JA` / `VI` / `EN`), Command Palette.
@@ -102,7 +102,7 @@
      ```bash
      python3 scripts/build_singlefile.py
      ```
-   - Nếu thay đổi danh sách file JS hoặc cần làm mới cache PWA, tăng số phiên bản `CACHE_NAME` trong `public/sw.js`.
+   - Nếu thay đổi danh sách file JS hoặc cần làm mới cache PWA, tăng số phiên bản `CACHE_NAME` trong `sw.js` (thư mục gốc).
 
 ---
 

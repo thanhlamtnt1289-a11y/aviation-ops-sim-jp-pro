@@ -15,6 +15,7 @@ import {
 import { a3dAudio } from '../engines/audioEngine.js';
 import { appState, bi, saveState, t } from '../core/state.js';
 import { wbState } from './wbModule.js';
+import { DOLLY_TYPES } from '../three3d/crewBuilder3D.js';
 
 function makeInitialHandsOn() {
   return {
@@ -50,7 +51,19 @@ export const a3d = {
   showZones: true,
   syncWbFailure: true,
   spot101BeaconOn: true,
-  ngoVehMode: 'standard', // 'standard' (TT 30km/h) | 'towing' (TT + 6 carts 15km/h) | 'high38' (>3.8m) | 'backing' (Semi-Trailer Reverse Bay)
+  ngoVehMode: 'standard', // 'standard' (TT 30km/h) | 'towing' (TT + 1..6 Dollies 15km/h) | 'high38' (>3.8m) | 'backing' (Semi-Trailer Reverse Bay)
+  dollyType: 'ake',       // 'ake' | 'akh' | 'pmc' | 'bulk' | 'semi'
+  dollyCount: 3,          // 1..6 towed units (max 6 per NGO rule)
+  coupledDolly: null,     // { id, type, count } when coupled in 3D world
+  nearbyDolly: null,
+  worldDollies: [
+    { id: 'D_BULK', type: 'bulk', count: 3, x: -108, z: 12, heading: 0, coupled: false },
+    { id: 'D_AKE',  type: 'ake',  count: 3, x: -120, z: 22, heading: 0, coupled: false },
+    { id: 'D_AKH',  type: 'akh',  count: 2, x: -132, z: 32, heading: 0, coupled: false },
+    { id: 'D_PMC',  type: 'pmc',  count: 2, x: 175,  z: 24, heading: 0, coupled: false },
+    { id: 'D_SEMI', type: 'semi', count: 1, x: 196,  z: 14, heading: Math.PI, coupled: false }
+  ],
+  yubikoshi: { timer: 0, dir: 'fwd', labelJa: '', labelVi: '', labelEn: '', lastStopKey: '', lastRevAt: 0 },
   ngoDriveScenario: 'SC1', // 'SC1' | 'SC2' | 'SC3' | 'SC4' | 'SC5' (Reverse Trailer Bay Parking)
   ngoScenarioTime: 0,
   backingBay: { cx: 218, cz: 26, len: 11.4, w: 5.0 },
@@ -352,13 +365,96 @@ export function setA3dViewpoint(vpId) {
   document.querySelectorAll('[data-vp]').forEach(b => b.classList.toggle('btn-primary', b.dataset.vp === vpId));
   const vp = A3D_VIEWPOINTS.find(v => v.id === vpId);
   const descEl = document.getElementById('a3d-vp-desc');
-  if (descEl && vp) descEl.textContent = `[${vp.key}] ${t(vp.ja, vp.vi, vp.en)} — ${t(vp.descJa, vp.descVi, vp.descEn)}`;
+  if (descEl && vp) {
+    descEl.textContent = `[${vp.key}] ${t(vp.ja, vp.vi, vp.en)} — ${t(vp.descJa, vp.descVi, vp.descEn)}`;
+    descEl.classList.remove('faded');
+    clearTimeout(setA3dViewpoint._fade);
+    setA3dViewpoint._fade = setTimeout(() => descEl.classList.add('faded'), 5000);
+  }
 }
 
 function wrapAngle(a) {
   while (a > Math.PI) a -= Math.PI * 2;
   while (a < -Math.PI) a += Math.PI * 2;
   return a;
+}
+
+export function triggerYubikoshi(dir = 'fwd', reason = null) {
+  const isRev = dir === 'rev';
+  a3d.yubikoshi.timer = 2.2;
+  a3d.yubikoshi.dir = isRev ? 'rev' : 'fwd';
+  a3d.yubikoshi.labelJa = isRev ? '指差呼称「後方・左右ミラーヨシ！」' : '指差呼称「停止線・前方安全ヨシ！」';
+  a3d.yubikoshi.labelVi = isRev ? 'Chỉ tay hô: "PHÍA SAU & GƯƠNG AN TOÀN — YOSHI!"' : 'Chỉ tay hô: "VẠCH DỪNG & PHÍA TRƯỚC AN TOÀN — YOSHI!"';
+  a3d.yubikoshi.labelEn = isRev ? 'Point & Call: "REAR & MIRRORS CLEAR — YOSHI!"' : 'Point & Call: "STOP LINE & AHEAD CLEAR — YOSHI!"';
+  a3dAudio.playChirp();
+  if (reason !== 'silent') {
+    logA3d('ok', `👉 ${a3d.yubikoshi.labelJa}`, `👉 ${a3d.yubikoshi.labelVi}`, `👉 ${a3d.yubikoshi.labelEn}`);
+  }
+}
+
+export function toggleCoupleDolly() {
+  if (a3d.subtab !== 'drive') return;
+  const kmh = Math.abs(a3d.veh.speed || 0) * 3.6;
+  if (kmh > 3.5) {
+    a3dAudio.playBeep(380, 0.18);
+    logA3d('warn', '⚠ 連結・切離し前に車両を完全停止してください！', '⚠ Phải dừng hẳn xe TT trước khi nối hoặc tháo Dolly!', '⚠ Stop the tractor completely before coupling or uncoupling dollies!');
+    return;
+  }
+  if (a3d.coupledDolly) {
+    // Uncouple at current pose
+    const pose0 = (a3d.cartPoses && a3d.cartPoses[0]) ? a3d.cartPoses[0] : {
+      x: a3d.veh.x - Math.cos(a3d.veh.heading) * 4.0,
+      z: a3d.veh.z - Math.sin(a3d.veh.heading) * 4.0,
+      heading: a3d.veh.heading
+    };
+    const wd = a3d.worldDollies.find(d => d.id === a3d.coupledDolly.id);
+    if (wd) {
+      wd.coupled = false;
+      wd.x = pose0.x;
+      wd.z = pose0.z;
+      wd.heading = pose0.heading;
+    }
+    const info = DOLLY_TYPES[a3d.coupledDolly.type] || DOLLY_TYPES.ake;
+    a3d.coupledDolly = null;
+    a3d.cartPoses = [];
+    if (a3d.ngoVehMode === 'towing') a3d.ngoVehMode = 'standard';
+    a3dAudio.playChirp();
+    logA3d(
+      'ok',
+      `⛓‍💥 ドーリー切離し完了 (${info.nameJa})・輪止め確認！`,
+      `⛓‍💥 Đã tháo đoàn Dolly (${info.nameVi}) — nhớ kiểm tra chèn bánh!`,
+      `⛓‍💥 Uncoupled Dolly train (${info.nameEn}) — verify wheel chocks!`
+    );
+    renderAirport3dUI();
+    return;
+  }
+  const near = a3d.nearbyDolly;
+  if (!near) {
+    a3dAudio.playBeep(420, 0.16);
+    logA3d(
+      'info',
+      '🔗 青/緑のリングがあるドーリー付近（9.5m以内）へ移動して [C] を押してください。',
+      '🔗 Hãy lái xe TT lại gần đoàn Dolly có vòng tròn sáng (≤ 9,5m) rồi bấm [C] để móc nối!',
+      '🔗 Drive within 9.5m of a highlighted Dolly train on the apron and press [C] to couple!'
+    );
+    return;
+  }
+  near.coupled = true;
+  a3d.coupledDolly = { id: near.id, type: near.type, count: near.count };
+  a3d.dollyType = near.type;
+  a3d.dollyCount = near.count;
+  a3d.ngoVehMode = near.type === 'semi' ? 'backing' : 'towing';
+  a3d.prevHitch = null;
+  a3d.trailerHeadings = [near.heading, near.heading, near.heading, near.heading, near.heading, near.heading];
+  triggerYubikoshi('rev', 'silent');
+  const info = DOLLY_TYPES[near.type] || DOLLY_TYPES.ake;
+  logA3d(
+    'ok',
+    `🔗 連結完了: ${info.nameJa} ×${near.count}（牽引時 制限15km/h・指差呼称ヨシ！）`,
+    `🔗 Đã móc nối thành công: ${info.nameVi} ×${near.count} (Giới hạn 15 km/h · Đã 指差呼称!)`,
+    `🔗 Coupled: ${info.nameEn} ×${near.count} (15 km/h towing limit · Point & Call OK!)`
+  );
+  renderAirport3dUI();
 }
 
 function resetBackingScenario() {
@@ -439,9 +535,12 @@ function stepPhysics(dt, now) {
     return;
   }
 
-  // Decay impact flash & camera shake smoothly
+  // Decay impact flash, camera shake & Yubisasikoshou timer smoothly
   a3d.impactFlash = Math.max(0, (a3d.impactFlash || 0) - dt * 2.2);
   a3d.camShake = Math.max(0, (a3d.camShake || 0) - dt * 2.6);
+  if (a3d.yubikoshi && a3d.yubikoshi.timer > 0) {
+    a3d.yubikoshi.timer = Math.max(0, a3d.yubikoshi.timer - dt);
+  }
 
   // Live Chubu Centrair (NGO) Driving Scenarios (Moving Departing / Taxiing Aircraft + Active Spotters!)
   a3d.ngoScenarioTime = (a3d.ngoScenarioTime || 0) + dt;
@@ -493,11 +592,32 @@ function stepPhysics(dt, now) {
   const targetSteer = (a3d.keys.left ? -0.52 : 0) + (a3d.keys.right ? 0.52 : 0);
   v.steerAngle = (v.steerAngle || 0) + (targetSteer - (v.steerAngle || 0)) * Math.min(1, dt * 11);
 
-  const isBackMode = a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing';
+  const isBackMode = a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing' || (a3d.coupledDolly && a3d.coupledDolly.type === 'semi');
+  const prevSpeed = v.speed;
   if (a3d.keys.brake) v.speed = Math.abs(v.speed) < 0.35 ? 0 : v.speed - Math.sign(v.speed) * 20 * dt;
   else if (a3d.keys.up) v.speed = Math.min(isBackMode ? 7.5 : 12.2, v.speed + 8.5 * dt);
   else if (a3d.keys.down) v.speed = Math.max(isBackMode ? -3.4 : -4.5, v.speed - 7.5 * dt);
   else v.speed = Math.abs(v.speed) < 0.15 ? 0 : v.speed - Math.sign(v.speed) * 5.2 * dt;
+
+  // Auto-trigger 指差呼称 (Yubisasikoshou) when initiating Reverse from stop, OR stopping cleanly at a Stop Line!
+  if (a3d.keys.down && prevSpeed >= -0.05 && Math.abs(prevSpeed) < 0.5 && now - (a3d.yubikoshi.lastRevAt || 0) > 4500) {
+    a3d.yubikoshi.lastRevAt = now;
+    triggerYubikoshi('rev');
+  }
+  const nearStopZone =
+    (Math.abs(v.z + 44) < 5.5 && [-31, -155, 148, -520, 520].some(sx => Math.abs(v.x - sx) < 9)) ||
+    (Math.abs(v.z + 62) < 12 && (Math.abs(v.x - 20.5) < 6 || Math.abs(v.x - 71.5) < 6)) ||
+    (Math.abs(v.z + 580) < 18 && (Math.abs(v.x + 2060) < 14 || Math.abs(v.x - 2130) < 14)) ||
+    (Math.abs(v.z - 39.5) < 4.5 && Math.abs(v.x - 46) < 14);
+  if (nearStopZone && Math.abs(v.speed) < 0.25) {
+    const sk = `${Math.round(v.x / 10)}_${Math.round(v.z / 10)}`;
+    if (a3d.yubikoshi.lastStopKey !== sk) {
+      a3d.yubikoshi.lastStopKey = sk;
+      triggerYubikoshi('fwd');
+    }
+  } else if (!nearStopZone) {
+    a3d.yubikoshi.lastStopKey = '';
+  }
 
   if (Math.abs(v.speed) > 0.10) {
     const dir = v.speed >= 0 ? 1 : -1;
@@ -552,14 +672,30 @@ function stepPhysics(dt, now) {
   } else {
     v.x = nx;
     v.z = nz;
-    // TRUE Articulated Rigid-Hitch Tractor-Trailer Kinematics (Realistic Forward & Reverse Counter-Steering!)
-    const isBacking = a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing';
-    const numUnits = isBacking ? 1 : 6;
-    const wheelBase = isBacking ? 6.1 : 3.15;
+    // TRUE Articulated Rigid-Hitch Tractor-Trailer Kinematics (All Dolly Types + Reverse Counter-Steer!)
+    const isBacking = isBackMode;
+    const isTowingActive = isBacking || a3d.ngoVehMode === 'towing' || Boolean(a3d.coupledDolly);
+    const activeDollyId = isBacking ? 'semi' : ((a3d.coupledDolly && a3d.coupledDolly.type) || a3d.dollyType || 'ake');
+    const numUnits = isBacking ? 1 : (a3d.coupledDolly ? a3d.coupledDolly.count : (a3d.ngoVehMode === 'towing' ? (a3d.dollyCount || 3) : 0));
+    const wheelBase = (DOLLY_TYPES[activeDollyId] || DOLLY_TYPES.ake).wheelBase;
     const hitchArm = isBacking ? 1.95 : 1.9;
     const curHx0 = v.x - Math.cos(v.heading) * hitchArm;
     const curHz0 = v.z - Math.sin(v.heading) * hitchArm;
 
+    // Detect nearby uncoupled World Dolly for interactive Coupling [C]
+    let nearest = null, bestDist = 9.5;
+    if (!a3d.coupledDolly && !isBacking) {
+      for (const wd of (a3d.worldDollies || [])) {
+        if (wd.coupled) continue;
+        const d = Math.hypot(curHx0 - wd.x, curHz0 - wd.z);
+        if (d < bestDist) { bestDist = d; nearest = wd; }
+      }
+    }
+    a3d.nearbyDolly = nearest;
+
+    if (!isTowingActive || numUnits <= 0) {
+      a3d.cartPoses = [];
+    } else {
     if (!a3d.prevHitch || Math.hypot(curHx0 - a3d.prevHitch.x, curHz0 - a3d.prevHitch.z) > 6.0) {
       a3d.prevHitch = { x: curHx0, z: curHz0 };
       if (!a3d.trailerHeadings || a3d.trailerHeadings.length < 6) {
@@ -606,10 +742,11 @@ function stepPhysics(dt, now) {
     }
     a3d.prevHitch = { x: curHx0, z: curHz0 };
     a3d.cartPoses = cartPoses;
+    }
 
     // SC5 Live Reverse Bay-Parking Telemetry, Counter-Steer Assistant & Cone Collision Grading
-    if (isBacking && cartPoses[0]) {
-      const tr = cartPoses[0];
+    if (isBacking && a3d.cartPoses && a3d.cartPoses[0]) {
+      const tr = a3d.cartPoses[0];
       const bay = a3d.backingBay;
       const hitchDeg = Math.round(Math.abs(wrapAngle(tr.heading - v.heading)) * 180 / Math.PI);
       const jackknife = hitchDeg >= 62;
@@ -708,7 +845,7 @@ function stepPhysics(dt, now) {
 
   const kmh = Math.abs(v.speed) * 3.6;
   const ev = evaluateAirportZone(v.x, v.z, kmh, a3d.spot101BeaconOn, {
-    towingCarts: a3d.ngoVehMode === 'towing',
+    towingCarts: a3d.ngoVehMode === 'towing' || Boolean(a3d.coupledDolly),
     over38m: a3d.ngoVehMode === 'high38',
     ilsRedOn: a3d.ilsRedOn,
     blastActive: a3d.blastActive || a3d.ngoDriveScenario === 'SC3'
@@ -769,110 +906,91 @@ export function stopAirport3dLoop() {
 
 function drawNgoMinimap() {
   const now = performance.now();
-  if (now - (a3d._lastMinimapMs || 0) < 120) return;
+  if (now - (a3d._lastMinimapMs || 0) < 100) return;
   a3d._lastMinimapMs = now;
   const c = document.getElementById('a3d-minimap');
   if (!c || c.offsetParent === null) return;
-  const W = 252, H = 152;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = Math.round(c.clientWidth * dpr) || 440, H = Math.round(c.clientHeight * dpr) || 280;
   if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
   const ctx = c.getContext('2d');
-  // True 1:1 Chubu Centrair 4,370m × 1,920m Island Coordinate Projection
-  const mx = wx => ((wx + 2250) / 4580) * W;
-  const mz = wz => ((wz + 780) / 1720) * H;
+  const isFlight = a3d.subtab === 'flight';
+  const pose = isFlight ? computeFlightCyclePose(a3d.flightPhaseIdx, a3d.flightProgress).ac : null;
+  const px = isFlight ? pose.x : a3d.veh.x;
+  const pz = isFlight ? pose.z : a3d.veh.z;
+  const local = (a3d.ui.mapZoom || (isFlight ? 'island' : 'local')) === 'local';
+  // View window (scene metres): local = follows the player (~520 m wide), island = whole Centrair island
+  const spanX = local ? 520 : 4580;
+  const spanZ = spanX * (H / W);
+  const cx = local ? px : -35, cz = local ? pz : 80;
+  const mx = wx => ((wx - (cx - spanX / 2)) / spanX) * W;
+  const mz = wz => ((wz - (cz - spanZ / 2)) / spanZ) * H;
+  const k = W / spanX; // px per metre
+  const rect = (x1, z1, x2, z2) => ctx.fillRect(mx(Math.min(x1, x2)), mz(Math.min(z1, z2)), Math.max(1.5, Math.abs(x2 - x1) * k), Math.max(1.5, Math.abs(z2 - z1) * k));
 
-  // Ise Bay Water
-  ctx.fillStyle = '#09223B';
-  ctx.fillRect(0, 0, W, H);
-
-  // Authentic Chamfered Centrair Artificial Island Polygon (matching Official Blueprint J08-1!)
-  ctx.fillStyle = '#1E293B';
+  ctx.fillStyle = '#0a2540'; ctx.fillRect(0, 0, W, H); // Ise Bay
+  ctx.fillStyle = '#25303f';                           // island
   ctx.beginPath();
-  [
-    [-2140, -735], [2180, -735], [2180, 320], [1560, 820],
-    [-1480, 820], [-2140, 520]
-  ].forEach(([ix, iz], idx) => {
-    if (idx === 0) ctx.moveTo(mx(ix), mz(iz));
-    else ctx.lineTo(mx(ix), mz(iz));
+  [[-2140, -735], [2180, -735], [2180, 320], [1560, 820], [-1480, 820], [-2140, 520]].forEach(([ix, iz], n) => (n ? ctx.lineTo(mx(ix), mz(iz)) : ctx.moveTo(mx(ix), mz(iz))));
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#3a4656'; rect(-1280, -210, 1860, 110);           // apron concrete
+  ctx.fillStyle = '#505c6b'; rect(-1750, -610, 1750, -550);          // runway 36/18
+  ctx.fillStyle = '#2f3a48';
+  [[-415, -1750, 1750], [-335, -1560, 1660], [-235, -1350, 1620]].forEach(([z, a, b]) => rect(a, z - 11, b, z + 11)); // TWY A/B/C
+  ctx.fillStyle = '#8a6d1f'; rect(-1280, -64, 1860, -60);            // inner taxilane line
+  ctx.fillStyle = '#7f1d1d'; rect(-1280, -40, 1860, -36);            // behind-stand service road
+  ctx.fillStyle = '#9fb3c8';
+  rect(-172, 68, 192, 175);                                          // T1
+  rect(29, -180, 63, 75);                                            // centre pier
+  rect(-960, 90, -565, 140);                                         // T2
+  ctx.fillStyle = '#c8d1dc';
+  NGO_CARGO_DISTRICT.filter(b => b.h > 0).forEach(b => rect(b.x1, b.z1, b.x2, b.z2));
+  ctx.fillStyle = '#f87171'; ctx.beginPath(); ctx.arc(mx(330), mz(175), Math.max(2.5, 6 * k), 0, Math.PI * 2); ctx.fill(); // tower
+
+  // Spot 7 stand + aircraft
+  ctx.strokeStyle = '#facc15'; ctx.lineWidth = Math.max(1, 1.2 * dpr);
+  ctx.beginPath(); ctx.moveTo(mx(0), mz(-235)); ctx.lineTo(mx(0), mz(10)); ctx.stroke();
+  const drawPlane = (x, z, hdg, col, size) => {
+    ctx.save(); ctx.translate(mx(x), mz(z)); ctx.rotate(hdg + Math.PI / 2); ctx.fillStyle = col;
+    const L = Math.max(7 * dpr, size * k), S = L * 0.9;
+    ctx.fillRect(-L * 0.08, -L / 2, L * 0.16, L);           // fuselage
+    ctx.fillRect(-S / 2, -L * 0.08, S, L * 0.14);            // wing
+    ctx.fillRect(-S * 0.18, L * 0.36, S * 0.36, L * 0.08);   // tail
+    ctx.restore();
+  };
+  if (isFlight) drawPlane(px, pz, pose.heading ?? Math.PI / 2, '#22d3ee', 40);
+  else drawPlane(0, 10, Math.PI / 2, '#e2e8f0', 40);
+
+  // World dolly trains (blue = free, green = in coupling range)
+  (a3d.worldDollies || []).filter(d => !d.coupled).forEach(d => {
+    ctx.fillStyle = a3d.nearbyDolly && a3d.nearbyDolly.id === d.id ? '#22c55e' : '#3b82f6';
+    ctx.beginPath(); ctx.arc(mx(d.x), mz(d.z), Math.max(2.5 * dpr, 4 * k), 0, Math.PI * 2); ctx.fill();
   });
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = '#64748B';
-  ctx.lineWidth = 1.1;
-  ctx.stroke();
+  // Towed units behind the player
+  ctx.fillStyle = '#93c5fd';
+  (a3d.cartPoses || []).forEach(cp => { ctx.beginPath(); ctx.arc(mx(cp.x), mz(cp.z), Math.max(2 * dpr, 1.8 * k), 0, Math.PI * 2); ctx.fill(); });
 
-  // Centrair Skyway Bridge (連絡橋 + Meitetsu Rail to Tokoname Mainland)
-  ctx.fillStyle = '#94A3B8';
-  ctx.fillRect(mx(110), mz(380), 8, H - mz(380));
+  // Player: heading arrow
+  if (!isFlight) {
+    ctx.save(); ctx.translate(mx(px), mz(pz)); ctx.rotate(a3d.veh.heading || 0);
+    const r = 7 * dpr;
+    ctx.fillStyle = '#22d3ee'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.4 * dpr;
+    ctx.beginPath(); ctx.moveTo(r, 0); ctx.lineTo(-r * 0.7, r * 0.6); ctx.lineTo(-r * 0.35, 0); ctx.lineTo(-r * 0.7, -r * 0.6); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
 
-  // 8.5km Perimeter Road (場周道路 — Magenta per J04)
-  ctx.strokeStyle = '#EC4899';
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(mx(-2060), mz(-685), mx(2130) - mx(-2060), mz(520) - mz(-685));
-
-  // Dual ILS Restricted Zones on West Seawall
-  ctx.strokeStyle = a3d.ilsRedOn ? '#EF4444' : '#38BDF8';
-  ctx.lineWidth = 2.6;
-  ctx.beginPath();
-  ctx.moveTo(mx(-1460), mz(-685)); ctx.lineTo(mx(-1140), mz(-685));
-  ctx.moveTo(mx(1140), mz(-685)); ctx.lineTo(mx(1460), mz(-685));
-  ctx.stroke();
-
-  // 1:1 3,500m × 60m Runway 36/18 (z = -580, x = -1750..+1750)
-  ctx.fillStyle = '#DC2626';
-  ctx.fillRect(mx(-1750), mz(-610), mx(1750) - mx(-1750), Math.max(4, mz(-550) - mz(-610)));
-
-  // Parallel Taxiways A (-415), B (-335) & C (-235)
-  ctx.fillStyle = '#64748B';
-  ctx.fillRect(mx(-1750), mz(-422), mx(1750) - mx(-1750), 2.2);
-  ctx.fillRect(mx(-1560), mz(-342), mx(1660) - mx(-1560), 2.0);
-  ctx.fillRect(mx(-1350), mz(-242), mx(1620) - mx(-1350), 2.0);
-
-  // Apron Concrete Green Tint (T2, Remote #300-#600, T1, Remote #200, Cargo #101-#119, N-Area)
-  ctx.fillStyle = 'rgba(34,197,94,0.24)';
-  ctx.fillRect(mx(-1280), mz(-210), mx(1860) - mx(-1280), mz(110) - mz(-210));
-
-  // T1 Main + 300m Center Pier + North/South Wings + T2 + Cargo Sheds
-  ctx.fillStyle = '#38BDF8';
-  ctx.fillRect(mx(-430), mz(72), mx(430) - mx(-430), 6); // T1 Wings
-  ctx.fillRect(mx(26), mz(-180), Math.max(3, mx(66) - mx(26)), mz(75) - mz(-180)); // 300m Center Pier!
-  ctx.fillStyle = '#0284C7';
-  ctx.fillRect(mx(-960), mz(95), mx(-565) - mx(-960), 5); // T2 LCC
-  // Cargo District buildings (same data as the 3D scene) + ATC Tower NE of T1
-  ctx.fillStyle = '#CBD5E1';
-  NGO_CARGO_DISTRICT.filter(b => b.h > 0).forEach(b => {
-    ctx.fillRect(mx(b.x1), mz(b.z1), Math.max(1.5, mx(b.x2) - mx(b.x1)), Math.max(1.5, mz(b.z2) - mz(b.z1)));
-  });
-  ctx.fillStyle = '#F87171';
-  ctx.beginPath(); ctx.arc(mx(330), mz(175), 2.2, 0, Math.PI * 2); ctx.fill();
-
-  // Moving AI Airliner & GSE Traffic Dots
-  const tSec = a3d.aiTime || 0;
-  ctx.fillStyle = '#FACC15';
-  const twyAcX = -1550 + ((tSec * 38) % 3100);
-  ctx.fillRect(mx(twyAcX) - 2, mz(-415) - 1.5, 4, 3);
-  const cTwyX = 1100 - ((tSec * 28) % 2100);
-  ctx.fillRect(mx(cTwyX) - 2, mz(-235) - 1.5, 4, 3);
-
-  // Labels
-  ctx.fillStyle = '#F8FAFC';
-  ctx.font = '700 7.5px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('RWY 36 ◀ 3,500m ▶ RWY 18', mx(0), mz(-628));
-  ctx.fillText('T2', mx(-770), mz(220));
-  ctx.fillText('T1 PIER', mx(35), mz(220));
-  ctx.fillText('CARGO #101-119', mx(960), mz(220));
-  ctx.fillText('N', mx(1740), mz(220));
-
-  // Active Aircraft or Player Vehicle Marker
-  const px = a3d.subtab === 'flight' ? (computeFlightCyclePose(a3d.flightPhaseIdx, a3d.flightProgress).ac.x) : a3d.veh.x;
-  const pz = a3d.subtab === 'flight' ? (computeFlightCyclePose(a3d.flightPhaseIdx, a3d.flightProgress).ac.z) : a3d.veh.z;
-  ctx.fillStyle = '#22D3EE';
-  ctx.beginPath();
-  ctx.arc(mx(px), mz(pz), 3.8, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#FFFFFF';
-  ctx.lineWidth = 1.3;
-  ctx.stroke();
+  // Labels (only those inside the view)
+  ctx.fillStyle = '#f8fafc'; ctx.textAlign = 'center';
+  ctx.font = `700 ${Math.round(9 * dpr)}px system-ui, sans-serif`;
+  const lab = (txt, x, z) => { const X = mx(x), Y = mz(z); if (X > 10 && X < W - 10 && Y > 10 && Y < H - 4) ctx.fillText(txt, X, Y); };
+  lab('RWY 36/18', 0, -620); lab('T1', 10, 125); lab('PIER', 46, -100); lab('T2', -760, 118); lab('CARGO', 700, -10);
+  if (local) { lab('Spot 7', 0, -6); lab('TWY C', px, -250); }
+  // Scale bar + mode badge
+  const barM = local ? 100 : 1000;
+  ctx.fillStyle = '#e2e8f0'; ctx.fillRect(8 * dpr, H - 10 * dpr, barM * k, 2 * dpr);
+  ctx.textAlign = 'left'; ctx.font = `600 ${Math.round(8 * dpr)}px system-ui, sans-serif`;
+  ctx.fillText(`${barM} m`, 8 * dpr, H - 14 * dpr);
+  ctx.textAlign = 'right'; ctx.fillText(local ? '🔍 −' : '🔍 +', W - 6 * dpr, 12 * dpr);
 }
 
 export async function startAirport3dLoop() {
@@ -885,6 +1003,7 @@ export async function startAirport3dLoop() {
     try {
       const { AirportScene3D } = await import('../three3d/AirportScene3D.js');
       scene3d = new AirportScene3D(glCanvas, hudCanvas, { onInteract: handle3DInteract });
+      if (typeof window !== "undefined" && window.__DEV3D) window.__scene = scene3d;
     } catch (err) {
       const ctx = hudCanvas.getContext('2d');
       ctx.fillStyle = '#0B1324'; ctx.fillRect(0, 0, hudCanvas.width, hudCanvas.height);
@@ -922,6 +1041,12 @@ export function initAirport3dModule() {
       if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') a3d.keys.left = true;
       if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') a3d.keys.right = true;
       if (e.key === ' ') a3d.keys.brake = true;
+      if ((e.key === 'y' || e.key === 'Y') && a3d.subtab === 'drive') {
+        triggerYubikoshi((a3d.veh.speed || 0) < -0.1 || a3d.keys.down ? 'rev' : 'fwd');
+      }
+      if ((e.key === 'c' || e.key === 'C') && a3d.subtab === 'drive') {
+        toggleCoupleDolly();
+      }
       const vp = A3D_VIEWPOINTS.find(v => v.key.toLowerCase() === String(e.key).toLowerCase());
       if (vp) setA3dViewpoint(vp.id);
     });
@@ -1045,10 +1170,15 @@ export function renderAirport3dUI() {
               ` : (isDrive ? `
                 <select id="a3d-ngo-veh-sel" class="a3d-select">
                   <option value="standard" ${a3d.ngoVehMode === 'standard' ? 'selected' : ''}>🚗 ${t('通常GSE (30km/h)', 'GSE thường (30km/h)', 'Standard GSE (30km/h)')}</option>
-                  <option value="towing" ${a3d.ngoVehMode === 'towing' ? 'selected' : ''}>🚜 ${t('カート牽引 (15km/h)', 'Kéo 6 moóc (15km/h)', 'Towing 6 Carts (15km/h)')}</option>
+                  <option value="towing" ${a3d.ngoVehMode === 'towing' ? 'selected' : ''}>🚜 ${t('ドーリー牽引 (15km/h)', 'Kéo Dolly (15km/h)', 'Towing Dollies (15km/h)')}</option>
                   <option value="backing" ${a3d.ngoVehMode === 'backing' ? 'selected' : ''}>🅿 ${t('牽引バック車庫入れ', 'Lùi rơ-moóc vào chuồng', 'Semi-Trailer Reverse Bay')}</option>
                   <option value="high38" ${a3d.ngoVehMode === 'high38' ? 'selected' : ''}>🚛 ${t('全高3.8m超', 'Xe cao >3.8m', 'High Vehicle >3.8m')}</option>
                 </select>
+                <select id="a3d-dolly-type-sel" class="a3d-select" title="${t('ドーリー種別', 'Loại Dolly', 'Dolly Type')}">
+                  ${Object.values(DOLLY_TYPES).map(d => `<option value="${d.id}" ${a3d.dollyType === d.id ? 'selected' : ''}>${t(d.nameJa, d.nameVi, d.nameEn)}</option>`).join('')}
+                </select>
+                <button class="btn btn-sm ${a3d.coupledDolly ? 'btn-danger-outline' : 'btn-primary'}" id="a3d-btn-couple" title="Key: C">${a3d.coupledDolly ? `⛓‍💥 ${t('切離(C)', 'Tháo(C)', 'Uncouple(C)')}` : `🔗 ${t('連結(C)', 'Nối(C)', 'Couple(C)')}`}</button>
+                <button class="btn btn-sm" id="a3d-btn-yubi" title="Key: Y">👉 ${t('指差呼称(Y)', 'Chỉ tay hô(Y)', 'Yoshi!(Y)')}</button>
                 <span class="pro-only" style="display:contents;">
                   <button class="btn btn-sm ${a3d.spot101BeaconOn ? 'btn-danger-outline' : ''}" id="a3d-toggle-beacon">S6:${a3d.spot101BeaconOn ? '🔴' : '⚪'}</button>
                   <button class="btn btn-sm ${a3d.ilsRedOn ? 'btn-danger-outline' : ''}" id="a3d-toggle-ils">ILS:${a3d.ilsRedOn ? '🔴' : '⚪'}</button>
@@ -1116,7 +1246,7 @@ export function renderAirport3dUI() {
           <div class="airport3d-stage ${a3d.expanded ? 'expanded' : ''} ${a3d.ui.hudInfo ? 'hud-info-open' : ''}" id="a3d-stage-box">
             <canvas id="airport3d-gl"></canvas>
             <canvas id="airport3d-hud2d"></canvas>
-            <div class="a3d-minimap-wrap ${a3d.ui.map && !(a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing') ? '' : 'hidden'}" id="a3d-minimap-box" title="NGO Centrair">
+            <div class="a3d-minimap-wrap ${a3d.ui.map ? '' : 'hidden'} ${a3d.ui.mapBig ? 'big' : ''}" id="a3d-minimap-box" title="${t('タップ：拡大／全体切替', 'Chạm: phóng to / toàn đảo', 'Tap: zoom / island')}">
               <canvas id="a3d-minimap"></canvas>
             </div>
             <div class="raycast-toast" id="a3d-raycast-toast"></div>
@@ -1209,6 +1339,7 @@ export function renderAirport3dUI() {
             ` : ''}
             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">
               <span style="font-size:11px;font-weight:700;color:var(--text-secondary);width:100%;">${t('🗺 4.37kmセントレア島 クイック移動 (実寸地区ジャンプ):', '🗺 Nhảy nhanh tới các phân khu Sân bay NGO 4,37km:', '🗺 Quick Jump Across 1:1 4.37km NGO Island:')}</span>
+              <button class="btn btn-sm" data-ngojump="dolly">🚜 ${t('ドーリー待機所', 'Bãi Dolly GSE', 'Dolly Staging')}</button>
               <button class="btn btn-sm" data-ngojump="t1">✈ T1 Spot 7</button>
               <button class="btn btn-sm" data-ngojump="pier">🌉 ${t('300mピア先端', 'Mũi Pier 300m', '300m Pier Tip')}</button>
               <button class="btn btn-sm" data-ngojump="t2">🛫 T2 (#71–80)</button>
@@ -1229,6 +1360,20 @@ export function renderAirport3dUI() {
   `;
 
   mount.querySelectorAll('[data-st]').forEach(b => { b.onclick = () => openA3dSubtab(b.dataset.st); });
+  {
+    const mb = document.getElementById('a3d-minimap-box');
+      if (mb && !mb._wired) {
+      mb._wired = true;
+      // Tap: local ⇄ whole island. Double-tap: bigger / smaller panel.
+      mb.addEventListener('click', () => {
+        const cur = a3d.ui.mapZoom || (a3d.subtab === 'flight' ? 'island' : 'local');
+        a3d.ui.mapZoom = cur === 'local' ? 'island' : 'local';
+        a3d._lastMinimapMs = 0;
+      });
+      mb.addEventListener('dblclick', () => { a3d.ui.mapBig = !a3d.ui.mapBig; mb.classList.toggle('big', a3d.ui.mapBig); a3d._lastMinimapMs = 0; });
+    }
+
+  }
   mount.querySelectorAll('[data-tod]').forEach(b => {
     b.onclick = () => { a3d.timeOfDay = b.dataset.tod; mount.querySelectorAll('[data-tod]').forEach(x => x.classList.toggle('btn-primary', x.dataset.tod === a3d.timeOfDay)); };
   });
@@ -1258,6 +1403,7 @@ export function renderAirport3dUI() {
     const mb = document.getElementById('a3d-minimap-box');
     if (mb) mb.classList.toggle('hidden', !a3d.ui.map);
   };
+  { const de = document.getElementById('a3d-vp-desc'); if (de) { clearTimeout(setA3dViewpoint._fade); setA3dViewpoint._fade = setTimeout(() => de.classList.add('faded'), 6000); } }
   mount.querySelectorAll('details[data-panel]').forEach(d => {
     d.addEventListener('toggle', () => { a3d.ui.panels[d.dataset.panel] = d.open; });
   });
@@ -1317,6 +1463,25 @@ export function renderAirport3dUI() {
         }
       };
     }
+    const dtSel = document.getElementById('a3d-dolly-type-sel');
+    if (dtSel) {
+      dtSel.onchange = e => {
+        a3d.dollyType = e.target.value;
+        if (a3d.coupledDolly) a3d.coupledDolly.type = a3d.dollyType;
+        if (a3d.dollyType === 'semi') {
+          a3d.ngoVehMode = 'backing';
+          resetBackingScenario();
+        } else {
+          a3d.ngoVehMode = 'towing';
+          a3d.prevHitch = null;
+        }
+        renderAirport3dUI();
+      };
+    }
+    const cBtn = document.getElementById('a3d-btn-couple');
+    if (cBtn) cBtn.onclick = () => toggleCoupleDolly();
+    const yBtn = document.getElementById('a3d-btn-yubi');
+    if (yBtn) yBtn.onclick = () => triggerYubikoshi((a3d.veh.speed || 0) < -0.1 || a3d.keys.down ? 'rev' : 'fwd');
     const ti = document.getElementById('a3d-toggle-ils');
     if (ti) ti.onclick = () => { a3d.ilsRedOn = !a3d.ilsRedOn; ti.textContent = `ILS:${a3d.ilsRedOn ? '🔴' : '⚪'}`; ti.classList.toggle('btn-danger-outline', a3d.ilsRedOn); };
     const tbl = document.getElementById('a3d-toggle-blast');
@@ -1357,7 +1522,8 @@ export function renderAirport3dUI() {
         const dest = jb.dataset.ngojump;
         a3d.veh.speed = 0;
         a3d.prevHitch = null;
-        if (dest === 't1') { a3d.veh.x = -18; a3d.veh.z = 50; a3d.veh.heading = 0; }
+        if (dest === 'dolly') { a3d.veh.x = -100; a3d.veh.z = 22; a3d.veh.heading = Math.PI; }
+        else if (dest === 't1') { a3d.veh.x = -18; a3d.veh.z = 50; a3d.veh.heading = 0; }
         else if (dest === 'pier') { a3d.veh.x = 46; a3d.veh.z = -192; a3d.veh.heading = Math.PI; }
         else if (dest === 't2') { a3d.veh.x = -620; a3d.veh.z = 50; a3d.veh.heading = Math.PI; }
         else if (dest === 'cargo') { a3d.veh.x = 620; a3d.veh.z = 50; a3d.veh.heading = 0; }

@@ -5,6 +5,7 @@
 //   1. ✋ 手積み (Manual Hand Stacking for light cargo ≤35kg: Heavy-Bottom, Brick Interlock across 2 boxes, Care Marks)
 //   2. 🚜 フォークリフト搭載 (Forklift Loading for heavy cargo >35kg: Wooden/Plastic Pallets T11 110×110, ISO 120×100, Euro 120×80, Skid + Spreader Planks 補強板, Tuna Pan, Bike Skid)
 import * as THREE from 'three';
+import { applySkyEnvironment } from '../three3d/envLighting.js';
 import { appState, saveState, updateProgressBadges, t } from '../core/state.js';
 
 // =====================================================================
@@ -796,12 +797,13 @@ class UldBuildupScene3D {
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.12;
+    this.renderer.toneMappingExposure = 1.0;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0b1526);
+    applySkyEnvironment(this.renderer, this.scene, 'overcast'); // warehouse-like soft reflections
 
     this.camera = new THREE.PerspectiveCamera(44, 16 / 9, 0.1, 80);
     this.orbit = {
@@ -818,7 +820,7 @@ class UldBuildupScene3D {
     };
 
     // Warehouse lighting
-    const hemi = new THREE.HemisphereLight(0xdbeafe, 0x1e293b, 1.05);
+    const hemi = new THREE.HemisphereLight(0xdbeafe, 0x1e293b, 0.7);
     this.scene.add(hemi);
     const dir = new THREE.DirectionalLight(0xfffbeb, 1.85);
     dir.position.set(5.5, 9.0, 6.0);
