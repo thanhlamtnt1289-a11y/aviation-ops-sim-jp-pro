@@ -5,3 +5,4 @@ dist/
 .env
 .env.*
 __harness.html
+__gse_showroom.html

@@ -10,7 +10,8 @@ import {
   A3D_RADIO_COMMS,
   A3D_VIEWPOINTS,
   computeFlightCyclePose,
-  evaluateAirportZone
+  evaluateAirportZone,
+  NGO_STAND7_X
 } from '../data/airports.js';
 import { a3dAudio } from '../engines/audioEngine.js';
 import { appState, bi, saveState, t } from '../core/state.js';
@@ -99,7 +100,7 @@ export const a3d = {
   impactPos: null,
   camShake: 0,
   lastSpotterWarnTime: 0,
-  cam: { tx: 0, ty: 2, tz: 10, dist: 105, yaw: 0.45, pitch: 0.50 },
+  cam: { tx: -10, ty: 2, tz: 10, dist: 105, yaw: 0.45, pitch: 0.50 },
   driveZoom: 1.0,
   _lastMinimapMs: 0,
   _lastBkDomMs: 0,
@@ -545,22 +546,22 @@ function stepPhysics(dt, now) {
   // Live Chubu Centrair (NGO) Driving Scenarios (Moving Departing / Taxiing Aircraft + Active Spotters!)
   a3d.ngoScenarioTime = (a3d.ngoScenarioTime || 0) + dt;
   const st = a3d.ngoScenarioTime;
-  let liveAc = { x: 0, z: 10, heading: Math.PI / 2, beaconOn: false, chocksOn: true, blastOn: false, mode: 'parked' };
+  let liveAc = { x: NGO_STAND7_X, z: 10, heading: Math.PI / 2, beaconOn: false, chocksOn: true, blastOn: false, mode: 'parked' };
   const sAlert = { pushback: false, service: false, blast: false, blastDist: 999 };
 
   if (a3d.ngoDriveScenario === 'SC1') {
     // SC1: Aircraft at Spot 7 activates 6 Pushback/Self-Taxi-Out signs & pushes across Behind-Stand Road (-38)!
     const cyc = st % 28;
     if (cyc < 5) {
-      liveAc = { x: 0, z: 10, heading: Math.PI / 2, beaconOn: true, chocksOn: false, blastOn: false, mode: 'pushback' };
+      liveAc = { x: NGO_STAND7_X, z: 10, heading: Math.PI / 2, beaconOn: true, chocksOn: false, blastOn: false, mode: 'pushback' };
       sAlert.pushback = true;
     } else if (cyc < 16) {
       const p = (cyc - 5) / 11;
-      liveAc = { x: 0, z: 10 - p * 54, heading: Math.PI / 2, beaconOn: true, chocksOn: false, blastOn: true, mode: 'pushback' };
+      liveAc = { x: NGO_STAND7_X, z: 10 - p * 54, heading: Math.PI / 2, beaconOn: true, chocksOn: false, blastOn: true, mode: 'pushback' };
       sAlert.pushback = true;
     } else if (cyc < 22) {
       const p = (cyc - 16) / 6;
-      liveAc = { x: p * 75, z: -44 - p * 11, heading: Math.PI / 2 - p * (Math.PI / 2), beaconOn: true, chocksOn: false, blastOn: true, mode: 'pushback' };
+      liveAc = { x: NGO_STAND7_X + p * 75, z: -44 - p * 11, heading: Math.PI / 2 - p * (Math.PI / 2), beaconOn: true, chocksOn: false, blastOn: true, mode: 'pushback' };
       sAlert.pushback = p < 0.7;
     } else {
       // Safe window — Spotter waves CLEAR!
@@ -577,12 +578,12 @@ function stepPhysics(dt, now) {
     sAlert.service = (tx > -115 && tailDist < 100); // True 1:1 100m jet-blast clearance behind aircraft tail!
   } else if (a3d.ngoDriveScenario === 'SC3') {
     // SC3: 24h Engine Run-Up at Spot 7 (Anti-collision ON + Chocks STILL IN!) + #71 Blast Active
-    liveAc = { x: 0, z: 10, heading: Math.PI / 2, beaconOn: true, chocksOn: true, blastOn: true, mode: 'runup' };
+    liveAc = { x: NGO_STAND7_X, z: 10, heading: Math.PI / 2, beaconOn: true, chocksOn: true, blastOn: true, mode: 'runup' };
     sAlert.pushback = true;
     sAlert.blast = true;
   } else {
     // SC4: High Vehicle >3.8m + ILS Red Lamp + Fire Station Check
-    liveAc = { x: 0, z: 10, heading: Math.PI / 2, beaconOn: false, chocksOn: true, blastOn: false, mode: 'parked' };
+    liveAc = { x: NGO_STAND7_X, z: 10, heading: Math.PI / 2, beaconOn: false, chocksOn: true, blastOn: false, mode: 'parked' };
   }
   a3d.ngoLiveAc = liveAc;
   a3d.spotterAlert = sAlert;
@@ -949,7 +950,7 @@ function drawNgoMinimap() {
 
   // Spot 7 stand + aircraft
   ctx.strokeStyle = '#facc15'; ctx.lineWidth = Math.max(1, 1.2 * dpr);
-  ctx.beginPath(); ctx.moveTo(mx(0), mz(-235)); ctx.lineTo(mx(0), mz(10)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(mx(NGO_STAND7_X), mz(-235)); ctx.lineTo(mx(NGO_STAND7_X), mz(10)); ctx.stroke();
   const drawPlane = (x, z, hdg, col, size) => {
     ctx.save(); ctx.translate(mx(x), mz(z)); ctx.rotate(hdg + Math.PI / 2); ctx.fillStyle = col;
     const L = Math.max(7 * dpr, size * k), S = L * 0.9;
@@ -959,7 +960,7 @@ function drawNgoMinimap() {
     ctx.restore();
   };
   if (isFlight) drawPlane(px, pz, pose.heading ?? Math.PI / 2, '#22d3ee', 40);
-  else drawPlane(0, 10, Math.PI / 2, '#e2e8f0', 40);
+  else drawPlane(NGO_STAND7_X, 10, Math.PI / 2, '#e2e8f0', 40);
 
   // World dolly trains (blue = free, green = in coupling range)
   (a3d.worldDollies || []).filter(d => !d.coupled).forEach(d => {
@@ -984,7 +985,7 @@ function drawNgoMinimap() {
   ctx.font = `700 ${Math.round(9 * dpr)}px system-ui, sans-serif`;
   const lab = (txt, x, z) => { const X = mx(x), Y = mz(z); if (X > 10 && X < W - 10 && Y > 10 && Y < H - 4) ctx.fillText(txt, X, Y); };
   lab('RWY 36/18', 0, -620); lab('T1', 10, 125); lab('PIER', 46, -100); lab('T2', -760, 118); lab('CARGO', 700, -10);
-  if (local) { lab('Spot 7', 0, -6); lab('TWY C', px, -250); }
+  if (local) { lab('Spot 7', NGO_STAND7_X, -6); lab('TWY C', px, -250); }
   // Scale bar + mode badge
   const barM = local ? 100 : 1000;
   ctx.fillStyle = '#e2e8f0'; ctx.fillRect(8 * dpr, H - 10 * dpr, barM * k, 2 * dpr);
@@ -1130,7 +1131,7 @@ function updateMarshalDrill(dt) {
 export function openA3dSubtab(tab = 'flight') {
   a3d.subtab = ['flight', 'drive', 'ops3d'].includes(tab) ? tab : 'flight';
   if (a3d.subtab !== 'flight') stopMarshalDrill();
-  if (a3d.subtab === 'ops3d') { a3d.camMode = 'orbit'; a3d.cam = { tx: 0, ty: 3, tz: 12, dist: 46, yaw: -0.55, pitch: 0.42 }; }
+  if (a3d.subtab === 'ops3d') { a3d.camMode = 'orbit'; a3d.cam = { tx: NGO_STAND7_X, ty: 3, tz: 12, dist: 46, yaw: -0.55, pitch: 0.42 }; }
   else if (a3d.subtab === 'drive') a3d.camMode = 'chase';
   else if (!a3d.marshalDrill.active) a3d.camMode = 'flight_follow';
   renderAirport3dUI();

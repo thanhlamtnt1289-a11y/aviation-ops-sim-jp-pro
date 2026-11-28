@@ -24,7 +24,7 @@ export const GSE_PALETTE = {
   chassis: 0x2b3442,     // khung gầm
   rubber: 0x15181d,      // lốp, cản
   rim: 0xb8c2cf,         // mâm
-  glass: 0x9cc8ec,       // kính cabin
+  glass: 0x3a5470,       // kính cabin (kính màu khói, phản chiếu trời)
   steel: 0xc3ccd7,       // sàn thép / nhôm
   fuelRed: 0xd32f2f,     // xe nhiên liệu (火気厳禁)
   lavGrey: 0x5b6676,     // xe vệ sinh
@@ -35,11 +35,19 @@ export const GSE_PALETTE = {
 
 const matCache = new Map();
 function mat(key, color, opts = {}) {
-  const k = `${key}_${color}_${opts.metalness ?? ''}_${opts.roughness ?? ''}_${opts.opacity ?? ''}`;
+  const k = `${key}_${color}_${opts.metalness ?? ''}_${opts.roughness ?? ''}_${opts.opacity ?? ''}_${opts.map ? opts.map.uuid : ''}`;
   if (matCache.has(k)) return matCache.get(k);
   let m;
   if (key === 'glass') {
-    m = new THREE.MeshPhysicalMaterial({ color, roughness: 0.06, metalness: 0.15, transparent: true, opacity: opts.opacity ?? 0.55, clearcoat: 1 });
+    // Tinted automotive glass: dark, highly reflective (picks up the sky env map)
+    m = new THREE.MeshPhysicalMaterial({ color, roughness: 0.04, metalness: 0.35, transparent: true, opacity: opts.opacity ?? 0.82, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.6 });
+  } else if (key === 'paint') {
+    // Clear-coated fleet paint
+    m = new THREE.MeshPhysicalMaterial({ color, metalness: opts.metalness ?? 0.12, roughness: opts.roughness ?? 0.38, clearcoat: 0.7, clearcoatRoughness: 0.18 });
+  } else if (key === 'lamp') {
+    m = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: opts.opacity ?? 1.4, roughness: 0.2, metalness: 0.1 });
+  } else if (key === 'tex') {
+    m = new THREE.MeshStandardMaterial({ map: opts.map, transparent: true, roughness: 0.5, metalness: 0.05, polygonOffset: true, polygonOffsetFactor: -2 });
   } else if (key === 'basic') {
     m = new THREE.MeshBasicMaterial({ color, transparent: opts.opacity !== undefined, opacity: opts.opacity ?? 1 });
   } else {
@@ -49,17 +57,96 @@ function mat(key, color, opts = {}) {
   return m;
 }
 export const GSE_MAT = {
-  body: () => mat('std', GSE_PALETTE.body, { metalness: 0.2, roughness: 0.34 }),
-  bodyShade: () => mat('std', GSE_PALETTE.bodyShade, { metalness: 0.2, roughness: 0.38 }),
-  accent: () => mat('std', GSE_PALETTE.accent, { metalness: 0.25, roughness: 0.38 }),
+  body: () => mat('paint', GSE_PALETTE.body, { metalness: 0.1, roughness: 0.32 }),
+  bodyShade: () => mat('paint', GSE_PALETTE.bodyShade, { metalness: 0.1, roughness: 0.36 }),
+  accent: () => mat('paint', GSE_PALETTE.accent, { metalness: 0.15, roughness: 0.34 }),
   safety: () => mat('std', GSE_PALETTE.safety, { metalness: 0.25, roughness: 0.42 }),
   chassis: () => mat('std', GSE_PALETTE.chassis, { metalness: 0.45, roughness: 0.55 }),
   rubber: () => mat('std', GSE_PALETTE.rubber, { metalness: 0.02, roughness: 0.92 }),
   rim: () => mat('std', GSE_PALETTE.rim, { metalness: 0.65, roughness: 0.3 }),
   steel: () => mat('std', GSE_PALETTE.steel, { metalness: 0.55, roughness: 0.35 }),
   glass: () => mat('glass', GSE_PALETTE.glass),
+  headLamp: () => mat('lamp', 0xfff4d6, { opacity: 1.2 }),
+  tailLamp: () => mat('lamp', 0xd61f1f, { opacity: 0.9 }),
+  marker: () => mat('lamp', 0xff9a1a, { opacity: 0.8 }),
+  mirror: () => mat('std', 0x1b222c, { metalness: 0.6, roughness: 0.25 }),
   color: (hex, metalness = 0.22, roughness = 0.42) => mat('std', hex, { metalness, roughness })
 };
+
+// ---------------------------------------------------------------- Decals (canvas textures, generated once)
+const texCache = new Map();
+function canvasTex(key, w, h, draw) {
+  if (texCache.has(key)) return texCache.get(key);
+  if (typeof document === 'undefined') return null;
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  texCache.set(key, t);
+  return t;
+}
+// Yellow/black chevrons on rear bumpers (虎柄 — standard on Japanese airside vehicles)
+function hazardTex() {
+  return canvasTex('hazard', 256, 32, (x, w, h) => {
+    x.fillStyle = '#f5b301'; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#111'; for (let i = -h; i < w + h; i += 32) { x.beginPath(); x.moveTo(i, h); x.lineTo(i + 16, h); x.lineTo(i + 16 + h, 0); x.lineTo(i + h, 0); x.closePath(); x.fill(); }
+  });
+}
+// Generic handling-company door mark + fleet number (fictional brand, no real logos)
+function doorLogoTex(no) {
+  return canvasTex('logo_' + no, 256, 128, (x, w, h) => {
+    x.clearRect(0, 0, w, h);
+    x.fillStyle = '#0b4fa8';
+    x.beginPath(); x.moveTo(18, 70); x.lineTo(70, 20); x.lineTo(92, 20); x.lineTo(40, 70); x.closePath(); x.fill();
+    x.fillStyle = '#f5b301'; x.fillRect(18, 76, 74, 8);
+    x.fillStyle = '#0f1f33'; x.font = '700 30px system-ui, sans-serif'; x.fillText('NGO GH', 102, 56);
+    x.font = '600 22px ui-monospace, monospace'; x.fillStyle = '#334155'; x.fillText('No. ' + no, 104, 92);
+  });
+}
+let fleetSeq = 0;
+const FLEET_NOS = [12, 23, 31, 47, 58, 64];
+// Tyre: tread blocks on the running surface, black sidewalls (CylinderGeometry: group 0 = side, 1/2 = caps)
+function tyreMaterial() {
+  const k = 'tyreMat';
+  if (texCache.has(k)) return texCache.get(k);
+  const t = canvasTex('tread', 256, 64, (x, w, h) => {
+    x.fillStyle = '#16191e'; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#0b0d10';
+    for (let i = 0; i < w; i += 16) { x.fillRect(i, 6, 7, h * 0.4); x.fillRect(i + 8, h * 0.5, 7, h * 0.42); }
+    x.fillStyle = '#23272e'; x.fillRect(0, 0, w, 4); x.fillRect(0, h - 4, w, 4);
+  });
+  const side = new THREE.MeshStandardMaterial({ map: t, roughness: 0.95, metalness: 0.0 });
+  const wall = new THREE.MeshStandardMaterial({ color: 0x23272e, roughness: 0.88, metalness: 0.0 });
+  const m = t ? [side, wall, wall] : GSE_MAT.rubber();
+  texCache.set(k, m);
+  return m;
+}
+// Rim face: silver disc, 6 spokes/windows, 5 lug nuts, dark sidewall ring
+function rimFaceMaterial() {
+  const k = 'rimFace';
+  if (texCache.has(k)) return texCache.get(k);
+  const t = canvasTex('rimface', 128, 128, (x, w) => {
+    const c = w / 2;
+    x.clearRect(0, 0, w, w);
+    x.fillStyle = '#23272e'; x.beginPath(); x.arc(c, c, c, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#c3ccd7'; x.beginPath(); x.arc(c, c, c * 0.68, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#4b5563';
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; x.beginPath(); x.ellipse(c + Math.cos(a) * c * 0.45, c + Math.sin(a) * c * 0.45, c * 0.12, c * 0.07, a, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = '#e5e9ef'; x.beginPath(); x.arc(c, c, c * 0.22, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#374151';
+    for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2 + 0.3; x.beginPath(); x.arc(c + Math.cos(a) * c * 0.15, c + Math.sin(a) * c * 0.15, c * 0.035, 0, Math.PI * 2); x.fill(); }
+  });
+  const m = t ? new THREE.MeshStandardMaterial({ map: t, transparent: true, metalness: 0.55, roughness: 0.32 }) : GSE_MAT.rim();
+  texCache.set(k, m);
+  return m;
+}
+function circleGeo(r) {
+  const key = 'circ_' + r.toFixed(3);
+  if (!geoCache.has(key)) geoCache.set(key, new THREE.CircleGeometry(r, 20));
+  return geoCache.get(key);
+}
 
 // ---------------------------------------------------------------- Geometry helpers
 const geoCache = new Map();
@@ -114,22 +201,65 @@ function makeKit(g) {
     // Chassis frame + front/rear black rubber bumpers
     chassis(w, len, y = 0.62, zc = 0) {
       kit.box(w, 0.34, len, GSE_MAT.chassis(), 0, y, zc);
+      // side frame rails & cross-members visible under the body
+      [-1, 1].forEach(s => kit.box(0.12, 0.2, len * 0.96, GSE_MAT.color(0x1c232d, 0.5, 0.5), s * (w / 2 - 0.25), y - 0.26, zc));
       kit.box(w + 0.06, 0.22, 0.16, GSE_MAT.rubber(), 0, y - 0.04, zc + len / 2 + 0.06);
       kit.box(w + 0.06, 0.22, 0.16, GSE_MAT.rubber(), 0, y - 0.04, zc - len / 2 - 0.06);
+      // rear: 虎柄 chevrons + tail/brake lamps + reflectors
+      const hz = hazardTex();
+      if (hz) {
+        const pl = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.96, 0.2), mat('tex', 0xffffff, { map: hz }));
+        pl.position.set(0, y - 0.04, zc - len / 2 - 0.145);
+        pl.rotation.y = Math.PI;
+        g.add(pl);
+      }
+      [-1, 1].forEach(s => {
+        kit.box(0.22, 0.12, 0.04, GSE_MAT.tailLamp(), s * (w / 2 - 0.22), y + 0.12, zc - len / 2 - 0.02);
+        kit.box(0.08, 0.08, 0.03, GSE_MAT.marker(), s * (w / 2 - 0.05), y + 0.12, zc - len / 2 - 0.02);
+      });
     },
 
-    // Standard fleet cab (same proportions on every truck): white rounded body + navy band + glass + beacon
+    // Standard fleet cab (same proportions on every truck): clear-coated white body, navy band, tinted
+    // glass with black pillars, mirrors, lamps, door logo + fleet number, grab handle and step, beacon.
     cab(w, h, d, x, yBase, z, opts = {}) {
       const cg = new THREE.Group();
+      const so = w / 2 + 0.09; // rounded-box bevel pushes the skin ~0.085 m past w/2
+      const fo = d / 2 + 0.01;
       cg.position.set(x, yBase, z);
       kit.rbox(w, h, d, GSE_MAT.body(), 0, h / 2, 0, 0.14, cg);
       kit.box(w + 0.02, 0.2, d + 0.02, GSE_MAT.accent(), 0, 0.28, 0, cg);
-      // windshield (front +Z) and side windows
-      kit.box(w - 0.22, h * 0.42, 0.04, GSE_MAT.glass(), 0, h * 0.68, d / 2 + 0.005, cg);
-      [-1, 1].forEach(s => kit.box(0.04, h * 0.36, d * 0.62, GSE_MAT.glass(), s * (w / 2 + 0.005), h * 0.68, 0.05, cg));
-      // headlights
-      [-1, 1].forEach(s => kit.box(0.26, 0.12, 0.05, mat('basic', 0xfff7d6), s * (w / 2 - 0.3), 0.55, d / 2 + 0.01, cg));
-      if (opts.beacon !== false) kit.beacon(0, h + 0.02, -d * 0.15, cg);
+      kit.rbox(w + 0.06, 0.08, d + 0.08, GSE_MAT.bodyShade(), 0, h + 0.01, 0, 0.03, cg);        // roof cap
+      // glazing: windshield + side windows set into black frames
+      const blk = GSE_MAT.color(0x10151c, 0.2, 0.6);
+      kit.box(w - 0.12, h * 0.48, 0.03, blk, 0, h * 0.68, fo, cg);
+      kit.box(w - 0.26, h * 0.4, 0.03, GSE_MAT.glass(), 0, h * 0.69, fo + 0.012, cg);
+      [-1, 1].forEach(s => {
+        kit.box(0.03, h * 0.44, d * 0.7, blk, s * so, h * 0.68, 0.04, cg);
+        kit.box(0.03, h * 0.36, d * 0.6, GSE_MAT.glass(), s * (so + 0.012), h * 0.69, 0.04, cg);
+        // mirror on an arm
+        kit.box(0.26, 0.03, 0.03, blk, s * (so + 0.12), h * 0.72, d / 2 - 0.08, cg);
+        kit.box(0.05, 0.26, 0.16, GSE_MAT.mirror(), s * (so + 0.26), h * 0.7, d / 2 - 0.08, cg);
+        // amber side marker
+        kit.box(0.02, 0.06, 0.12, GSE_MAT.marker(), s * (so + 0.006), 0.42, d / 2 - 0.14, cg);
+        // door logo + fleet number decal
+        const tex = doorLogoTex(opts.no || FLEET_NOS[(fleetSeq++) % FLEET_NOS.length]); // 6 shared textures
+        if (tex) {
+          const pl = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(0.95, d * 0.55), Math.min(0.48, d * 0.27)), mat('tex', 0xffffff, { map: tex }));
+          pl.position.set(s * (so + 0.012), h * 0.36, -0.06);
+          pl.rotation.y = s * Math.PI / 2;
+          cg.add(pl);
+        }
+      });
+      // front: grille, headlights, turn signals, number plate
+      kit.box(w * 0.5, 0.22, 0.03, blk, 0, 0.42, fo + 0.008, cg);
+      [-1, 1].forEach(s => {
+        kit.box(0.26, 0.13, 0.04, GSE_MAT.headLamp(), s * (w / 2 - 0.3), 0.56, fo + 0.008, cg);
+        kit.box(0.1, 0.08, 0.04, GSE_MAT.marker(), s * (w / 2 - 0.1), 0.56, fo + 0.008, cg);
+      });
+      kit.box(0.42, 0.14, 0.02, GSE_MAT.color(0xf8fafc, 0.0, 0.6), 0, 0.22, fo + 0.012, cg);
+      // entry step
+      kit.box(0.5, 0.05, 0.28, GSE_MAT.steel(), (opts.stepSide || -1) * (w / 2 + 0.05), 0.12, -d * 0.18, cg);
+      if (opts.beacon !== false) kit.beacon(0, h + 0.05, -d * 0.15, cg);
       g.add(cg);
       return cg;
     },
@@ -137,7 +267,7 @@ function makeKit(g) {
     // Amber rotating beacon (黄色回転灯) — required on every airside vehicle
     beacon(x, y, z, parent = g) {
       const base = kit.cyl(0.09, 0.11, 0.06, GSE_MAT.rubber(), x, y + 0.03, z, parent, 10);
-      const bulb = new THREE.Mesh(cylGeo(0.085, 0.1, 0.17, 12), mat('basic', GSE_PALETTE.beacon));
+      const bulb = new THREE.Mesh(cylGeo(0.085, 0.1, 0.17, 12), mat('lamp', GSE_PALETTE.beacon, { opacity: 2.2 }));
       bulb.position.set(x, y + 0.14, z);
       parent.add(bulb);
       g.userData.beaconLamps = (g.userData.beaconLamps || []).concat([bulb]);
@@ -146,19 +276,30 @@ function makeKit(g) {
 
     // Wheels: identical tyre style on every vehicle (dark tyre + light rim + hub cap)
     wheels(trackHalf, zList, r = 0.42, width = 0.28) {
+      // 3 meshes per wheel (draw-call friendly): treaded tyre (texture), rim face decal (spokes + lug nuts), hub
       const wheels = [];
+      const tyreMat = tyreMaterial();
+      const faceMat = rimFaceMaterial();
       zList.forEach(wz => {
         [-trackHalf, trackHalf].forEach(wx => {
+          const side = Math.sign(wx) || 1;
           const wg = new THREE.Group();
           wg.position.set(wx, r, wz);
-          const tyre = new THREE.Mesh(cylGeo(r, r, width, 18), GSE_MAT.rubber());
+          const tyre = new THREE.Mesh(cylGeo(r, r, width, 22), tyreMat);
           tyre.rotation.z = Math.PI / 2;
           tyre.castShadow = true;
-          const rim = new THREE.Mesh(cylGeo(r * 0.55, r * 0.55, width + 0.02, 12), GSE_MAT.rim());
-          rim.rotation.z = Math.PI / 2;
-          wg.add(tyre, rim);
+          const face = new THREE.Mesh(circleGeo(r * 0.86), faceMat);
+          face.position.x = side * (width / 2 + 0.006);
+          face.rotation.y = side * Math.PI / 2;
+          const hub = new THREE.Mesh(cylGeo(r * 0.16, r * 0.19, width + 0.08, 10), GSE_MAT.steel());
+          hub.rotation.z = Math.PI / 2;
+          wg.add(tyre, face, hub);
           g.add(wg);
           wheels.push(wg);
+          if (r >= 0.3) {
+            const fg = kit.box(width + 0.12, 0.05, r * 2.1, GSE_MAT.chassis(), wx, r * 2 + 0.08, wz);
+            fg.castShadow = false;
+          }
         });
       });
       g.userData.wheels = (g.userData.wheels || []).concat(wheels);
@@ -256,7 +397,18 @@ export function buildGse(kind, targetHeightY = 2.8, extra = {}) {
     k.box(2.1, 0.08, 1.6, M.accent(), 0, topY + 2.1, 2.65);
     [-0.98, 0.98].forEach(sx => k.box(0.08, 2.1, 1.5, M.glass(), sx, topY + 1.05, 2.65));
     k.box(2.1, 0.12, 0.2, M.rubber(), 0, topY + 0.04, 3.45);
-    k.box(2.24, 0.2, 6.2, M.accent(), 0, 0.92, -0.3);
+    // body deck: white with the fleet's navy band (was one solid blue slab)
+    k.rbox(2.24, 0.34, 6.2, M.body(), 0, 0.98, -0.3, 0.06);
+    k.box(2.26, 0.12, 6.22, M.accent(), 0, 0.86, -0.3);
+    // structure under the stair: side stringers, lift columns under the platform, cross braces
+    [-0.88, 0.88].forEach(sx => {
+      const str = k.box(0.12, 0.42, rampLen * 0.96, M.chassis(), sx, (topY + 1.05) * 0.5 - 0.3, 0.45);
+      str.rotation.x = -rampAng;
+      k.box(0.16, topY - 1.15, 0.16, M.chassis(), sx, (topY + 1.15) * 0.5, 2.2);
+      k.box(0.16, topY - 1.15, 0.16, M.chassis(), sx, (topY + 1.15) * 0.5, 3.1);
+    });
+    k.box(1.9, 0.1, 0.1, M.chassis(), 0, topY * 0.55, 2.2);
+    k.box(1.9, 0.1, 0.1, M.chassis(), 0, topY * 0.55, 3.1);
     k.wheels(1.06, [-2.2, 1.65], 0.42);
     k.outriggers(1.08, 1.95, -2.0);
   } else if (kind === 'catering' || kind === 'cabinClean') {
@@ -387,6 +539,9 @@ export function buildGse(kind, targetHeightY = 2.8, extra = {}) {
     k.box(0.78, 0.06, boomLen - 0.2, M.rubber(), 0, 0.13, boomLen * 0.5, boomGroup);
     [-1, 1].forEach(s => k.box(0.06, 0.24, boomLen - 0.4, M.safety(), s * 0.5, 0.24, boomLen * 0.5, boomGroup));
     k.box(1.0, 0.16, 0.2, M.rubber(), 0, 0.1, boomLen, boomGroup);
+    // belt cleats (ribs every 0.45 m) + side guide rollers
+    for (let z = 0.3; z < boomLen - 0.2; z += 0.45) k.box(0.74, 0.025, 0.05, M.color(0x0a0c0f, 0.0, 0.9), 0, 0.17, z, boomGroup);
+    [-1, 1].forEach(s => { for (let z = 0.6; z < boomLen; z += 1.2) k.cyl(0.05, 0.05, 0.12, M.steel(), s * 0.45, 0.2, z, boomGroup, 8); });
     const bagCols = [0x1e3a8a, 0x9f1239, 0x0f766e, 0x374151];
     const bags = [];
     for (let bi = 0; bi < 4; bi++) {
@@ -458,8 +613,23 @@ export function buildGse(kind, targetHeightY = 2.8, extra = {}) {
     const panelY = Math.max(1.9, targetHeightY);
     k.chassis(2.1, 5.3, 0.58, -0.2);
     k.cab(2.1, 1.55, 1.55, 0, 0.7, 1.95);
-    const tank = k.cyl(0.85, 0.85, 3.2, M.color(tankCol, 0.35, 0.35), 0, 1.6, -0.95, g, 18);
+    const tank = k.cyl(0.85, 0.85, 3.2, mat('paint', tankCol, { metalness: 0.35, roughness: 0.3 }), 0, 1.6, -0.95, g, 24);
     tank.rotation.x = Math.PI / 2;
+    // dished end caps, 3 hold-down straps, top manhole + walkway rail, cradle saddles, contents label
+    [-1, 1].forEach(e => { const cap = k.cyl(0.8, 0.86, 0.12, mat('paint', tankCol, { metalness: 0.35, roughness: 0.3 }), 0, 1.6, -0.95 + e * 1.64, g, 24); cap.rotation.x = Math.PI / 2; });
+    [-1.2, -0.95 + 0.0, 0.3].forEach((z, i) => { const st = k.cyl(0.875, 0.875, 0.08, GSE_MAT.chassis(), 0, 1.6, i === 1 ? -0.95 : z, g, 24); st.rotation.x = Math.PI / 2; });
+    [-2.1, 0.2].forEach(z => k.box(1.5, 0.5, 0.18, GSE_MAT.chassis(), 0, 0.98, z));
+    k.cyl(0.24, 0.26, 0.16, GSE_MAT.steel(), 0, 2.5, -0.55, g, 14);
+    k.rail(2.2, 0.42, 2.38, -0.95, g, 'z', 0.4);
+    const lbl = canvasTex('tanklbl_' + kind, 256, 64, (x, w, h) => {
+      x.fillStyle = 'rgba(255,255,255,0.92)'; x.fillRect(0, 8, w, h - 16);
+      x.fillStyle = isLav ? '#374151' : '#075985'; x.font = '700 30px system-ui, sans-serif'; x.textAlign = 'center';
+      x.fillText(isLav ? '汚水 LAV WASTE' : '飲料水 POTABLE', w / 2, 44);
+    });
+    if (lbl) [-1, 1].forEach(sd => {
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), mat('tex', 0xffffff, { map: lbl }));
+      pl.position.set(sd * 0.865, 1.55, -0.95); pl.rotation.y = sd * Math.PI / 2; g.add(pl);
+    });
     k.box(2.12, 0.14, 3.4, M.accent(), 0, 0.84, -0.95);
     const lift = new THREE.Group();
     lift.position.set(0, 1.05, 2.65);
@@ -600,7 +770,7 @@ export function animateGseBeacons(root, timeSec) {
   root.traverse(o => {
     if (o.userData && o.userData.beaconLamps) {
       const on = Math.floor(timeSec * 3 + (o.id % 5) * 0.37) % 2 === 0;
-      o.userData.beaconLamps.forEach(b => { b.material = on ? mat('basic', GSE_PALETTE.beacon) : mat('basic', 0x7a5200); });
+      o.userData.beaconLamps.forEach(b => { b.material = on ? mat('lamp', GSE_PALETTE.beacon, { opacity: 2.2 }) : mat('std', 0x7a5200); });
     }
   });
 }
