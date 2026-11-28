@@ -900,110 +900,91 @@ export function stopAirport3dLoop() {
 
 function drawNgoMinimap() {
   const now = performance.now();
-  if (now - (a3d._lastMinimapMs || 0) < 120) return;
+  if (now - (a3d._lastMinimapMs || 0) < 100) return;
   a3d._lastMinimapMs = now;
   const c = document.getElementById('a3d-minimap');
   if (!c || c.offsetParent === null) return;
-  const W = 252, H = 152;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = Math.round(c.clientWidth * dpr) || 440, H = Math.round(c.clientHeight * dpr) || 280;
   if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
   const ctx = c.getContext('2d');
-  // True 1:1 Chubu Centrair 4,370m × 1,920m Island Coordinate Projection
-  const mx = wx => ((wx + 2250) / 4580) * W;
-  const mz = wz => ((wz + 780) / 1720) * H;
+  const isFlight = a3d.subtab === 'flight';
+  const pose = isFlight ? computeFlightCyclePose(a3d.flightPhaseIdx, a3d.flightProgress).ac : null;
+  const px = isFlight ? pose.x : a3d.veh.x;
+  const pz = isFlight ? pose.z : a3d.veh.z;
+  const local = (a3d.ui.mapZoom || (isFlight ? 'island' : 'local')) === 'local';
+  // View window (scene metres): local = follows the player (~520 m wide), island = whole Centrair island
+  const spanX = local ? 520 : 4580;
+  const spanZ = spanX * (H / W);
+  const cx = local ? px : -35, cz = local ? pz : 80;
+  const mx = wx => ((wx - (cx - spanX / 2)) / spanX) * W;
+  const mz = wz => ((wz - (cz - spanZ / 2)) / spanZ) * H;
+  const k = W / spanX; // px per metre
+  const rect = (x1, z1, x2, z2) => ctx.fillRect(mx(Math.min(x1, x2)), mz(Math.min(z1, z2)), Math.max(1.5, Math.abs(x2 - x1) * k), Math.max(1.5, Math.abs(z2 - z1) * k));
 
-  // Ise Bay Water
-  ctx.fillStyle = '#09223B';
-  ctx.fillRect(0, 0, W, H);
-
-  // Authentic Chamfered Centrair Artificial Island Polygon (matching Official Blueprint J08-1!)
-  ctx.fillStyle = '#1E293B';
+  ctx.fillStyle = '#0a2540'; ctx.fillRect(0, 0, W, H); // Ise Bay
+  ctx.fillStyle = '#25303f';                           // island
   ctx.beginPath();
-  [
-    [-2140, -735], [2180, -735], [2180, 320], [1560, 820],
-    [-1480, 820], [-2140, 520]
-  ].forEach(([ix, iz], idx) => {
-    if (idx === 0) ctx.moveTo(mx(ix), mz(iz));
-    else ctx.lineTo(mx(ix), mz(iz));
+  [[-2140, -735], [2180, -735], [2180, 320], [1560, 820], [-1480, 820], [-2140, 520]].forEach(([ix, iz], n) => (n ? ctx.lineTo(mx(ix), mz(iz)) : ctx.moveTo(mx(ix), mz(iz))));
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#3a4656'; rect(-1280, -210, 1860, 110);           // apron concrete
+  ctx.fillStyle = '#505c6b'; rect(-1750, -610, 1750, -550);          // runway 36/18
+  ctx.fillStyle = '#2f3a48';
+  [[-415, -1750, 1750], [-335, -1560, 1660], [-235, -1350, 1620]].forEach(([z, a, b]) => rect(a, z - 11, b, z + 11)); // TWY A/B/C
+  ctx.fillStyle = '#8a6d1f'; rect(-1280, -64, 1860, -60);            // inner taxilane line
+  ctx.fillStyle = '#7f1d1d'; rect(-1280, -40, 1860, -36);            // behind-stand service road
+  ctx.fillStyle = '#9fb3c8';
+  rect(-172, 68, 192, 175);                                          // T1
+  rect(29, -180, 63, 75);                                            // centre pier
+  rect(-960, 90, -565, 140);                                         // T2
+  ctx.fillStyle = '#c8d1dc';
+  NGO_CARGO_DISTRICT.filter(b => b.h > 0).forEach(b => rect(b.x1, b.z1, b.x2, b.z2));
+  ctx.fillStyle = '#f87171'; ctx.beginPath(); ctx.arc(mx(330), mz(175), Math.max(2.5, 6 * k), 0, Math.PI * 2); ctx.fill(); // tower
+
+  // Spot 7 stand + aircraft
+  ctx.strokeStyle = '#facc15'; ctx.lineWidth = Math.max(1, 1.2 * dpr);
+  ctx.beginPath(); ctx.moveTo(mx(0), mz(-235)); ctx.lineTo(mx(0), mz(10)); ctx.stroke();
+  const drawPlane = (x, z, hdg, col, size) => {
+    ctx.save(); ctx.translate(mx(x), mz(z)); ctx.rotate(hdg + Math.PI / 2); ctx.fillStyle = col;
+    const L = Math.max(7 * dpr, size * k), S = L * 0.9;
+    ctx.fillRect(-L * 0.08, -L / 2, L * 0.16, L);           // fuselage
+    ctx.fillRect(-S / 2, -L * 0.08, S, L * 0.14);            // wing
+    ctx.fillRect(-S * 0.18, L * 0.36, S * 0.36, L * 0.08);   // tail
+    ctx.restore();
+  };
+  if (isFlight) drawPlane(px, pz, pose.heading ?? Math.PI / 2, '#22d3ee', 40);
+  else drawPlane(0, 10, Math.PI / 2, '#e2e8f0', 40);
+
+  // World dolly trains (blue = free, green = in coupling range)
+  (a3d.worldDollies || []).filter(d => !d.coupled).forEach(d => {
+    ctx.fillStyle = a3d.nearbyDolly && a3d.nearbyDolly.id === d.id ? '#22c55e' : '#3b82f6';
+    ctx.beginPath(); ctx.arc(mx(d.x), mz(d.z), Math.max(2.5 * dpr, 4 * k), 0, Math.PI * 2); ctx.fill();
   });
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = '#64748B';
-  ctx.lineWidth = 1.1;
-  ctx.stroke();
+  // Towed units behind the player
+  ctx.fillStyle = '#93c5fd';
+  (a3d.cartPoses || []).forEach(cp => { ctx.beginPath(); ctx.arc(mx(cp.x), mz(cp.z), Math.max(2 * dpr, 1.8 * k), 0, Math.PI * 2); ctx.fill(); });
 
-  // Centrair Skyway Bridge (連絡橋 + Meitetsu Rail to Tokoname Mainland)
-  ctx.fillStyle = '#94A3B8';
-  ctx.fillRect(mx(110), mz(380), 8, H - mz(380));
+  // Player: heading arrow
+  if (!isFlight) {
+    ctx.save(); ctx.translate(mx(px), mz(pz)); ctx.rotate(a3d.veh.heading || 0);
+    const r = 7 * dpr;
+    ctx.fillStyle = '#22d3ee'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.4 * dpr;
+    ctx.beginPath(); ctx.moveTo(r, 0); ctx.lineTo(-r * 0.7, r * 0.6); ctx.lineTo(-r * 0.35, 0); ctx.lineTo(-r * 0.7, -r * 0.6); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
 
-  // 8.5km Perimeter Road (場周道路 — Magenta per J04)
-  ctx.strokeStyle = '#EC4899';
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(mx(-2060), mz(-685), mx(2130) - mx(-2060), mz(520) - mz(-685));
-
-  // Dual ILS Restricted Zones on West Seawall
-  ctx.strokeStyle = a3d.ilsRedOn ? '#EF4444' : '#38BDF8';
-  ctx.lineWidth = 2.6;
-  ctx.beginPath();
-  ctx.moveTo(mx(-1460), mz(-685)); ctx.lineTo(mx(-1140), mz(-685));
-  ctx.moveTo(mx(1140), mz(-685)); ctx.lineTo(mx(1460), mz(-685));
-  ctx.stroke();
-
-  // 1:1 3,500m × 60m Runway 36/18 (z = -580, x = -1750..+1750)
-  ctx.fillStyle = '#DC2626';
-  ctx.fillRect(mx(-1750), mz(-610), mx(1750) - mx(-1750), Math.max(4, mz(-550) - mz(-610)));
-
-  // Parallel Taxiways A (-415), B (-335) & C (-235)
-  ctx.fillStyle = '#64748B';
-  ctx.fillRect(mx(-1750), mz(-422), mx(1750) - mx(-1750), 2.2);
-  ctx.fillRect(mx(-1560), mz(-342), mx(1660) - mx(-1560), 2.0);
-  ctx.fillRect(mx(-1350), mz(-242), mx(1620) - mx(-1350), 2.0);
-
-  // Apron Concrete Green Tint (T2, Remote #300-#600, T1, Remote #200, Cargo #101-#119, N-Area)
-  ctx.fillStyle = 'rgba(34,197,94,0.24)';
-  ctx.fillRect(mx(-1280), mz(-210), mx(1860) - mx(-1280), mz(110) - mz(-210));
-
-  // T1 Main + 300m Center Pier + North/South Wings + T2 + Cargo Sheds
-  ctx.fillStyle = '#38BDF8';
-  ctx.fillRect(mx(-430), mz(72), mx(430) - mx(-430), 6); // T1 Wings
-  ctx.fillRect(mx(26), mz(-180), Math.max(3, mx(66) - mx(26)), mz(75) - mz(-180)); // 300m Center Pier!
-  ctx.fillStyle = '#0284C7';
-  ctx.fillRect(mx(-960), mz(95), mx(-565) - mx(-960), 5); // T2 LCC
-  // Cargo District buildings (same data as the 3D scene) + ATC Tower NE of T1
-  ctx.fillStyle = '#CBD5E1';
-  NGO_CARGO_DISTRICT.filter(b => b.h > 0).forEach(b => {
-    ctx.fillRect(mx(b.x1), mz(b.z1), Math.max(1.5, mx(b.x2) - mx(b.x1)), Math.max(1.5, mz(b.z2) - mz(b.z1)));
-  });
-  ctx.fillStyle = '#F87171';
-  ctx.beginPath(); ctx.arc(mx(330), mz(175), 2.2, 0, Math.PI * 2); ctx.fill();
-
-  // Moving AI Airliner & GSE Traffic Dots
-  const tSec = a3d.aiTime || 0;
-  ctx.fillStyle = '#FACC15';
-  const twyAcX = -1550 + ((tSec * 38) % 3100);
-  ctx.fillRect(mx(twyAcX) - 2, mz(-415) - 1.5, 4, 3);
-  const cTwyX = 1100 - ((tSec * 28) % 2100);
-  ctx.fillRect(mx(cTwyX) - 2, mz(-235) - 1.5, 4, 3);
-
-  // Labels
-  ctx.fillStyle = '#F8FAFC';
-  ctx.font = '700 7.5px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('RWY 36 ◀ 3,500m ▶ RWY 18', mx(0), mz(-628));
-  ctx.fillText('T2', mx(-770), mz(220));
-  ctx.fillText('T1 PIER', mx(35), mz(220));
-  ctx.fillText('CARGO #101-119', mx(960), mz(220));
-  ctx.fillText('N', mx(1740), mz(220));
-
-  // Active Aircraft or Player Vehicle Marker
-  const px = a3d.subtab === 'flight' ? (computeFlightCyclePose(a3d.flightPhaseIdx, a3d.flightProgress).ac.x) : a3d.veh.x;
-  const pz = a3d.subtab === 'flight' ? (computeFlightCyclePose(a3d.flightPhaseIdx, a3d.flightProgress).ac.z) : a3d.veh.z;
-  ctx.fillStyle = '#22D3EE';
-  ctx.beginPath();
-  ctx.arc(mx(px), mz(pz), 3.8, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#FFFFFF';
-  ctx.lineWidth = 1.3;
-  ctx.stroke();
+  // Labels (only those inside the view)
+  ctx.fillStyle = '#f8fafc'; ctx.textAlign = 'center';
+  ctx.font = `700 ${Math.round(9 * dpr)}px system-ui, sans-serif`;
+  const lab = (txt, x, z) => { const X = mx(x), Y = mz(z); if (X > 10 && X < W - 10 && Y > 10 && Y < H - 4) ctx.fillText(txt, X, Y); };
+  lab('RWY 36/18', 0, -620); lab('T1', 10, 125); lab('PIER', 46, -100); lab('T2', -760, 118); lab('CARGO', 700, -10);
+  if (local) { lab('Spot 7', 0, -6); lab('TWY C', px, -250); }
+  // Scale bar + mode badge
+  const barM = local ? 100 : 1000;
+  ctx.fillStyle = '#e2e8f0'; ctx.fillRect(8 * dpr, H - 10 * dpr, barM * k, 2 * dpr);
+  ctx.textAlign = 'left'; ctx.font = `600 ${Math.round(8 * dpr)}px system-ui, sans-serif`;
+  ctx.fillText(`${barM} m`, 8 * dpr, H - 14 * dpr);
+  ctx.textAlign = 'right'; ctx.fillText(local ? '🔍 −' : '🔍 +', W - 6 * dpr, 12 * dpr);
 }
 
 export async function startAirport3dLoop() {
@@ -1258,7 +1239,7 @@ export function renderAirport3dUI() {
           <div class="airport3d-stage ${a3d.expanded ? 'expanded' : ''}" id="a3d-stage-box">
             <canvas id="airport3d-gl"></canvas>
             <canvas id="airport3d-hud2d"></canvas>
-            <div class="a3d-minimap-wrap ${a3d.ui.map && !(a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing') ? '' : 'hidden'}" id="a3d-minimap-box" title="NGO Centrair">
+            <div class="a3d-minimap-wrap ${a3d.ui.map ? '' : 'hidden'} ${a3d.ui.mapBig ? 'big' : ''}" id="a3d-minimap-box" title="${t('タップ：拡大／全体切替', 'Chạm: phóng to / toàn đảo', 'Tap: zoom / island')}">
               <canvas id="a3d-minimap"></canvas>
             </div>
             <div class="raycast-toast" id="a3d-raycast-toast"></div>
@@ -1371,6 +1352,20 @@ export function renderAirport3dUI() {
   `;
 
   mount.querySelectorAll('[data-st]').forEach(b => { b.onclick = () => openA3dSubtab(b.dataset.st); });
+  {
+    const mb = document.getElementById('a3d-minimap-box');
+      if (mb && !mb._wired) {
+      mb._wired = true;
+      // Tap: local ⇄ whole island. Double-tap: bigger / smaller panel.
+      mb.addEventListener('click', () => {
+        const cur = a3d.ui.mapZoom || (a3d.subtab === 'flight' ? 'island' : 'local');
+        a3d.ui.mapZoom = cur === 'local' ? 'island' : 'local';
+        a3d._lastMinimapMs = 0;
+      });
+      mb.addEventListener('dblclick', () => { a3d.ui.mapBig = !a3d.ui.mapBig; mb.classList.toggle('big', a3d.ui.mapBig); a3d._lastMinimapMs = 0; });
+    }
+
+  }
   mount.querySelectorAll('[data-tod]').forEach(b => {
     b.onclick = () => { a3d.timeOfDay = b.dataset.tod; mount.querySelectorAll('[data-tod]').forEach(x => x.classList.toggle('btn-primary', x.dataset.tod === a3d.timeOfDay)); };
   });
