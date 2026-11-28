@@ -1558,9 +1558,12 @@ export const A3D_FLIGHT_PHASES = [
       leadIn: 70, vLeadIn: 2.6, vLeadEnd: 0.5                     // marshaller lead-in: walking pace, creep to the stop line
     }),
     // Pushback (tail first) from Spot 7 onto the inner taxilane, nose ends pointing south (-X)
-    push: buildMotion([[NGO_STAND7_X, 10], [NGO_STAND7_X, -62], [NGO_STAND7_X + 30, -62]], { radius: 26, vMax: 1.3, vTurn: 1.0, accel: 0.15, decel: 0.2, vStart: 0, vEnd: 0 }),
+    // Pushback: straight back down the Spot 7 lead-in corridor to the outer taxilane (z = -235, clear of the
+    // Centre Pier tip at z = -179), THEN swing the tail north so the nose faces south for taxi-out.
+    // (Swinging on the inner lane z = -62 put the tail of every type inside the 300 m Centre Pier.)
+    push: buildMotion([[NGO_STAND7_X, 10], [NGO_STAND7_X, -235], [NGO_STAND7_X + 30, -235]], { radius: 26, vMax: 1.6, vTurn: 1.0, accel: 0.15, decel: 0.2, vStart: 0, vEnd: 0 }),
     // Taxi-out: wave-off hold → taxilane → crossover x=-108 → A-TWY southbound → RWY 36 threshold (A1 area)
-    taxiOut: buildMotion([[NGO_STAND7_X + 30, -62], [-108, -62], [-108, -415], [-1680, -415], [-1680, -580], [-1650, -580]], {
+    taxiOut: buildMotion([[NGO_STAND7_X + 30, -235], [-108, -235], [-108, -415], [-1680, -415], [-1680, -580], [-1650, -580]], {
       radius: 40, vMax: 9.5, vTurn: 5.0, accel: 0.45, decel: 0.7, vStart: 0, vEnd: 0, holdStart: 14,
       zones: [{ from: 0, to: 150, v: 5.0 }]                       // apron taxilane ≤ 10kt
     })
@@ -1665,22 +1668,22 @@ export const A3D_FLIGHT_PHASES = [
       const ang = p * Math.PI * 1.4;
       crew.push({ x: -Math.cos(ang) * 6.5, z: 14 + Math.sin(ang) * 14, labelJa: 'ヘッドセットマン (最終指差呼称)', labelVi: 'Headset Man (Walkaround 指差呼称)', labelEn: 'Headset Man (360° Walkaround)', vest: [249, 115, 22], waving: false });
     } else if (phaseIdx === 7) {
-      // 8. Pushback (tail first, ≈4 km/h) onto the inner taxilane & engine start
+      // 8. Pushback (tail first) down the lead-in corridor to the outer taxilane & engine start (pose x is absolute → offset cancels the stand shift below)
       ac.beaconOn = true;
       const m = NGO_MOTION.push.sampleAt(p * NGO_MOTION.push.T);
       ac.x = m.x; ac.z = m.z; ac.heading = m.h + Math.PI; ac.gs = m.gs;
       const noseX = ac.x + Math.cos(ac.heading) * 19.5;
       const noseZ = ac.z + Math.sin(ac.heading) * 19.5;
       const portDX = -Math.sin(ac.heading), portDZ = Math.cos(ac.heading);
-      crew.push({ x: noseX + portDX * 5.2, z: noseZ + portDZ * 5.2, labelJa: 'ヘッドセットマン (並走)', labelVi: 'Headset Man (Đi kèm mũi)', labelEn: 'Headset Man (Nose Escort)', vest: [249, 115, 22], waving: false });
-      crew.push({ x: ac.x + portDX * 21.5, z: ac.z + portDZ * 21.5, labelJa: 'ウイングウォーカー', labelVi: 'Canh đầu cánh', labelEn: 'Wingwalker Escort', vest: [190, 242, 100], waving: true });
+      crew.push({ x: noseX + portDX * 5.2 - NGO_STAND7_X, z: noseZ + portDZ * 5.2, labelJa: 'ヘッドセットマン (並走)', labelVi: 'Headset Man (Đi kèm mũi)', labelEn: 'Headset Man (Nose Escort)', vest: [249, 115, 22], waving: false });
+      crew.push({ x: ac.x + portDX * 21.5 - NGO_STAND7_X, z: ac.z + portDZ * 21.5, labelJa: 'ウイングウォーカー', labelVi: 'Canh đầu cánh', labelEn: 'Wingwalker Escort', vest: [190, 242, 100], waving: true });
     } else if (phaseIdx === 8) {
       // 9. Bypass-pin show & wave-off hold, then taxi-out via taxilane → x=-108 → A-TWY → RWY 36 threshold
       ac.beaconOn = true;
       const m = NGO_MOTION.taxiOut.sampleAt(p * NGO_MOTION.taxiOut.T);
       ac.x = m.x; ac.z = m.z; ac.heading = m.h; ac.gs = m.gs;
-        crew.push({ x: -29.0, z: -53.0, labelJa: 'バイパスピン左前方提示・お見送り', labelVi: 'Giơ cờ đỏ Bypass Pin bên trái & Tiễn bay', labelEn: 'Bypass Pin Shown on Left & Wave-Off!', vest: [56, 189, 248], waving: true, pin: true });
-        crew.push({ x: -19.0, z: -40.5, labelJa: 'ランプチーム お見送り', labelVi: 'Đội sân đỗ vẫy chào (お見送り)', labelEn: 'Ramp Team Wave-Off (Omiokuri)', vest: [190, 242, 100], waving: true });
+        crew.push({ x: -29.0, z: -205.0, labelJa: 'バイパスピン左前方提示・お見送り', labelVi: 'Giơ cờ đỏ Bypass Pin bên trái & Tiễn bay', labelEn: 'Bypass Pin Shown on Left & Wave-Off!', vest: [56, 189, 248], waving: true, pin: true });
+        crew.push({ x: -19.0, z: -202.0, labelJa: 'ランプチーム お見送り', labelVi: 'Đội sân đỗ vẫy chào (お見送り)', labelEn: 'Ramp Team Wave-Off (Omiokuri)', vest: [190, 242, 100], waving: true });
     } else {
       // 10. Takeoff roll (2.0 m/s² to Vr 75 m/s ≈ 1,400m) & initial climb on RWY 36
       ac.beaconOn = true;

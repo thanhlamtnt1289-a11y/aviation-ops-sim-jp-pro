@@ -550,9 +550,16 @@ function stepPhysics(dt, now) {
   }
   if (a3d.hitEffects) {
     Object.keys(a3d.hitEffects).forEach(k => {
-      a3d.hitEffects[k].ttl -= dt;
-      if (a3d.hitEffects[k].ttl <= 0) delete a3d.hitEffects[k];
+      const e = a3d.hitEffects[k];
+      e.t = (e.t || 0) + dt;
+      if (!a3d.incidentLock && e.t > 1.2 && e.release == null) e.release = e.t; // incident closed → start recovery
+      if (e.release != null && e.t - e.release > 1.6) delete a3d.hitEffects[k];
     });
+  }
+  // Show the mandatory-procedure popup only after the crash has visibly played out
+  if (a3d.incidentLock && a3d.incidentLock.revealAt && !a3d.incidentLock.revealed && performance.now() >= a3d.incidentLock.revealAt) {
+    a3d.incidentLock.revealed = true;
+    renderIncidentOverlay();
   }
 
   // Live Chubu Centrair (NGO) Driving Scenarios (Moving Departing / Taxiing Aircraft + Active Spotters!)
@@ -573,11 +580,12 @@ function stepPhysics(dt, now) {
       sAlert.pushback = true;
     } else if (cyc < 22) {
       const p = (cyc - 16) / 6;
-      liveAc = { x: NGO_STAND7_X + p * 75, z: -44 - p * 11, heading: Math.PI / 2 - p * (Math.PI / 2), beaconOn: true, chocksOn: false, blastOn: true, mode: 'pushback' };
+      // keeps pushing straight back down the lead-in corridor (no tail swing into the Centre Pier)
+      liveAc = { x: NGO_STAND7_X, z: -44 - p * 110, heading: Math.PI / 2, beaconOn: true, chocksOn: false, blastOn: true, mode: 'pushback' };
       sAlert.pushback = p < 0.7;
     } else {
       // Safe window — Spotter waves CLEAR!
-      liveAc = { x: 110, z: -55, heading: 0, beaconOn: true, chocksOn: false, blastOn: false, mode: 'clear' };
+      liveAc = { x: NGO_STAND7_X + 30, z: -235, heading: Math.PI, beaconOn: true, chocksOn: false, blastOn: false, mode: 'clear' };
       sAlert.pushback = false;
     }
   } else if (a3d.ngoDriveScenario === 'SC2') {
@@ -705,7 +713,8 @@ function stepPhysics(dt, now) {
       v.speed = 0; // Automatic emergency brake on personnel strike
       v.x -= ux * 0.65;
       v.z -= uz * 0.65;
-      a3d.hitEffects[hitCol.id] = { kind: 'person', dx: ux * 2.8, dz: uz * 2.8, spin: 0, ttl: 4.5 };
+      const throwM = Math.min(4.5, 1.6 + impactKmh * 0.22); // thrown further the faster the impact
+      a3d.hitEffects[hitCol.id] = { kind: 'person', dx: ux * throwM, dz: uz * throwM, spin: (Math.random() - 0.5) * 1.2, t: 0 };
     } else {
       v.x -= ux * 0.85;
       v.z -= uz * 0.85;
@@ -716,7 +725,7 @@ function stepPhysics(dt, now) {
         dx: ux * Math.min(3.5, 0.9 + impactKmh * 0.08),
         dz: uz * Math.min(3.5, 0.9 + impactKmh * 0.08),
         spin: (Math.random() > 0.5 ? 1 : -1) * Math.min(0.45, 0.12 + impactKmh * 0.014),
-        ttl: 4.5
+        t: 0
       };
     }
 
@@ -739,9 +748,15 @@ function stepPhysics(dt, now) {
         nameVi: hitCol.nameVi,
         nameEn: hitCol.nameEn,
         speedKmh: Math.round(impactKmh),
-        step: 0
+        step: 0,
+        revealAt: performance.now() + 2200, // vehicle is locked at once; the procedure appears after the crash plays out
+        prevCam: { mode: a3d.camMode, cam: { ...a3d.cam } }
       };
-      renderIncidentOverlay();
+      // Show the consequence: orbit camera on the person / vehicle that was hit
+      a3d.camMode = 'orbit';
+      // camera beyond the victim looking back at the vehicle (3/4 view), centred where the victim lands
+      const land = hitCol.kind === 'person' ? Math.min(4.5, 1.6 + impactKmh * 0.22) * 0.8 : 1.5;
+      a3d.cam = { tx: hitCol.x + ux * land, ty: 0.7, tz: hitCol.z + uz * land, dist: 11, yaw: Math.atan2(ux, uz) + 0.75, pitch: 0.42 };
     }
   } else if (hitObj) {
     const impactKmh = Math.abs(v.speed) * 3.6;
@@ -773,8 +788,7 @@ function stepPhysics(dt, now) {
         `💥 COLLISION (${impactKmh.toFixed(0)} km/h · -${pen}pt): Preserve the scene and report immediately to COC (0569-38-1500 / Ext. 3000)!`
       );
       if (impactKmh > 10 && !a3d.incidentLock) {
-        a3d.incidentLock = { kind: 'obstacle', nameJa: hitObj.name, nameVi: hitObj.name, nameEn: hitObj.name, speedKmh: Math.round(impactKmh), step: 0 };
-        renderIncidentOverlay();
+        a3d.incidentLock = { kind: 'obstacle', nameJa: hitObj.name, nameVi: hitObj.name, nameEn: hitObj.name, speedKmh: Math.round(impactKmh), step: 0, revealAt: performance.now() + 1600 };
       }
     }
   } else {
@@ -1388,7 +1402,7 @@ export function renderAirport3dUI() {
               <canvas id="a3d-minimap"></canvas>
             </div>
             <div class="raycast-toast" id="a3d-raycast-toast"></div>
-            <div id="a3d-incident-overlay" style="display:none;position:absolute;inset:0;z-index:25;background:rgba(15,23,42,0.82);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;"></div>
+            <div id="a3d-incident-overlay" class="a3d-incident-dock" style="display:none;"></div>
             <div class="hud-top">
               <div class="hud-pill ok" id="a3d-hud-zone">THREE.JS</div>
               <div class="a3d-hud-right" style="display:flex;gap:6px;">
@@ -1770,7 +1784,7 @@ function renderIncidentOverlay() {
   const box = document.getElementById('a3d-incident-overlay');
   if (!box) return;
   const inc = a3d.incidentLock;
-  if (!inc) {
+  if (!inc || (inc.revealAt && !inc.revealed)) {
     box.style.display = 'none';
     box.innerHTML = '';
     return;
@@ -1827,7 +1841,9 @@ function renderIncidentOverlay() {
       a3dAudio.playChirp();
       a3d.incidentLock.step += 1;
       if (a3d.incidentLock.step >= 4) {
+        const prev = a3d.incidentLock.prevCam;
         a3d.incidentLock = null;
+        if (prev) { a3d.camMode = prev.mode; a3d.cam = prev.cam; }
         triggerYubikoshi('fwd');
         logA3d(
           'ok',

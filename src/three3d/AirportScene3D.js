@@ -1150,7 +1150,7 @@ export class AirportScene3D {
       [
         { prof: 'B738', liveryId: 'ANA', x: 360, z: 12, yaw: 0 },              // T1 North Domestic #3
         { prof: 'B788', liveryId: 'ANA', x: 104, z: -95, yaw: -Math.PI / 2 },  // 300m Center Pier #9 (clear of Pier wall x=64!)
-        { prof: 'B788', liveryId: 'JAL', x: -14, z: -152, yaw: Math.PI / 2 },  // 300m Center Pier #13 (clear of Pier wall x=28!)
+        // (#13 parked aircraft removed: it sat inside the Spot 7 lead-in / pushback corridor x = NGO_STAND7_X)
         { prof: 'B788', liveryId: 'JAL', x: -265, z: 12, yaw: 0 },             // T1 South International #19
         { prof: 'A320', liveryId: 'ANA', x: -345, z: 12, yaw: 0 },             // T1 South International #22
         { prof: 'A320', liveryId: 'ANA', x: -650, z: 20, yaw: 0 },             // T2 LCC #72
@@ -2274,20 +2274,20 @@ export class AirportScene3D {
       this.crewWingR.rotation.y = yaw3d + Math.PI;
       animateCrewSignal(this.crewWingR, 'walk_escort', tSec);
 
-      this.crewMarshaller.position.set(X0 - 14.0, 0, -39.5);
+      this.crewMarshaller.position.set(X0 - 30.0, 0, -205.0);
       this.crewMarshaller.rotation.y = Math.PI;
       animateCrewSignal(this.crewMarshaller, demoSig || 'm_allclear', tSec);
     } else if (ph === 8) {
-      this.crewHeadset.position.set(X0 - 29.0, 0, -53.0);
-      this.crewHeadset.rotation.y = Math.atan2(acPose.x - (X0 - 29.0), acPose.z - (-53.0));
+      this.crewHeadset.position.set(X0 - 29.0, 0, -205.0);
+      this.crewHeadset.rotation.y = Math.atan2(acPose.x - (X0 - 29.0), acPose.z - (-205.0));
       animateCrewSignal(this.crewHeadset, p < 0.32 ? 'bypass_pin_salute' : 'wave_off', tSec);
 
       this.crewLoadmaster.visible = true;
       [
-        [this.crewMarshaller, -16.0, -40.5],
-        [this.crewLoadmaster, -19.0, -40.5],
-        [this.crewWingL,      -22.0, -40.5],
-        [this.crewWingR,      -25.0, -40.5]
+        [this.crewMarshaller, -16.0, -202.0],
+        [this.crewLoadmaster, -19.0, -202.0],
+        [this.crewWingL,      -22.0, -202.0],
+        [this.crewWingR,      -25.0, -202.0]
       ].forEach(([cr, cx, cz]) => {
         cr.position.set(X0 + cx, 0, cz);
         cr.rotation.y = Math.atan2(acPose.x - (X0 + cx), acPose.z - cz);
@@ -2620,19 +2620,36 @@ export class AirportScene3D {
         crew_load: this.crewLoadmaster, crew_wingL: this.crewWingL, crew_wingR: this.crewWingR,
         crew_spot_pb: this.spotterPushback, crew_spot_sl: this.spotterService, crew_spot_71: this.spotterBlast71
       };
+      this._hitTouched = this._hitTouched || new Set();
+      const live = new Set();
       Object.entries(state.hitEffects).forEach(([cid, eff]) => {
         const m = actorMap[cid];
-        if (!m || !eff || eff.ttl <= 0) return;
-        const p = Math.min(1, eff.ttl / 4.0);
-        m.position.x += eff.dx * p;
-        m.position.z += eff.dz * p;
+        if (!m || !eff) return;
+        live.add(cid); this._hitTouched.add(cid);
+        const tt = eff.t || 0;
+        const fly = Math.min(1, tt / 0.55);                 // 0.55 s throw / shove
+        const ease = 1 - Math.pow(1 - fly, 3);
+        const rec = eff.release != null ? Math.max(0, 1 - (tt - eff.release) / 1.6) : 1; // recovery after the incident is closed
+        const k = ease * rec;
+        m.position.x += eff.dx * k;
+        m.position.z += eff.dz * k;
         if (eff.kind === 'person') {
-          m.rotation.x = Math.PI * 0.44 * p;
-          m.position.y = 0.25 * p;
+          m.position.y = Math.sin(Math.PI * fly) * 0.9 * (1 - fly * 0.3) * rec;  // airborne arc
+          m.rotation.x = (Math.PI / 2) * Math.min(1, tt / 0.7) * rec;          // ends lying on the apron
+          m.rotation.y += (eff.spin || 0) * k;
         } else {
-          m.rotation.y += eff.spin * p;
-          m.rotation.z = Math.sin(tSec * 28) * 0.08 * p;
+          m.rotation.y += eff.spin * k;
+          const wob = Math.max(0, 1 - tt / 1.2);
+          m.rotation.z = Math.sin(tSec * 26) * 0.09 * wob * rec;
+          m.position.y = Math.abs(Math.sin(tSec * 26)) * 0.12 * wob * rec;
         }
+      });
+      // Restore anything whose effect just ended (crew/vehicles would otherwise stay tilted)
+      this._hitTouched.forEach(cid => {
+        if (live.has(cid)) return;
+        const m = actorMap[cid];
+        if (m) { m.rotation.x = 0; m.rotation.z = 0; m.position.y = 0; }
+        this._hitTouched.delete(cid);
       });
     }
 
