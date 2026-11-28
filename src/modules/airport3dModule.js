@@ -70,7 +70,7 @@ export const a3d = {
   backingStatus: { hitchDeg: 0, latErr: 0, angErr: 0, depthPct: 0, jackknife: false, parked: false, hintJa: '', hintVi: '', hintEn: '' },
   prevHitch: null,
   trailerHeadings: [0, 0, 0, 0, 0, 0],
-  ui: { views: false, settings: false, map: true, panels: {} }, // drawers / collapsible panels (kept across re-renders)
+  ui: { views: false, settings: false, map: true, hudInfo: false, landSide: false, panels: {} }, // drawers / collapsible panels (kept across re-renders)
   marshalDrill: { active: false, x: 0, z: -35, heading: Math.PI / 2, v: 0, moved: false, result: null, t: 0 },
   marshallerDemoSignal: null, // null = auto phase | 'm_straight' | 'm_left' | 'm_right' | 'm_slow' | 'm_stop' | 'm_emerg_stop' | 'm_chocks' | 'm_allclear'
   ilsRedOn: true,
@@ -521,9 +521,15 @@ function stepPhysics(dt, now) {
       }
     }
     const pose = computeFlightCyclePose(a3d.flightPhaseIdx, a3d.flightProgress);
+    const gsKt = Math.round((pose.ac.gs || 0) * 1.944);
+    const compactHud = window.innerWidth <= 900;
     if (hudZone) { hudZone.textContent = `${a3d.flightPhaseIdx + 1}/10 · ${t(ph.tagJa, ph.tagVi, ph.tagEn)}`; hudZone.className = `hud-pill ${pose.ac.beaconOn ? 'danger' : 'ok'}`; }
-    if (hudSpd) hudSpd.textContent = `GS ${Math.round((pose.ac.gs || 0) * 1.944)} kt${pose.ac.y > 1 ? ` · ALT ${Math.round(pose.ac.y)} m` : ''} · ${pose.ac.beaconOn ? 'BEACON ON' : 'BEACON OFF'}`;
-    if (hudScr) hudScr.textContent = `${Math.round(a3d.flightProgress * 100)}%`;
+    if (hudSpd) hudSpd.textContent = compactHud
+      ? `${gsKt} kt${pose.ac.y > 1 ? ` · ${Math.round(pose.ac.y)}m` : ''}`
+      : `GS ${gsKt} kt${pose.ac.y > 1 ? ` · ALT ${Math.round(pose.ac.y)} m` : ''} · ${pose.ac.beaconOn ? 'BEACON ON' : 'BEACON OFF'}`;
+    if (hudScr) hudScr.textContent = compactHud
+      ? `${Math.round(a3d.flightProgress * 100)}% · ${pose.ac.beaconOn ? 'BEACON ON' : 'BEACON OFF'}`
+      : `${Math.round(a3d.flightProgress * 100)}%`;
     const bar = document.getElementById('a3d-flight-prog');
     if (bar) bar.style.width = `${Math.round(a3d.flightProgress * 100)}%`;
     return;
@@ -1147,7 +1153,7 @@ export function renderAirport3dUI() {
       <button class="subtab ${isOps3d ? 'active' : ''}" data-st="ops3d">${t(`3. 3D直接クリック実習・実技試験 (${appState.exam3dBest !== null ? appState.exam3dBest + 'pt' : '100pt'})`, `3. Click 3D FOD/PBB/Loader & Thi 3D (${appState.exam3dBest !== null ? appState.exam3dBest + 'đ' : '100đ'})`, `3. Direct 3D Raycast Ops & Exam (${appState.exam3dBest !== null ? appState.exam3dBest + 'pt' : '100pt'})`)}</button>
     </div>
 
-    <div class="workspace-grid wide-left a3d-layout">
+    <div class="workspace-grid wide-left a3d-layout ${a3d.ui.landSide ? 'land-side-open' : ''}">
       <div>
         <div class="card a3d-main-card">
           <!-- Compact toolbar: playback / vehicle on the left, view · map · settings drawers on the right -->
@@ -1181,10 +1187,11 @@ export function renderAirport3dUI() {
               ` : `<span class="badge badge-ok">${t('3Dクリック操作', 'Click trực tiếp trên 3D', 'Click directly in 3D')}</span>`)}
             </div>
             <div class="a3d-toolbar-right">
-              <button class="btn btn-sm ${a3d.ui.views ? 'btn-primary' : ''}" data-drawer="views">🎥 ${t('視点', 'Góc nhìn', 'Views')} ▾</button>
-              <button class="btn btn-sm ${a3d.ui.map ? 'btn-primary' : ''}" id="a3d-toggle-map">🗺 ${t('地図', 'Bản đồ', 'Map')}</button>
-              <button class="btn btn-sm ${a3d.ui.settings ? 'btn-primary' : ''}" data-drawer="settings">⚙ ${t('設定', 'Cài đặt', 'Settings')} ▾</button>
+              <button class="btn btn-sm ${a3d.ui.views ? 'btn-primary' : ''}" data-drawer="views" aria-label="${t('視点', 'Góc nhìn', 'Views')}">🎥<span class="a3d-btn-lbl"> ${t('視点', 'Góc nhìn', 'Views')} ▾</span></button>
+              <button class="btn btn-sm ${a3d.ui.map ? 'btn-primary' : ''}" id="a3d-toggle-map" aria-label="${t('地図', 'Bản đồ', 'Map')}">🗺<span class="a3d-btn-lbl"> ${t('地図', 'Bản đồ', 'Map')}</span></button>
+              <button class="btn btn-sm ${a3d.ui.settings ? 'btn-primary' : ''}" data-drawer="settings" aria-label="${t('設定', 'Cài đặt', 'Settings')}">⚙<span class="a3d-btn-lbl"> ${t('設定', 'Cài đặt', 'Settings')} ▾</span></button>
               <button class="btn btn-sm ${a3d.expanded ? 'btn-primary' : ''}" id="a3d-toggle-expand" title="${t('拡大', 'Phóng to', 'Expand')}">⛶</button>
+              <button class="btn btn-sm a3d-land-panel-btn ${a3d.ui.landSide ? 'btn-primary' : ''}" id="a3d-land-panel-btn" aria-label="${t('パネル', 'Bảng điều khiển', 'Panels')}">☰</button>
             </div>
           </div>
 
@@ -1236,7 +1243,7 @@ export function renderAirport3dUI() {
             </div>
           </div>
 
-          <div class="airport3d-stage ${a3d.expanded ? 'expanded' : ''}" id="a3d-stage-box">
+          <div class="airport3d-stage ${a3d.expanded ? 'expanded' : ''} ${a3d.ui.hudInfo ? 'hud-info-open' : ''}" id="a3d-stage-box">
             <canvas id="airport3d-gl"></canvas>
             <canvas id="airport3d-hud2d"></canvas>
             <div class="a3d-minimap-wrap ${a3d.ui.map ? '' : 'hidden'} ${a3d.ui.mapBig ? 'big' : ''}" id="a3d-minimap-box" title="${t('タップ：拡大／全体切替', 'Chạm: phóng to / toàn đảo', 'Tap: zoom / island')}">
@@ -1245,13 +1252,14 @@ export function renderAirport3dUI() {
             <div class="raycast-toast" id="a3d-raycast-toast"></div>
             <div class="hud-top">
               <div class="hud-pill ok" id="a3d-hud-zone">THREE.JS</div>
-              <div style="display:flex;gap:6px;">
+              <div class="a3d-hud-right" style="display:flex;gap:6px;">
                 <div class="hud-pill" id="a3d-hud-spd">0 km/h</div>
-                <div class="hud-pill" id="a3d-hud-score">0%</div>
+                <div class="hud-pill a3d-hud-secondary" id="a3d-hud-score">0%</div>
+                <button class="a3d-hud-info-btn" id="a3d-hud-info-btn" aria-label="HUD Info">ⓘ</button>
               </div>
             </div>
             <div class="hud-banner">
-              <div class="hud-pill pro-only" id="a3d-vp-desc" style="font-family:var(--font-sans);font-size:11.5px;max-width:70%;">
+              <div class="hud-pill pro-only a3d-hud-secondary" id="a3d-vp-desc" style="font-family:var(--font-sans);font-size:11.5px;max-width:70%;">
                 [${curVp.key}] ${t(curVp.ja, curVp.vi, curVp.en)} — ${t(curVp.descJa, curVp.descVi, curVp.descEn)}
               </div>
               ${isDrive ? `
@@ -1281,18 +1289,18 @@ export function renderAirport3dUI() {
                 : t('「開始」で航空機が停止線の約45m手前で待機します。後方視点で腕の動きと機体の反応を確認。', 'Bấm "Bắt đầu": máy bay chờ cách vạch dừng ~45m. Dùng góc "Nhìn sau lưng" để thấy tay Marshaller và máy bay phản ứng.', 'Press Start: the aircraft waits ~45m before the stop bar. Use the rear view to watch the arm signals and the aircraft response.')}</div>
               <div id="a3d-drill-live" class="drill-live"></div>
             </div>
-            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <div class="marshal-sig-grid" style="display:flex;gap:5px;flex-wrap:wrap;">
               ${[
-                [null, t('自動連動', 'Tự động theo pha', 'Auto Sync')],
-                ['m_straight', t('1. 直進', '1. Đi thẳng', '1. Straight')],
-                ['m_left', t('2. 左折', '2. Rẽ trái', '2. Turn Left')],
-                ['m_right', t('3. 右折', '3. Rẽ phải', '3. Turn Right')],
-                ['m_slow', t('4. 減速', '4. Giảm tốc', '4. Slow Down')],
-                ['m_stop', t('5. 停止', '5. Dừng lại', '5. Stop')],
-                ['m_emerg_stop', t('6. 緊急停止', '6. Dừng khẩn cấp', '6. Emerg Stop')],
-                ['m_chocks', t('7. 輪止め設置', '7. Chèn bánh', '7. Chocks In')],
-                ['m_allclear', t('8. 出発OK', '8. An toàn / OK', '8. All Clear')]
-              ].map(([sid, lbl]) => `<button class="btn btn-sm sig-btn ${a3d.marshallerDemoSignal === sid ? 'btn-primary' : ''}" data-msig="${sid || ''}">${lbl}</button>`).join('')}
+                [null, '🔄', t('自動連動', 'Tự động theo pha', 'Auto Sync')],
+                ['m_straight', '⬆', t('1. 直進', '1. Đi thẳng', '1. Straight')],
+                ['m_left', '⬅', t('2. 左折', '2. Rẽ trái', '2. Turn Left')],
+                ['m_right', '➡', t('3. 右折', '3. Rẽ phải', '3. Turn Right')],
+                ['m_slow', '🐢', t('4. 減速', '4. Giảm tốc', '4. Slow Down')],
+                ['m_stop', '✋', t('5. 停止', '5. Dừng lại', '5. Stop')],
+                ['m_emerg_stop', '🛑', t('6. 緊急停止', '6. Dừng khẩn cấp', '6. Emerg Stop')],
+                ['m_chocks', '🧱', t('7. 輪止め設置', '7. Chèn bánh', '7. Chocks In')],
+                ['m_allclear', '✅', t('8. 出発OK', '8. An toàn / OK', '8. All Clear')]
+              ].map(([sid, ico, lbl]) => `<button class="btn btn-sm sig-btn ${a3d.marshallerDemoSignal === sid ? 'btn-primary' : ''}" data-msig="${sid || ''}"><span class="marshal-sig-ico">${ico}</span><span>${lbl}</span></button>`).join('')}
             </div>
           `, true)}
           ${panel('roles', `👷 ${t('地上スタッフ担当役割', 'Vai trò Nhân viên Mặt đất', 'Ground Crew Roles')}`, `<div id="a3d-flight-roles-panel"></div>`, appState.userLevel === 'pro')}
@@ -1402,6 +1410,19 @@ export function renderAirport3dUI() {
   document.getElementById('a3d-toggle-expand').onclick = () => {
     a3d.expanded = !a3d.expanded;
     document.getElementById('a3d-stage-box').classList.toggle('expanded', a3d.expanded);
+  };
+  const hudInfoBtn = document.getElementById('a3d-hud-info-btn');
+  if (hudInfoBtn) hudInfoBtn.onclick = () => {
+    a3d.ui.hudInfo = !a3d.ui.hudInfo;
+    const sb = document.getElementById('a3d-stage-box');
+    if (sb) sb.classList.toggle('hud-info-open', a3d.ui.hudInfo);
+  };
+  const landPanelBtn = document.getElementById('a3d-land-panel-btn');
+  if (landPanelBtn) landPanelBtn.onclick = () => {
+    a3d.ui.landSide = !a3d.ui.landSide;
+    landPanelBtn.classList.toggle('btn-primary', a3d.ui.landSide);
+    const lay = mount.querySelector('.a3d-layout');
+    if (lay) lay.classList.toggle('land-side-open', a3d.ui.landSide);
   };
 
   if (isFlight) {
@@ -1554,6 +1575,41 @@ export function renderAirport3dUI() {
     const factor = e.deltaY > 0 ? 1.12 : 0.89;
     a3d.cam.dist = Math.max(18, Math.min(3800, a3d.cam.dist * factor));
   };
+
+  // Touch orbit (1-finger) + pinch zoom (2-finger) for iPhone / iPad
+  let pinchDist = 0;
+  canvas.ontouchstart = e => {
+    if (e.touches.length === 1) {
+      a3d.dragging = true;
+      a3d.lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 2) {
+      a3d.dragging = false;
+      pinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  };
+  canvas.ontouchmove = e => {
+    if (e.touches.length === 1 && a3d.dragging) {
+      const dx = e.touches[0].clientX - a3d.lastMouse.x;
+      const dy = e.touches[0].clientY - a3d.lastMouse.y;
+      if (Math.abs(dx) + Math.abs(dy) > 3 && a3d.camMode !== 'orbit') setA3dViewpoint('orbit');
+      a3d.lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      a3d.cam.yaw -= dx * 0.008;
+      a3d.cam.pitch = Math.max(0.10, Math.min(1.42, a3d.cam.pitch + dy * 0.006));
+    } else if (e.touches.length === 2 && pinchDist > 0) {
+      const d = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const ratio = pinchDist / Math.max(10, d);
+      pinchDist = d;
+      if (a3d.camMode !== 'orbit') setA3dViewpoint('orbit');
+      a3d.cam.dist = Math.max(18, Math.min(3800, a3d.cam.dist * ratio));
+    }
+  };
+  canvas.ontouchend = () => { a3d.dragging = false; pinchDist = 0; };
 
   startAirport3dLoop();
 }
