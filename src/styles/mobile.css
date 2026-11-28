@@ -1,0 +1,1295 @@
+/* =====================================================================
+   MOBILE & IPAD RESPONSIVE LAYER (T02)
+   - Desktop (>= 1024px) stays unchanged; sidebar stays visible >= 1024px.
+   - Mobile / iPad Portrait (<= 1023px / <= 900px):
+       * Zero horizontal overflow (scrollWidth <= innerWidth)
+       * 52px single-row topbar + 56px bottom tab bar + safe-area insets
+       * 16px body text, >= 14px captions, NEVER < 12px visible text
+       * >= 44x44px touch targets with >= 8px spacing
+       * Preserves phrase-aware word-break: keep-all (never break-all)
+   ===================================================================== */
+
+/* Desktop default: hide mobile-only chrome so 1440x900 is 100% untouched */
+.topbar-mobile-actions,
+.mobile-prefs-popover,
+.bottom-tab-bar,
+.sheet-backdrop,
+.sidebar-backdrop,
+.title-short,
+.qz-mobile-topic-bar,
+.qz-mobile-lbl,
+.a3d-hud-info-btn,
+.a3d-land-panel-btn,
+.rm-mobile-cta,
+.rm-mobile-toggle,
+.marshal-sig-ico {
+  display: none;
+}
+
+.title-full {
+  display: inline;
+}
+
+/* Keep sidebar visible on iPad landscape (>= 1024px) matching spec */
+@media (min-width: 1024px) {
+  .sidebar {
+    transform: translateX(0);
+    box-shadow: none;
+  }
+  .main-area {
+    margin-left: var(--sidebar-w);
+  }
+  .mobile-menu-btn {
+    display: none;
+  }
+}
+
+/* Subtle safety for iPad Landscape (1024px..1200px) so topbar never overflows */
+@media (min-width: 1024px) and (max-width: 1220px) {
+  .topbar {
+    padding: 8px 14px;
+    gap: 8px;
+  }
+  .topbar-title {
+    font-size: 14px;
+  }
+  .cmdk-trigger {
+    padding: 5px 8px;
+    max-width: 170px;
+  }
+  .cmdk-trigger > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .lang-btn {
+    padding: 5px 7px;
+  }
+}
+
+/* =====================================================================
+   SHARED DRAWER, POPOVER, BOTTOM SHEET & IPAD PORTRAIT (<= 1023px)
+   ===================================================================== */
+@media (max-width: 1023px) {
+  :root {
+    /* Lift muted/secondary contrast >= 4.5:1 on light surfaces */
+    --text-secondary: #3E4C63;
+    --text-muted: #526178;
+  }
+  body.theme-dark {
+    --text-secondary: #B4C8E0;
+    --text-muted: #8FA9C7;
+  }
+
+  html, body {
+    overflow-x: clip;
+    max-width: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .app-shell,
+  .main-area,
+  .content,
+  .module-screen,
+  .card,
+  .workspace-grid,
+  .workspace-grid > *,
+  .dash-hero,
+  .a3d-side,
+  .uld-sim-grid,
+  .uld-sim-grid > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Sidebar slide-out drawer */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(300px, 84vw);
+    z-index: 120;
+    transform: translateX(-104%);
+    transition: transform 0.22s ease;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 6px 0 28px rgba(0, 0, 0, 0.35);
+  }
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    background: rgba(5, 11, 22, 0.56);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .sidebar-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .main-area {
+    margin-left: 0;
+  }
+
+  /* Compact single-row topbar (52px + safe area) */
+  .topbar {
+    min-height: calc(52px + env(safe-area-inset-top));
+    height: auto;
+    padding: calc(4px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 4px calc(12px + env(safe-area-inset-left));
+    gap: 8px;
+    z-index: 60;
+  }
+  .topbar-start {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 8px !important;
+  }
+  .topbar-controls {
+    display: none;
+  }
+  .topbar-mobile-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .mobile-menu-btn,
+  .topbar-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-subtle);
+    color: var(--text-primary);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .topbar-title {
+    font-size: 18px;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .title-full { display: none; }
+  .title-short { display: inline; }
+
+  /* Topbar 🌐 preferences popover */
+  .mobile-prefs-popover {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: calc(12px + env(safe-area-inset-right));
+    width: min(296px, calc(100vw - 24px));
+    background: var(--bg-surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+    z-index: 150;
+  }
+  .mobile-prefs-popover.open {
+    display: block;
+  }
+  .mobile-prefs-section + .mobile-prefs-section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .mobile-prefs-lbl {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .mobile-prefs-lang-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .mobile-lang-opt {
+    min-height: 44px;
+    padding: 8px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-subtle);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .mobile-lang-opt.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #FFFFFF;
+  }
+  body.theme-dark .mobile-lang-opt.active {
+    color: #061326;
+  }
+  .mobile-theme-opt {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  /* Reusable Bottom Sheet (More menu & Quiz Topic picker) */
+  .sheet-backdrop {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 160;
+    background: rgba(5, 11, 22, 0.62);
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .sheet-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .bottom-sheet {
+    width: 100%;
+    max-width: 600px;
+    max-height: 82dvh;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-strong);
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+    transition: transform 0.24s ease;
+    overflow: hidden;
+  }
+  .sheet-backdrop.open .bottom-sheet {
+    transform: translateY(0);
+  }
+  .sheet-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 99px;
+    background: var(--border-strong);
+    margin: 10px auto 4px;
+    flex-shrink: 0;
+  }
+  .sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 17px;
+  }
+  .sheet-close-btn {
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+    color: var(--text-primary);
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .sheet-body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 16px 16px;
+  }
+  .more-sheet-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .more-sheet-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 52px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+  .more-sheet-item.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .more-sheet-ico { font-size: 20px; flex-shrink: 0; }
+  .more-sheet-name { flex: 1; min-width: 0; }
+  .more-sheet-arrow { color: var(--text-muted); font-size: 20px; }
+  .more-sheet-footer {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .more-sheet-lbl {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .more-sheet-footer .level-toggle button {
+    min-height: 44px;
+    font-size: 15px;
+  }
+
+  /* Bottom Tab Bar (56px + safe area) */
+  .bottom-tab-bar {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 80;
+    min-height: calc(56px + env(safe-area-inset-bottom));
+    padding: 4px env(safe-area-inset-right) calc(4px + env(safe-area-inset-bottom)) env(safe-area-inset-left);
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-strong);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.14);
+  }
+  body.theme-dark .bottom-tab-bar {
+    background: rgba(10, 20, 36, 0.96);
+    backdrop-filter: blur(10px);
+  }
+  .btab-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 48px;
+    min-width: 44px;
+    padding: 4px 2px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 8px;
+  }
+  .btab-btn.active {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .btab-ico {
+    font-size: 19px;
+    line-height: 1.1;
+  }
+  .btab-lbl {
+    font-size: 12px;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* Sidebar drawer items: large touch targets */
+  .nav-btn,
+  .stage-head,
+  .level-toggle button,
+  .sidebar-footer .btn {
+    min-height: 44px;
+    font-size: 14px;
+  }
+  .stage-title { font-size: 14px; }
+  .stage-sub, .stage-pct, .nav-badge, .nav-group-label { font-size: 12px; }
+
+  /* Content area padding with bottom tab clearance */
+  .content {
+    padding: 14px calc(16px + env(safe-area-inset-right)) calc(80px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  }
+
+  /* Tables: always scroll inside card with sticky first column */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .table-wrap table {
+    font-size: 14px;
+  }
+  .table-wrap th {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .table-wrap td {
+    padding: 10px 10px;
+  }
+  .table-wrap th:first-child,
+  .table-wrap td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--bg-surface);
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.08);
+  }
+  .table-wrap th:first-child {
+    background: var(--bg-canvas);
+    z-index: 3;
+  }
+  body.theme-dark .table-wrap th:first-child {
+    background: #12243F;
+  }
+
+  /* Horizontal scroll strips with snap */
+  .h-scroll-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    gap: 8px !important;
+    padding-bottom: 4px;
+    max-width: 100%;
+  }
+  .h-scroll-row > * {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+
+  /* Prevent selects / inputs with inline min-width from pushing viewport */
+  select,
+  input[type="text"],
+  input[type="number"],
+  textarea {
+    min-width: 0 !important;
+    max-width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+  }
+  input[type="range"] {
+    min-height: 36px;
+    width: 100%;
+  }
+  input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  /* Touch targets >= 44x44 everywhere on tablet/mobile */
+  .btn,
+  .btn-sm,
+  .efb-btn,
+  .seg-tab,
+  .subtab,
+  .quiz-opt,
+  .phase-chip,
+  .roadmap-item,
+  .facility-btn,
+  .uld-mode-btn,
+  .uld-cargo-item,
+  .a3d-panel > summary,
+  .cmdk-item {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .btn, .btn-sm, .efb-btn {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+  .seg-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    max-width: 100%;
+    width: 100%;
+  }
+  .seg-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+  .subtabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    scroll-snap-type: x proximity;
+  }
+  .subtab {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 14px;
+    padding: 10px 14px;
+    scroll-snap-align: start;
+  }
+
+  /* iPad portrait: 2-column roadmap & tiles */
+  .roadmap-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .dash-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .wb-workspace {
+    grid-template-columns: 1fr;
+  }
+  .wb-col-results {
+    order: -1;
+  }
+  .uld-sim-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Ensure SVGs never cause horizontal overflow */
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* =====================================================================
+   PHONE & NARROW VIEWPORTS (<= 900px: iPhone SE/15/15PM + iPhone Landscape)
+   ===================================================================== */
+@media (max-width: 900px) {
+  html, body {
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .card {
+    padding: 14px 14px;
+  }
+  .card + .card {
+    margin-top: 12px;
+  }
+  .card-title {
+    font-size: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .section-label {
+    font-size: 13px;
+    margin: 14px 0 8px;
+  }
+  .field label {
+    font-size: 14px;
+  }
+  .field-hint,
+  .kpi-label,
+  .kpi-sub,
+  .badge,
+  .efb-stat-lbl,
+  .efb-stat-sub,
+  .efb-chip,
+  .ta-hud-pill,
+  .ta-tool-lbl,
+  .ta-attach-strip,
+  .a3d-set,
+  .kbd-hint,
+  .q-src,
+  .mono,
+  .drill-help,
+  .drill-gauges,
+  .pov-label,
+  .wb-split-3d-label,
+  .three-badge,
+  .efb-fleet-spec-bar,
+  .efb-pulse-strip,
+  footer {
+    font-size: 12px !important;
+  }
+  .alert {
+    font-size: 14px !important;
+    line-height: 1.55;
+  }
+  /* Guarantee NO inline 10px / 10.5px / 11px / 11.5px text slips below 12px on mobile */
+  [style*="font-size:10px"],
+  [style*="font-size: 10px"],
+  [style*="font-size:10.5px"],
+  [style*="font-size: 10.5px"],
+  [style*="font-size:11px"],
+  [style*="font-size: 11px"],
+  [style*="font-size:11.5px"],
+  [style*="font-size: 11.5px"] {
+    font-size: 12px !important;
+  }
+  [style*="font-size:12px"],
+  [style*="font-size: 12px"],
+  [style*="font-size:12.5px"],
+  [style*="font-size: 12.5px"] {
+    font-size: 14px !important;
+  }
+  /* Keep compact HUD pills & badges at crisp 12px so they don't bloat */
+  .badge,
+  .efb-chip,
+  .ta-hud-pill,
+  .hud-pill,
+  .btab-lbl,
+  .kbd-hint {
+    font-size: 12px !important;
+  }
+
+  /* Single-column grids on narrow screens */
+  @media (max-width: 760px) {
+    .roadmap-grid,
+    .dash-grid,
+    .form-grid-2,
+    .form-grid-3 {
+      grid-template-columns: 1fr;
+    }
+    #wb-kpi-grid {
+      grid-template-columns: 1fr !important;
+    }
+    #wb-perf-strip {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+  }
+
+  /* -----------------------------------------------------------------
+     DASHBOARD / ROADMAP (Sec 6)
+     ----------------------------------------------------------------- */
+  .dash-hero {
+    padding: 16px;
+    gap: 12px;
+  }
+  .dash-hero h2 {
+    font-size: 18px !important;
+    line-height: 1.4;
+  }
+  .roadmap-head h3 {
+    font-size: 17px;
+  }
+  .roadmap-card {
+    padding: 16px;
+    gap: 4px;
+  }
+  .roadmap-card .stage-no {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+  .roadmap-card-title {
+    font-size: 17px !important;
+  }
+  .roadmap-card-sub {
+    font-size: 14px !important;
+  }
+  .rm-mobile-cta {
+    display: inline-flex;
+    width: 100%;
+    min-height: 46px;
+    margin-top: 4px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .rm-mobile-toggle {
+    display: inline-flex;
+    width: 100%;
+    min-height: 44px;
+    margin-top: 8px;
+    justify-content: space-between;
+    font-size: 14px;
+  }
+  .roadmap-card:not(.rm-expanded) .roadmap-items {
+    display: none;
+  }
+  .roadmap-card.rm-expanded .roadmap-items {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .roadmap-item {
+    min-height: 46px;
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+
+  /* -----------------------------------------------------------------
+     QUIZ MODULE (Sec 4): Question-first + Topic bottom sheet + Sticky nav
+     ----------------------------------------------------------------- */
+  .qz-topic-groups {
+    display: none;
+  }
+  .qz-mobile-topic-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .qz-mobile-topic-btn {
+    width: 100%;
+    min-height: 46px;
+    justify-content: space-between;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-weight: 700;
+    background: var(--bg-surface);
+    border: 1.5px solid var(--accent-border);
+    border-radius: 10px;
+    text-align: left;
+  }
+  .qz-mobile-topic-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
+  .qz-sheet-group {
+    margin-bottom: 14px;
+  }
+  .qz-sheet-group-lbl {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .qz-sheet-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .qz-sheet-chip {
+    width: 100%;
+    min-height: 46px;
+    justify-content: space-between;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+  .qz-question-text {
+    font-size: 17px !important;
+    line-height: 1.55 !important;
+  }
+  .quiz-opt,
+  .qz-practice-opt {
+    min-height: 52px !important;
+    padding: 13px 14px !important;
+    font-size: 16px !important;
+    line-height: 1.5;
+    margin-bottom: 0;
+  }
+  .qz-opts-col {
+    gap: 10px !important;
+  }
+  .qz-mobile-lbl {
+    display: inline;
+  }
+  .qz-top-nav-btns {
+    display: none !important;
+  }
+  .qz-sticky-nav {
+    position: sticky;
+    bottom: calc(60px + env(safe-area-inset-bottom));
+    z-index: 40;
+    display: flex !important;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 10px;
+    border-radius: 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+  }
+  .qz-sticky-nav .btn {
+    min-height: 48px;
+    font-size: 14px;
+    font-weight: 700;
+    flex: 1;
+    white-space: nowrap;
+    padding: 8px 10px;
+  }
+  .qz-sticky-nav #qz-rand,
+  .qz-sticky-nav #qz-m-rand {
+    flex: 0 0 48px;
+    padding: 8px 4px;
+  }
+  .qz-exam-sticky-head {
+    position: sticky;
+    top: calc(52px + env(safe-area-inset-top));
+    z-index: 45;
+    background: var(--bg-surface);
+    margin: -14px -14px 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    border-radius: 10px 10px 0 0;
+  }
+  .qz-header-stats {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 6px;
+    width: 100%;
+    padding-bottom: 2px;
+  }
+  .qz-header-stats .badge {
+    flex-shrink: 0;
+  }
+
+  /* -----------------------------------------------------------------
+     3D AIRPORT MODULE (Sec 5)
+     ----------------------------------------------------------------- */
+  .a3d-main-card {
+    padding: 10px;
+  }
+  .a3d-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    scroll-snap-type: x proximity;
+  }
+  .a3d-toolbar-left,
+  .a3d-toolbar-right {
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    gap: 8px;
+  }
+  .a3d-toolbar .btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .a3d-toolbar .a3d-btn-lbl {
+    display: none;
+  }
+  .a3d-select {
+    min-height: 44px;
+    max-width: 112px;
+    font-size: 14px;
+    padding: 6px 8px;
+  }
+  @media (max-width: 560px) {
+    #a3d-flight-prev,
+    #a3d-flight-next,
+    #a3d-toggle-expand {
+      display: none;
+    }
+    .a3d-toolbar {
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .a3d-toolbar-left,
+    .a3d-toolbar-right {
+      gap: 6px;
+    }
+    .a3d-select {
+      max-width: 96px;
+    }
+  }
+  .airport3d-stage #airport3d-gl,
+  .airport3d-stage #airport3d-hud2d {
+    height: clamp(320px, 56dvh, 490px);
+  }
+  .hud-top {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .hud-pill {
+    padding: 6px 10px;
+    font-size: 12px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #a3d-hud-zone {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 48vw;
+  }
+  #a3d-hud-spd {
+    flex-shrink: 0;
+    max-width: 34vw;
+  }
+  .a3d-hud-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .a3d-hud-info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    background: rgba(15, 23, 42, 0.84);
+    color: #F8FAFC;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .airport3d-stage:not(.hud-info-open) .a3d-hud-secondary {
+    display: none !important;
+  }
+  .a3d-minimap-wrap {
+    top: 58px;
+    right: 8px;
+    width: 144px;
+    height: 92px;
+  }
+  .phase-strip {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    gap: 8px;
+    padding-bottom: 4px;
+  }
+  .phase-chip {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 8px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+    scroll-snap-align: start;
+  }
+  .pov-bar {
+    gap: 8px;
+    padding: 8px;
+    scroll-snap-type: x proximity;
+  }
+  .pov-bar .btn {
+    scroll-snap-align: start;
+  }
+  .drive-pad {
+    grid-template-columns: repeat(3, 48px);
+    grid-template-rows: repeat(2, 46px);
+    gap: 6px;
+    padding: 6px;
+  }
+  .drive-key {
+    font-size: 16px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .a3d-panel > summary {
+    min-height: 50px;
+    font-size: 15px;
+    padding: 12px 14px;
+  }
+  .a3d-panel-body {
+    padding: 0 14px 14px;
+  }
+
+  /* Marshaller signals grid (Sec 6: 2-3 cols, >= 64px with icon + label) */
+  .marshal-sig-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px !important;
+  }
+  .marshal-sig-grid .sig-btn {
+    flex-direction: column;
+    min-height: 64px;
+    padding: 8px 6px;
+    font-size: 12.5px;
+    text-align: center;
+    line-height: 1.25;
+    gap: 4px;
+  }
+  .marshal-sig-ico {
+    display: block;
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  /* -----------------------------------------------------------------
+     ULD BUILDUP & TURNAROUND & W&B & FIELD DRILLS (Sec 6)
+     ----------------------------------------------------------------- */
+  .uld-stage-wrap {
+    height: clamp(290px, 46dvh, 390px);
+  }
+  .uld-desktop-hint,
+  #ta-3d-hint {
+    display: none !important;
+  }
+  .uld-hud-bottom .btn,
+  .ta-cam-bar .btn {
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  .uld-hud-cam-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    gap: 8px !important;
+    width: 100%;
+    scroll-snap-type: x proximity;
+  }
+  .uld-hud-cam-row .btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+  .uld-mode-switch {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .uld-mode-btn {
+    min-height: 56px;
+    font-size: 15px;
+  }
+  .uld-kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .uld-queue-list {
+    max-height: none;
+  }
+  .uld-cargo-item {
+    min-height: 50px;
+    padding: 10px 12px;
+  }
+  .uld-check-row {
+    min-height: 44px;
+    padding: 6px 4px;
+    font-size: 14px !important;
+  }
+
+  /* Turnaround 3D */
+  .ta-3d-stage {
+    height: clamp(290px, 46dvh, 380px);
+  }
+  .ta-3d-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .ta-cam-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    gap: 8px;
+    padding-bottom: 2px;
+  }
+  .ta-cam-bar .btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* W&B controls: compact wrapping & full-width selects */
+  #wb-aircraft,
+  #wb-scenario {
+    flex: 1 0 100% !important;
+    width: 100% !important;
+  }
+  #wb-fleet-spec {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .uld-brief-body {
+    max-height: 68px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .wb-action-row {
+    gap: 8px !important;
+  }
+  .wb-split-3d canvas {
+    height: 240px !important;
+  }
+  #wb-fault-presets {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    gap: 8px !important;
+    padding-bottom: 4px;
+  }
+  #wb-fault-presets .efb-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Field drills / Ops: Phonetic & Signal grids */
+  .ops-phon-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    max-height: none !important;
+  }
+  .ops-phon-grid .btn {
+    flex-direction: column;
+    min-height: 64px !important;
+    justify-content: center !important;
+    gap: 4px;
+    font-size: 13px;
+  }
+  .ops-cards-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+/* Narrow phone tweaks (375px iPhone SE) */
+@media (max-width: 400px) {
+  .marshal-sig-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* =====================================================================
+   IPHONE LANDSCAPE 3D FULLSCREEN MODE (e.g. 844 x 390) — Sec 5
+   ===================================================================== */
+@media (max-width: 932px) and (max-height: 500px) and (orientation: landscape) {
+  /* Compact topbar & bottom bar in landscape so 3D gets maximum canvas */
+  .topbar {
+    min-height: 44px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  .bottom-tab-bar {
+    min-height: 48px;
+    padding-top: 2px;
+    padding-bottom: max(2px, env(safe-area-inset-bottom));
+  }
+  .btab-btn {
+    flex-direction: row;
+    gap: 5px;
+    min-height: 44px;
+  }
+
+  /* Fullscreen 3D airport canvas in landscape */
+  .content {
+    padding: 4px calc(10px + env(safe-area-inset-right)) calc(54px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));
+  }
+  #screen-airport3d.active .subtabs {
+    margin-bottom: 4px;
+  }
+  #screen-airport3d.active .a3d-main-card {
+    position: relative;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+  #screen-airport3d.active .airport3d-stage {
+    border-radius: 10px;
+  }
+  #screen-airport3d.active .airport3d-stage #airport3d-gl,
+  #screen-airport3d.active .airport3d-stage #airport3d-hud2d {
+    height: calc(100dvh - 150px);
+    min-height: 220px;
+  }
+  /* Floating translucent toolbar at bottom of 3D viewport */
+  #screen-airport3d.active .a3d-toolbar {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    z-index: 25;
+    margin: 0;
+    padding: 5px 8px;
+    border-radius: 10px;
+    background: rgba(10, 20, 36, 0.82);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(148, 163, 184, 0.36);
+  }
+  #screen-airport3d.active .a3d-toolbar .btn {
+    background: rgba(15, 29, 52, 0.85);
+    color: #F8FAFC;
+    border-color: rgba(148, 163, 184, 0.4);
+  }
+  #screen-airport3d.active .a3d-toolbar .btn.btn-primary {
+    background: #0284C7;
+    border-color: #38BDF8;
+    color: #FFFFFF;
+  }
+  #screen-airport3d.active .a3d-land-panel-btn {
+    display: inline-flex;
+  }
+  #screen-airport3d.active .a3d-drawer.open {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 66px;
+    z-index: 26;
+    background: var(--bg-surface);
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+  #screen-airport3d.active .phase-strip,
+  #screen-airport3d.active .radio-bar {
+    display: none;
+  }
+  /* Hide side panels behind slide-over drawer toggled by ☰ */
+  #screen-airport3d.active .a3d-side {
+    position: fixed;
+    top: 44px;
+    right: 0;
+    bottom: 48px;
+    width: min(360px, 86vw);
+    z-index: 95;
+    background: var(--bg-canvas);
+    border-left: 1px solid var(--border-strong);
+    padding: 10px;
+    overflow-y: auto;
+    transform: translateX(104%);
+    transition: transform 0.22s ease;
+    box-shadow: -8px 0 28px rgba(0, 0, 0, 0.4);
+  }
+  #screen-airport3d.active .a3d-layout.land-side-open .a3d-side {
+    transform: translateX(0);
+  }
+}
+
+/* Review fix (Claude): flex children in the Turnaround header must be allowed to shrink, otherwise the
+   airport chip row pushes the card 25px past the screen edge and clips the stand <select> and 3D view. */
+@media (max-width: 900px) {
+  #ta-top-bar .card > div > div,
+  #turnaround-mount .card > div > div { min-width: 0; max-width: 100%; }
+  #turnaround-mount select,
+  #turnaround-mount canvas { max-width: 100%; }
+}
+@media (max-width: 900px) {
+  /* Turnaround camera/tool groups: wrap inside the card instead of running 400px off-screen */
+  .ta-3d-toolbar .ta-tool-grp { min-width: 0; max-width: 100%; flex-wrap: wrap; }
+  .ta-3d-toolbar .ta-tool-grp .h-scroll-row { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scroll-snap-type: x proximity; }
+}

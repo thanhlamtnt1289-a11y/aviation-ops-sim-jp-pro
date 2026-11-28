@@ -42,6 +42,8 @@ def to_data_uri(js_text: str) -> str:
 def build():
     html = (ROOT / "index.html").read_text(encoding="utf-8")
     css = (ROOT / "src/styles/app.css").read_text(encoding="utf-8")
+    mobile_css_path = ROOT / "src/styles/mobile.css"
+    mobile_css = mobile_css_path.read_text(encoding="utf-8") if mobile_css_path.exists() else ""
     three_js = (ROOT / "vendor/three.module.min.js").read_text(encoding="utf-8")
     buf_utils_js = (ROOT / "vendor/BufferGeometryUtils.js").read_text(encoding="utf-8")
     gltf_loader_js = rewrite_imports(
@@ -76,6 +78,11 @@ def build():
         '<link rel="stylesheet" href="./src/styles/app.css" />',
         f"<style>\n{css}\n</style>",
     )
+    if mobile_css:
+        html = html.replace(
+            '<link rel="stylesheet" href="./src/styles/mobile.css" />',
+            f"<style>\n{mobile_css}\n</style>",
+        )
 
     # Inject inline GLB binary map + self-contained UTF-8 base64 importmap
     glb_script = f"<script>window.__APP_GLB_BASE64__={json.dumps(glb_map, separators=(',', ':'))};</script>"

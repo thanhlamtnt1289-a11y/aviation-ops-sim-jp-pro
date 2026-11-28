@@ -308,7 +308,7 @@ export function renderQuizModule() {
       const answeredCount = Object.keys(quizState.examAnswers).length;
       bodyHtml = `
         <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <div class="qz-exam-sticky-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
             <span class="badge badge-accent">Q ${quizState.idx + 1} / ${quizState.examQuestions.length} (${answeredCount} ${t('回答済', 'đã chọn', 'answered')})</span>
             <div style="display:flex;gap:8px;align-items:center;">
               <span class="badge badge-danger" style="font-family:var(--font-mono);font-size:13px;">⏱ <span id="quiz-exam-clock">${m}:${s}</span></span>
@@ -316,8 +316,8 @@ export function renderQuizModule() {
             </div>
           </div>
           ${q.visual ? `<div class="quiz-visual-box" style="margin-bottom:12px;">${renderVisual(q.visual)}</div>` : ''}
-          <div class="ja" style="font-size:15px;font-weight:700;margin-bottom:12px;">${getQText(q)}</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="ja qz-question-text" style="font-size:15px;font-weight:700;margin-bottom:12px;">${getQText(q)}</div>
+          <div class="qz-opts-col" style="display:flex;flex-direction:column;gap:8px;">
             ${opts.map((optTxt, oi) => {
               const sel = quizState.examAnswers[q.id] === oi;
               return `
@@ -328,7 +328,7 @@ export function renderQuizModule() {
               `;
             }).join('')}
           </div>
-          <div style="display:flex;justify-content:space-between;margin-top:14px;">
+          <div class="qz-sticky-nav" style="display:flex;justify-content:space-between;margin-top:14px;">
             <button class="btn btn-sm" id="qz-prev" ${quizState.idx === 0 ? 'disabled' : ''}>◀ ${t('前の問題', 'Câu trước', 'Previous')}</button>
             <button class="btn btn-sm btn-primary" id="qz-next" ${quizState.idx >= quizState.examQuestions.length - 1 ? 'disabled' : ''}>${t('次の問題', 'Câu tiếp', 'Next')} ▶</button>
           </div>
@@ -361,15 +361,15 @@ export function renderQuizModule() {
               ${q.visual ? `<span class="badge badge-ok">🖼 ${t('図版問題', 'HÌNH MINH HỌA', 'VISUAL')}</span>` : ''}
               ${appState.srsWrong[q.id] ? `<span class="badge badge-danger">SRS ×${appState.srsWrong[q.id]}</span>` : ''}
             </div>
-            <div style="display:flex;gap:6px;">
+            <div class="qz-top-nav-btns" style="display:flex;gap:6px;">
               <button class="btn btn-sm" id="qz-prev" ${quizState.idx === 0 ? 'disabled' : ''}>◀</button>
               <button class="btn btn-sm" id="qz-rand" title="Random">🎲</button>
               <button class="btn btn-sm btn-primary" id="qz-next" ${quizState.idx >= list.length - 1 ? 'disabled' : ''}>▶</button>
             </div>
           </div>
           ${q.visual ? `<div class="quiz-visual-box" style="margin-bottom:12px;">${renderVisual(q.visual)}</div>` : ''}
-          <div class="ja" style="font-size:15px;font-weight:700;margin-bottom:12px;line-height:1.6;">${getQText(q)}</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="ja qz-question-text" style="font-size:15px;font-weight:700;margin-bottom:12px;line-height:1.6;">${getQText(q)}</div>
+          <div class="qz-opts-col" style="display:flex;flex-direction:column;gap:8px;">
             ${opts.map((optTxt, oi) => {
               let border = 'var(--border)';
               let bg = 'var(--surface-2)';
@@ -378,7 +378,7 @@ export function renderQuizModule() {
                 else if (oi === picked) { border = 'var(--danger)'; bg = 'var(--danger-soft)'; }
               }
               return `
-                <button data-popt="${oi}" style="text-align:left;padding:10px 14px;border-radius:8px;border:1.5px solid ${border};background:${bg};cursor:pointer;color:var(--text-primary);font-size:13.5px;">
+                <button class="quiz-opt qz-practice-opt" data-popt="${oi}" style="text-align:left;padding:10px 14px;border-radius:8px;border:1.5px solid ${border};background:${bg};cursor:pointer;color:var(--text-primary);font-size:13.5px;">
                   <strong style="margin-right:8px;">${['A', 'B', 'C', 'D'][oi]}.</strong>
                   <span class="ja">${optTxt}</span>
                 </button>
@@ -394,9 +394,18 @@ export function renderQuizModule() {
             </div>
           ` : ''}
         </div>
+        <div class="qz-sticky-nav" style="display:none;">
+          <button class="btn" id="qz-m-prev" ${quizState.idx === 0 ? 'disabled' : ''}>◀ ${t('前の問題', 'Câu trước', 'Prev')}</button>
+          <button class="btn" id="qz-m-rand" aria-label="Random">🎲</button>
+          <button class="btn btn-primary" id="qz-m-next" ${quizState.idx >= list.length - 1 ? 'disabled' : ''}>${t('次の問題', 'Câu tiếp', 'Next')} ▶</button>
+        </div>
       `;
     }
   }
+
+  const curTopicObj = UNIFIED_TOPICS[quizState.topic] || UNIFIED_TOPICS.all;
+  const curTopicLabel = t(curTopicObj.ja, curTopicObj.vi, curTopicObj.en).replace(TOPIC_PREFIX_RE, '');
+  const curTopicCnt = questionsForTopic(quizState.topic).length;
 
   mount.innerHTML = `
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -405,7 +414,7 @@ export function renderQuizModule() {
         <button class="seg-tab ${quizState.mode === 'srs' ? 'active' : ''}" data-qmode="srs">🔁 ${t(`SRS弱点復習 (${srsCount})`, `Ôn lỗi sai SRS (${srsCount})`, `SRS Review (${srsCount})`)}</button>
         <button class="seg-tab ${quizState.mode === 'exam' ? 'active' : ''}" data-qmode="exam">🎓 ${t('タイマー模擬試験', 'Thi thử bấm giờ', 'Timed Mock Exams')}</button>
       </div>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <div class="qz-header-stats" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <span class="badge badge-neutral">${t(`正答率 ${acc}%`, `Đúng ${acc}%`, `Accuracy ${acc}%`)}</span>
         <span class="badge badge-warn">NGO: ${appState.quizStats.bestNgoExam !== null ? appState.quizStats.bestNgoExam + '%' : '—'}</span>
         <span class="badge badge-ok">SSW: ${appState.quizStats.bestExam !== null ? appState.quizStats.bestExam + '%' : '—'}</span>
@@ -414,6 +423,12 @@ export function renderQuizModule() {
     </div>
 
     ${quizState.mode === 'practice' ? `
+      <div class="qz-mobile-topic-bar">
+        <button class="btn qz-mobile-topic-btn" id="qz-mobile-topic-btn">
+          <span class="qz-mobile-topic-name">📚 ${t('分野', 'Chủ đề', 'Topic')}: ${curTopicLabel}${quizState.topic === 'all' || quizState.topic === 'ngo_driving' ? '' : ` (${curTopicCnt})`}</span>
+          <span>▾</span>
+        </button>
+      </div>
       <div class="qz-topic-groups">
         ${TOPIC_GROUPS.map(g => `
           <div class="qz-topic-row">
@@ -427,6 +442,30 @@ export function renderQuizModule() {
               }).join('')}
             </div>
           </div>`).join('')}
+      </div>
+      <div class="sheet-backdrop" id="qz-topic-sheet-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="bottom-sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-head">
+            <strong>📚 ${t('出題分野を選択', 'Chọn chủ đề ôn thi', 'Select Exam Topic')}</strong>
+            <button class="sheet-close-btn" id="qz-topic-sheet-close" aria-label="Close">✕</button>
+          </div>
+          <div class="sheet-body">
+            ${TOPIC_GROUPS.map(g => `
+              <div class="qz-sheet-group">
+                <div class="qz-sheet-group-lbl">${t(g.ja, g.vi, g.en)}</div>
+                <div class="qz-sheet-chips">
+                  ${g.ids.filter(id => UNIFIED_TOPICS[id]).map(tpId => {
+                    const tp = UNIFIED_TOPICS[tpId];
+                    const cnt = questionsForTopic(tpId).length;
+                    const label = t(tp.ja, tp.vi, tp.en).replace(TOPIC_PREFIX_RE, '');
+                    return `<button class="btn qz-sheet-chip ${quizState.topic === tpId ? 'btn-primary' : ''}" data-qtop="${tpId}"><span>${label}</span><span class="badge badge-neutral">${cnt}</span></button>`;
+                  }).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
       </div>
     ` : ''}
 
@@ -466,15 +505,36 @@ export function renderQuizModule() {
   if (goSrs) goSrs.onclick = () => { quizState.mode = 'srs'; quizState.idx = 0; renderQuizModule(); };
 
   const prev = document.getElementById('qz-prev');
-  if (prev) prev.onclick = () => { quizState.idx = Math.max(0, quizState.idx - 1); renderQuizModule(); };
-  const next = document.getElementById('qz-next');
-  if (next) next.onclick = () => { quizState.idx++; renderQuizModule(); };
-  const rand = document.getElementById('qz-rand');
-  if (rand) rand.onclick = () => {
+  const goPrev = () => { quizState.idx = Math.max(0, quizState.idx - 1); renderQuizModule(); };
+  const goNext = () => { quizState.idx++; renderQuizModule(); };
+  const goRand = () => {
     const list = getFilteredQuestions();
     quizState.idx = Math.floor(Math.random() * Math.max(1, list.length));
     renderQuizModule();
   };
+  if (prev) prev.onclick = goPrev;
+  const next = document.getElementById('qz-next');
+  if (next) next.onclick = goNext;
+  const rand = document.getElementById('qz-rand');
+  if (rand) rand.onclick = goRand;
+  const mPrev = document.getElementById('qz-m-prev');
+  if (mPrev) mPrev.onclick = goPrev;
+  const mNext = document.getElementById('qz-m-next');
+  if (mNext) mNext.onclick = goNext;
+  const mRand = document.getElementById('qz-m-rand');
+  if (mRand) mRand.onclick = goRand;
+
+  const mobTopicBtn = document.getElementById('qz-mobile-topic-btn');
+  const topicSheet = document.getElementById('qz-topic-sheet-backdrop');
+  const topicSheetClose = document.getElementById('qz-topic-sheet-close');
+  const closeTopicSheet = () => {
+    if (topicSheet) { topicSheet.classList.remove('open'); topicSheet.setAttribute('aria-hidden', 'true'); }
+  };
+  if (mobTopicBtn && topicSheet) {
+    mobTopicBtn.onclick = () => { topicSheet.classList.add('open'); topicSheet.setAttribute('aria-hidden', 'false'); };
+    topicSheet.onclick = e => { if (e.target === topicSheet) closeTopicSheet(); };
+  }
+  if (topicSheetClose) topicSheetClose.onclick = closeTopicSheet;
 
   mount.querySelectorAll('[data-popt]').forEach(b => {
     b.onclick = () => {

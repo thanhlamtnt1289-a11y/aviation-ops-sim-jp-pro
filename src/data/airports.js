@@ -679,9 +679,14 @@ export const SAFETY_CHECKLIST_GROUPS = [
     }
   ];
 
+// Spot 7 stand centreline (scene x). Placed midway between Spot 6's wingtip and the Centre Pier wall
+// (x = 28.75) so every type in the fleet — incl. B777-300ER / A350 / B777F (span ≈ 65 m) — parks at 1:1
+// scale with ≥ 6 m wingtip clearance to the pier and ≥ 7 m to an aircraft on Spot 6.
+export const NGO_STAND7_X = -10;
+
 export const A3D_SPOTS = [
     { id: '101', ngoNo: '6', name: 'NGO Spot 6 (B737-800 / Bulk)', acType: 'B738', cx: -68, cz: 10, wingHalf: 18, fuseLen: 39, bodyColor: [242, 245, 250], tailColor: [27, 79, 156], era: { x1: -90, x2: -45, z1: -14, z2: 34 }, loadPt: { x: -78, z: 20 } },
-    { id: '102', ngoNo: '7', name: 'NGO Spot 7 (A320 / B789)', acType: 'A320', cx: 0, cz: 10, wingHalf: 18, fuseLen: 38, bodyColor: [245, 247, 250], tailColor: [20, 92, 168], era: { x1: -22, x2: 22, z1: -14, z2: 34 }, loadPt: { x: -10, z: 20 } },
+    { id: '102', ngoNo: '7', name: 'NGO Spot 7 (A320 – B777 / Code E)', acType: 'A320', cx: NGO_STAND7_X, cz: 10, wingHalf: 32.5, eraHalfL: 39, eraCz: -8, fuseLen: 74, bodyColor: [245, 247, 250], tailColor: [20, 92, 168], era: { x1: NGO_STAND7_X - 34, x2: NGO_STAND7_X + 34, z1: -28, z2: 48 }, loadPt: { x: NGO_STAND7_X - 10, z: 20 } },
     { id: '103', ngoNo: '14', name: 'NGO Spot 14 (B787-8 / Dual PBB)', acType: 'B788', cx: 98, cz: 10, wingHalf: 24, fuseLen: 56, bodyColor: [244, 246, 250], tailColor: [30, 64, 128], era: { x1: 70, x2: 126, z1: -18, z2: 38 }, loadPt: { x: 84, z: 21 } }
   ];
 
@@ -1547,15 +1552,15 @@ export const A3D_FLIGHT_PHASES = [
 
   // Taxi-in: RWY 36 exit A6 (high-speed) → crossover x=255 → C-TWY southbound → apron link x=0 → Spot 7 lead-in
   export const NGO_MOTION = {
-    taxiIn: buildMotion([[180, -580], [255, -415], [255, -235], [0, -235], [0, 10]], {
+    taxiIn: buildMotion([[180, -580], [255, -415], [255, -235], [NGO_STAND7_X, -235], [NGO_STAND7_X, 10]], {
       radius: 40, vMax: 9.0, vTurn: 5.0, accel: 0.5, decel: 0.7, vStart: 14, vEnd: 0.0, 
       zones: [{ from: 0, to: 120, v: 14 }],                       // still decelerating on the exit
       leadIn: 70, vLeadIn: 2.6, vLeadEnd: 0.5                     // marshaller lead-in: walking pace, creep to the stop line
     }),
     // Pushback (tail first) from Spot 7 onto the inner taxilane, nose ends pointing south (-X)
-    push: buildMotion([[0, 10], [0, -62], [30, -62]], { radius: 26, vMax: 1.3, vTurn: 1.0, accel: 0.15, decel: 0.2, vStart: 0, vEnd: 0 }),
+    push: buildMotion([[NGO_STAND7_X, 10], [NGO_STAND7_X, -62], [NGO_STAND7_X + 30, -62]], { radius: 26, vMax: 1.3, vTurn: 1.0, accel: 0.15, decel: 0.2, vStart: 0, vEnd: 0 }),
     // Taxi-out: wave-off hold → taxilane → crossover x=-108 → A-TWY southbound → RWY 36 threshold (A1 area)
-    taxiOut: buildMotion([[30, -62], [-108, -62], [-108, -415], [-1680, -415], [-1680, -580], [-1650, -580]], {
+    taxiOut: buildMotion([[NGO_STAND7_X + 30, -62], [-108, -62], [-108, -415], [-1680, -415], [-1680, -580], [-1650, -580]], {
       radius: 40, vMax: 9.5, vTurn: 5.0, accel: 0.45, decel: 0.7, vStart: 0, vEnd: 0, holdStart: 14,
       zones: [{ from: 0, to: 150, v: 5.0 }]                       // apron taxilane ≤ 10kt
     })
@@ -1574,7 +1579,7 @@ export const A3D_FLIGHT_PHASES = [
   export function computeFlightCyclePose(phaseIdx, pRaw) {
     const p = Math.max(0, Math.min(1, pRaw));
     const lerp = (a, b, tVal) => a + (b - a) * Math.max(0, Math.min(1, tVal));
-    const ac = { x: 0, y: 0, z: 10, heading: Math.PI / 2, pitch: 0, beaconOn: false };
+    const ac = { x: NGO_STAND7_X, y: 0, z: 10, heading: Math.PI / 2, pitch: 0, beaconOn: false };
     let pbbExt = 0;
     let conesOn = false;
     let chocksOn = false;
@@ -1696,6 +1701,9 @@ export const A3D_FLIGHT_PHASES = [
       }
     }
 
+    // Crew & GSE markers above are authored relative to the Spot 7 centreline → move them with the stand
+    crew.forEach(c => { c.x += NGO_STAND7_X; });
+    gse.forEach(g => { g.x += NGO_STAND7_X; });
     return { ac, pbbExt, conesOn, chocksOn, smoke, crew, gse };
   }
 
@@ -1812,10 +1820,12 @@ export const A3D_VIEWPOINTS = [
   ];
 
 export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, orbitCam, phaseIdx, extra = null) {
-    const ac = flightPose ? flightPose.ac : { x: 0, y: 0, z: 10, heading: Math.PI / 2, pitch: 0 };
+    const ac = flightPose ? flightPose.ac : { x: NGO_STAND7_X, y: 0, z: 10, heading: Math.PI / 2, pitch: 0 };
     const ch = Math.cos(ac.heading), sh = Math.sin(ac.heading);
     const cp = Math.cos(ac.pitch || 0), sp = Math.sin(ac.pitch || 0);
-    const acLocalToW = (lx, ly, lz) => {
+    const refOffL = (extra && extra.acInfo && extra.acInfo.refOff) || 0;
+    const acLocalToW = (lx, ly, lz0) => {
+      const lz = lz0 + refOffL;
       const ly1 = ly * cp + lz * sp;
       const lz1 = -ly * sp + lz * cp;
       return [ac.x - lx * sh + lz1 * ch, ac.y + ly1, ac.z + lx * ch + lz1 * sh];
@@ -1840,7 +1850,7 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
     // Ground-crew POVs: eye = the actual 3D crew member's head (1.68m), always looking at the aircraft
     const crew = (extra && extra.crew) || {};
     if (camMode === 'marshaller') {
-      const eye = crewEye(crew.marshaller, [0, 1.68, (extra && extra.noseZ ? extra.noseZ : 29) + 6]);
+      const eye = crewEye(crew.marshaller, [NGO_STAND7_X, 1.68, (extra && extra.noseZ ? extra.noseZ : 29) + 6]);
       return { pos: eye, target: acCockpit, fov: 55, povKind: 'marshaller' };
     }
     if (camMode === 'marshal_rear') {
@@ -1879,9 +1889,9 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
       // Driver eye in TT local space: seat x=+0.34, y=1.64, z=-0.38 so wheel & both mirrors stay in view
       const toW = (lx, ly, lz) => [veh.x + lz * vch + lx * vsh, ly, veh.z + lz * vsh - lx * vch];
       return {
-        pos: toW(0.34, 1.64, -0.38),
-        target: toW(0.22, 1.38, 16.0),
-        fov: 76,
+        pos: toW(0.34, 1.98, -0.5),   // seated eye height: wheel sits in the lower third, apron ahead stays visible
+        target: toW(0.26, 1.15, 18.0),
+        fov: 78,
         povKind: 'gse_cab'
       };
     }

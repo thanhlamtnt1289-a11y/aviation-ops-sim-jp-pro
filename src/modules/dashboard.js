@@ -1,3 +1,4 @@
+import { ALL_QUESTIONS } from './quizModule.js';
 // 00. Flight Ops Hub Dashboard — Pure Trilingual JA / VI / EN · Readiness Score, NGO Centrair Shortcuts & Quick Launch
 import { ROADMAP, stageProgress, isPro } from '../core/roadmap.js';
 import { AIRCRAFT_PROFILES, WB_SCENARIOS } from '../data/aircraft.js';
@@ -11,7 +12,7 @@ export function renderDashboard(actions) {
   if (!mount) return;
 
   const overall = computeOverallProgress();
-  const totalQ = QUIZ_BANK.length + NGO_DRIVING_QUIZ.length;
+  const totalQ = ALL_QUESTIONS.length;
   const totalDict = OPS_DICTIONARY.length + NGO_EXTRA_DICTIONARY.length;
   const srsCount = Object.keys(appState.srsWrong || {}).length;
   const acc = appState.quizStats.answered > 0
@@ -64,17 +65,23 @@ export function renderDashboard(actions) {
         const pct = stageProgress(st.id);
         const isCur = (appState.activeStage || 'tg1') === st.id;
         const items = st.items.filter(it => isPro() || !it.pro);
+        const resumeItem = items.find(it => it.id === appState.navItem) || items[0];
         return `
-          <div class="roadmap-card ${isCur ? 'current' : ''} ${pct >= 100 ? 'done' : ''}">
+          <div class="roadmap-card ${isCur ? 'current' : ''} ${pct >= 100 ? 'done' : ''}" data-rm-card="${st.id}">
             <div class="roadmap-card-top">
               <span class="stage-no">${pct >= 100 ? '✓' : st.no}</span>
               <div style="min-width:0;">
-                <div class="ja" style="font-weight:800;font-size:14px;">${t(st.ja, st.vi, st.en)}</div>
-                <div class="ja" style="font-size:11.5px;color:var(--text-muted);">${t(st.subJa, st.subVi, st.subEn)}</div>
+                <div class="ja roadmap-card-title" style="font-weight:800;font-size:14px;">${t(st.ja, st.vi, st.en)}</div>
+                <div class="ja roadmap-card-sub" style="font-size:11.5px;color:var(--text-muted);">${t(st.subJa, st.subVi, st.subEn)}</div>
               </div>
             </div>
             <div class="stage-bar" style="margin:10px 0 8px;border-radius:3px;"><i style="width:${pct}%"></i></div>
             <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);margin-bottom:8px;">${pct}% ${t('完了', 'hoàn thành', 'complete')}</div>
+            ${resumeItem ? `<button class="btn btn-primary rm-mobile-cta" data-rm="${resumeItem.id}">▶ ${t('続ける', 'Tiếp tục', 'Continue')} · ${t(resumeItem.ja, resumeItem.vi, resumeItem.en)}</button>` : ''}
+            <button class="btn rm-mobile-toggle" data-rm-toggle="${st.id}" aria-expanded="false">
+              <span>${t(`全${items.length}項目を表示`, `Xem ${items.length} mục học`, `View ${items.length} items`)}</span>
+              <span>▾</span>
+            </button>
             <div class="roadmap-items">
               ${items.map(it => `<button class="roadmap-item ${it.exam ? 'exam' : ''}" data-rm="${it.id}"><span>${it.icon}</span><span>${t(it.ja, it.vi, it.en)}</span></button>`).join('')}
             </div>
@@ -166,6 +173,14 @@ export function renderDashboard(actions) {
         const it = st.items.find(x => x.id === el.dataset.rm);
         if (it) { appState.navItem = it.id; appState.activeStage = st.id; saveState(); actions.goRoadmap(it); return; }
       }
+    };
+  });
+  mount.querySelectorAll('[data-rm-toggle]').forEach(btn => {
+    btn.onclick = () => {
+      const card = mount.querySelector(`[data-rm-card="${btn.dataset.rmToggle}"]`);
+      if (!card) return;
+      const open = card.classList.toggle('rm-expanded');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     };
   });
   const bUld = document.getElementById('dash-go-uld-sim');

@@ -1710,7 +1710,7 @@ export function renderUldBuildupUI() {
           </div>
         </div>
 
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+        <div class="h-scroll-row" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
           ${ULD_MISSIONS.map(m => `
             <button class="btn btn-sm ${uldSimState.missionId === m.id ? 'btn-primary' : ''}" data-uld-mission="${m.id}">
               ${solvedList.includes(m.id) ? '✓ ' : ''}${m.id.replace('ULD_', '')}: ${ULD_SIM_SPECS[m.uldId].code.split(' ')[0]}
@@ -1722,15 +1722,15 @@ export function renderUldBuildupUI() {
         </div>
 
         ${uldSimState.missionId === 'FREE' ? `
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+          <div class="h-scroll-row" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
             ${Object.values(ULD_SIM_SPECS).map(u => `
               <button class="btn btn-sm ${uldSimState.uldId === u.id ? 'btn-primary' : ''}" data-uld-pick="${u.id}">${u.code}</button>
             `).join('')}
           </div>
         ` : `
-          <div class="alert alert-info" style="margin:6px 0 0;padding:8px 12px;font-size:12.5px;">
+          <div class="alert alert-info uld-brief-box" style="margin:6px 0 0;padding:8px 12px;font-size:12.5px;">
             <strong class="ja">${t(activeMission.titleJa, activeMission.titleVi, activeMission.titleEn)}</strong>
-            <div class="ja" style="margin-top:3px;">${t(activeMission.briefJa, activeMission.briefVi, activeMission.briefEn)}</div>
+            <div class="ja uld-brief-body" style="margin-top:3px;">${t(activeMission.briefJa, activeMission.briefVi, activeMission.briefEn)}</div>
           </div>
         `}
       </div>
@@ -1753,7 +1753,7 @@ export function renderUldBuildupUI() {
   const hudBot = document.getElementById('uld-hud-bottom');
   if (hudBot) {
     hudBot.innerHTML = `
-      <div style="display:flex;gap:5px;flex-wrap:wrap;">
+      <div class="uld-hud-cam-row" style="display:flex;gap:5px;flex-wrap:wrap;">
         <button class="btn btn-sm" data-uld-cam="iso">🎥 ${t('3D斜め', '3D chéo', '3D Iso')}</button>
         <button class="btn btn-sm" data-uld-cam="front">📐 ${t('正面コンター', 'Contour chính diện', 'Front Contour')}</button>
         <button class="btn btn-sm" data-uld-cam="top">🗺 ${t('真上(偏荷重)', 'Nhìn từ trên (lệch tải)', 'Top View (Off-center Load)')}</button>
@@ -1761,7 +1761,7 @@ export function renderUldBuildupUI() {
           📏 ${t('コンター枠', 'Khung Contour', 'Contour Gauge')}
         </button>
       </div>
-      <div style="font-size:11px;color:#BAE6FD;font-family:var(--font-mono);background:rgba(7,14,28,0.8);padding:4px 9px;border-radius:999px;">
+      <div class="uld-desktop-hint" style="font-size:11px;color:#BAE6FD;font-family:var(--font-mono);background:rgba(7,14,28,0.8);padding:4px 9px;border-radius:999px;">
         🖱 ${t('3D床/箱をクリックで配置・ドラッグで回転', 'Click lên mặt mâm/thùng 3D để đặt · Kéo để xoay', 'Click 3D deck/box to place · Drag to orbit')}
       </div>
     `;
@@ -1960,17 +1960,17 @@ export function renderUldBuildupUI() {
           <span class="ja">3. ${t('仕上げ処置・固縛 ＆ コンター最終検査', 'Hoàn thiện Chống thấm, Chằng buộc & Chấm điểm', 'Finishing Restraints & Final Inspection')}</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
-          <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;">
+          <label class="uld-check-row" style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;">
             <input type="checkbox" id="uld-chk-wp" ${uldSimState.waterproof ? 'checked' : ''} />
             <span class="ja">💧 ${t('ビニールシート防水処置（水濡れ厳禁・鮮魚）', 'Phủ bạt nilon chống thấm (ビニールシート)', 'Apply Waterproof Vinyl Sheeting')}</span>
           </label>
           ${uld.kind === 'pallet' ? `
-            <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;">
+            <label class="uld-check-row" style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;">
               <input type="checkbox" id="uld-chk-td" ${uldSimState.tiedown ? 'checked' : ''} />
               <span class="ja">⛓ ${t('タイダウンベルト固縛（重量物・長尺スキッド必須）', 'Chằng dây đai tăng đơ Tie-down vào rãnh Pallet', 'Rig Tie-Down Straps to Pallet Seat-Track')}</span>
             </label>
           ` : ''}
-          <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;">
+          <label class="uld-check-row" style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;">
             <input type="checkbox" id="uld-chk-net" ${uldSimState.netOrDoor ? 'checked' : ''} />
             <span class="ja">${uld.kind === 'pallet'
               ? `🕸 ${t('パレットネット掛け ＆ コーナー留め金ロック', 'Phủ lưới Pallet & Cài khóa móc sàn (ネット掛け)', 'Rig & Latch Pallet Cargo Net')}`

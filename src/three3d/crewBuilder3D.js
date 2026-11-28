@@ -8,8 +8,9 @@ import * as THREE from 'three';
 export function createOpenCabTowingTractor3D() {
   const g = new THREE.Group();
 
-  const matBodyWhite = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.32, metalness: 0.28 });
-  const matAccentYellow = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.35, metalness: 0.25 });
+  // Same fleet livery as gseLibrary3D (white clear-coat body + navy band) so the TT matches every other GSE
+  const matBodyWhite = new THREE.MeshPhysicalMaterial({ color: 0xf1f5f9, roughness: 0.32, metalness: 0.1, clearcoat: 0.7, clearcoatRoughness: 0.18 });
+  const matAccentYellow = new THREE.MeshPhysicalMaterial({ color: 0x0b4fa8, roughness: 0.34, metalness: 0.15, clearcoat: 0.7, clearcoatRoughness: 0.18 });
   const matChassisDark = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.55, metalness: 0.45 });
   const matRubber = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.88, metalness: 0.05 });
   const matRim = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.35, metalness: 0.65 });
@@ -64,7 +65,7 @@ export function createOpenCabTowingTractor3D() {
   steerWheel.rotation.x = 1.05;
   addPart(new THREE.TorusGeometry(0.20, 0.030, 8, 20), matRubber, 0, 0, 0, 0, 0, 0, steerWheel);
   // Top-dead-center yellow alignment stripe & 3 steering spokes for clear rotation feedback in cab view
-  addPart(new THREE.BoxGeometry(0.045, 0.07, 0.068), matAccentYellow, 0, 0.20, 0, 0, 0, 0, steerWheel);
+  addPart(new THREE.BoxGeometry(0.045, 0.07, 0.068), new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 }), 0, 0.20, 0, 0, 0, 0, steerWheel);
   addPart(new THREE.CylinderGeometry(0.045, 0.045, 0.05, 10), matChassisDark, 0, 0, 0, Math.PI / 2, 0, 0, steerWheel);
   addPart(new THREE.BoxGeometry(0.36, 0.028, 0.022), matRim, 0, 0, 0, 0, 0, 0, steerWheel);
   addPart(new THREE.BoxGeometry(0.030, 0.19, 0.022), matRim, 0, -0.095, 0, 0, 0, 0, steerWheel);
@@ -139,20 +140,26 @@ export function createOpenCabTowingTractor3D() {
   beamL.rotation.x = -Math.PI / 2 - 0.16;
   const beamR = beamL.clone();
   beamR.position.x = 0.48;
+  beamL.visible = false; beamR.visible = false; // only switched on at night by the scene
   g.add(beamL, beamR);
 
   const tailMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
   addPart(new THREE.BoxGeometry(0.22, 0.12, 0.06), tailMat, -0.56, 0.96, -1.66);
   addPart(new THREE.BoxGeometry(0.22, 0.12, 0.06), tailMat, 0.56, 0.96, -1.66);
 
+  const matSidewall = new THREE.MeshStandardMaterial({ color: 0x262a31, roughness: 0.85, metalness: 0.0 });
   const makeWheel = (r, w) => {
     const wg = new THREE.Group();
     const tire = new THREE.Mesh(new THREE.CylinderGeometry(r, r, w, 16), matRubber);
     tire.rotation.z = Math.PI / 2;
     tire.castShadow = true;
+    const wall = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.84, r * 0.84, w + 0.012, 16), matSidewall);
+    wall.rotation.z = Math.PI / 2;
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.52, r * 0.52, w + 0.03, 12), matRim);
     hub.rotation.z = Math.PI / 2;
-    wg.add(tire, hub);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.16, r * 0.2, w + 0.08, 8), matChassisDark);
+    cap.rotation.z = Math.PI / 2;
+    wg.add(tire, wall, hub, cap);
     return wg;
   };
   const frontPivots = [];
