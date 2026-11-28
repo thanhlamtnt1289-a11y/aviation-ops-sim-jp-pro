@@ -22,6 +22,7 @@ import {
   animateCrewSignal
 } from './crewBuilder3D.js';
 import { buildTurnaroundGseMesh } from './gseLibrary3D.js';
+import { applySkyEnvironment } from './envLighting.js';
 
 // =====================================================================
 // PROCEDURAL PBR TEXTURES (RUNWAY, CONCRETE, GLASS, SPOT SIGN)
@@ -365,7 +366,7 @@ export class TurnaroundScene3D {
       powerPreference: 'high-performance'
     });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.1;
+    this.renderer.toneMappingExposure = 1.0;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this._onCtxLost = e => { e.preventDefault(); this.stop(); };
@@ -376,6 +377,7 @@ export class TurnaroundScene3D {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x9bc5e8);
     this.scene.fog = new THREE.FogExp2(0xb8d7f0, 0.00018);
+    applySkyEnvironment(this.renderer, this.scene, 'day');
 
     this.camera = new THREE.PerspectiveCamera(46, 16 / 9, 2.0, 16000);
 
@@ -393,7 +395,7 @@ export class TurnaroundScene3D {
     this.scene.add(this.sunLight);
     this.scene.add(this.sunLight.target);
 
-    this.hemiLight = new THREE.HemisphereLight(0x9bd0ff, 0x455568, 0.92);
+    this.hemiLight = new THREE.HemisphereLight(0xdde7f1, 0x6b665e, 0.55);
     this.scene.add(this.hemiLight);
 
     this.airportGroup = new THREE.Group();

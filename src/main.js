@@ -35,7 +35,7 @@ const MODULE_TITLES = {
   pax: ['B. 旅客サービス（搭乗手続・手荷物・PRM）', 'B. Dịch vụ Hành khách (Check-in, Hành lý, PRM)', 'B. Passenger Service (Check-in, Baggage, PRM)'],
   cargo: ['C. 3D ULDビルドアップ実技ゲーム・航空貨物・IATA危険物', 'C. Trò chơi Đóng hàng ULD 3D thực tế, Hàng hóa & IATA DGR', 'C. Realistic 3D ULD Build-up Sim, Air Cargo & IATA DGR'],
   safety: ['E. 安全管理・FOD・コンプライアンス（JCAB/SMS）', 'E. An toàn Sân đỗ, FOD & Luật JCAB/SMS', 'E. Safety, FOD & Compliance (JCAB/SMS)'],
-  quiz: ['F. 特定技能 ＆ NGO車両運転講習 総合試験（160問）', 'F. Ôn thi Kỹ năng Đặc định & Bằng lái Sân đỗ NGO (160 câu)', 'F. SSW & NGO Airside Driving Exam Suite (160 Qs)'],
+  quiz: ['F. 特定技能 ＆ NGO車両運転講習 総合試験（342問）', 'F. Ôn thi Kỹ năng Đặc định & Bằng lái Sân đỗ NGO (342 câu)', 'F. SSW & NGO Airside Driving Exam Suite (342 Qs)'],
   ops: ['H. マーシャリング・ライトガン・MCA無線・音声辞典', 'H. Marshalling, Light Gun, MCA Radio & Từ điển', 'H. Marshalling, Light Gun, MCA Radio & Dictionary']
 };
 
@@ -245,7 +245,19 @@ function updateLangToggleUI() {
 
 function registerPWA() {
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-    navigator.serviceWorker.register('./public/sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(reg => {
+      reg.update().catch(() => {});
+      // Re-check when the PWA comes back to the foreground (iOS keeps home-screen apps alive for days)
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+    }).catch(() => {});
+    // A new version took over → reload once so the user sees it immediately
+    let reloaded = false;
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloaded) return;
+      reloaded = true;
+      location.reload();
+    });
   }
 }
 

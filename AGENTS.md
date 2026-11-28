@@ -31,4 +31,4 @@ Dự án: **Aviation Ops Sim JP Pro** — app mô phỏng đào tạo nghiệp v
 - **3D:** máy bay chỉ tạo qua `createFleetAircraft3D()`, xe GSE chỉ tạo qua `buildGse()` (`src/three3d/gseLibrary3D.js`). Không đổi tọa độ NGO trừ khi đặc tả yêu cầu (phải đồng bộ `airports.js` ↔ `airport3dModule.js` ↔ `AirportScene3D.js`).
 - **Giao diện:** gọn, thẳng hàng; không cắt đôi một từ khi xuống dòng (tiếng Nhật đã có `src/core/jaPhraseWrap.js`); phần nâng cao gắn class `pro-only`.
 - **Nội dung chuyên môn:** phải đúng quy định thực tế ở Nhật. Ghi nguồn tham khảo cho từng nhóm nội dung trong PR. Không chắc → ghi `TODO(verify)` thay vì bịa.
-- Khi thay đổi danh sách file JS hoặc cache: tăng `CACHE_NAME` trong `public/sw.js`.
+- Khi thay đổi danh sách file JS hoặc cache: tăng `CACHE_NAME` trong `sw.js` (thư mục gốc).

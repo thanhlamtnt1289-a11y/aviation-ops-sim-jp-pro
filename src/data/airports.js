@@ -1867,9 +1867,12 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
       const look = isFlightMode ? [ac.x, Math.max(2, ac.y + 3), ac.z] : [0, 3.5, 10];
       const nearStands = look[2] > -120 && look[0] < 300 && look[0] > -300;
       const pos = nearStands
-        ? [38.6, 18.2, Math.max(-168, Math.min(-12, look[2] - 28))]   // leaning on the south rail, facing Spot 7
+        ? [30.2, 17.4, Math.max(-168, Math.min(-12, look[2] - 28))]   // at the pier-roof edge rail, facing Spot 7
         : [46, 18.2, -176.4];                                           // at the deck-tip rail, facing the runway
       return { pos, target: look, fov: 52, povKind: 'terminal' };
+    }
+    if ((camMode === 'gse_cab' || camMode === 'backing') && isFlightMode && extra && extra.beltCab) {
+      return { pos: extra.beltCab.pos, target: extra.beltCab.target, fov: 62, povKind: 'gse_cab' };
     }
     if (camMode === 'gse_cab') {
       const vch = Math.cos(veh.heading), vsh = Math.sin(veh.heading);

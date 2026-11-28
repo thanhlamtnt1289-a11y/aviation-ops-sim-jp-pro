@@ -365,7 +365,12 @@ export function setA3dViewpoint(vpId) {
   document.querySelectorAll('[data-vp]').forEach(b => b.classList.toggle('btn-primary', b.dataset.vp === vpId));
   const vp = A3D_VIEWPOINTS.find(v => v.id === vpId);
   const descEl = document.getElementById('a3d-vp-desc');
-  if (descEl && vp) descEl.textContent = `[${vp.key}] ${t(vp.ja, vp.vi, vp.en)} — ${t(vp.descJa, vp.descVi, vp.descEn)}`;
+  if (descEl && vp) {
+    descEl.textContent = `[${vp.key}] ${t(vp.ja, vp.vi, vp.en)} — ${t(vp.descJa, vp.descVi, vp.descEn)}`;
+    descEl.classList.remove('faded');
+    clearTimeout(setA3dViewpoint._fade);
+    setA3dViewpoint._fade = setTimeout(() => descEl.classList.add('faded'), 5000);
+  }
 }
 
 function wrapAngle(a) {
@@ -1011,6 +1016,7 @@ export async function startAirport3dLoop() {
     try {
       const { AirportScene3D } = await import('../three3d/AirportScene3D.js');
       scene3d = new AirportScene3D(glCanvas, hudCanvas, { onInteract: handle3DInteract });
+      if (typeof window !== "undefined" && window.__DEV3D) window.__scene = scene3d;
     } catch (err) {
       const ctx = hudCanvas.getContext('2d');
       ctx.fillStyle = '#0B1324'; ctx.fillRect(0, 0, hudCanvas.width, hudCanvas.height);
@@ -1394,6 +1400,7 @@ export function renderAirport3dUI() {
     const mb = document.getElementById('a3d-minimap-box');
     if (mb) mb.classList.toggle('hidden', !a3d.ui.map);
   };
+  { const de = document.getElementById('a3d-vp-desc'); if (de) { clearTimeout(setA3dViewpoint._fade); setA3dViewpoint._fade = setTimeout(() => de.classList.add('faded'), 6000); } }
   mount.querySelectorAll('details[data-panel]').forEach(d => {
     d.addEventListener('toggle', () => { a3d.ui.panels[d.dataset.panel] = d.open; });
   });

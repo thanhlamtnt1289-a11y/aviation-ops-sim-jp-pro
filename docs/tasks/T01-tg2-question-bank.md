@@ -6,7 +6,7 @@ Chặng ④ 特定技能2号 trong lộ trình hiện chỉ dùng lại câu h�
 ## Phạm vi file
 - **Tạo mới:** `src/data/quizBankTg2.js`
 - **Sửa nhẹ:** `src/modules/quizModule.js` — chỉ để gộp bộ câu mới vào danh sách câu hỏi và vào chủ đề `stage_tg2` (xem "Tích hợp").
-- **Sửa:** `public/sw.js` — thêm file mới vào danh sách cache, tăng `CACHE_NAME` 1 bậc.
+- **Sửa:** `sw.js` — thêm file mới vào danh sách cache, tăng `CACHE_NAME` 1 bậc.
 - Không sửa file nào khác.
 
 ## Định dạng (giống hệt `src/data/quizBank.js`)
