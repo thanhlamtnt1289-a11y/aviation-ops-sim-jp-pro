@@ -65,15 +65,36 @@ export function createOpenCabTowingTractor3D() {
   addPart(new THREE.BoxGeometry(0.50, 0.14, 0.50), matSeat, -0.34, 0.90, -0.34);
   addPart(new THREE.BoxGeometry(0.50, 0.54, 0.12), matSeat, -0.34, 1.18, -0.56);
 
-  // Driver inside open cab
+  // Articulated Driver inside Open-Cab TT (supports Steering + Reversing Head-Check + 指差呼称 Yubisasikoshou!)
   const driverGroup = new THREE.Group();
   driverGroup.position.set(0.34, 0.98, -0.34);
   addPart(new THREE.BoxGeometry(0.42, 0.52, 0.24), new THREE.MeshStandardMaterial({ color: 0x84cc16, roughness: 0.5 }), 0, 0.32, 0, 0, 0, 0, driverGroup);
   addPart(new THREE.BoxGeometry(0.44, 0.08, 0.26), new THREE.MeshBasicMaterial({ color: 0xe2e8f0 }), 0, 0.26, 0, 0, 0, 0, driverGroup);
-  addPart(new THREE.SphereGeometry(0.15, 12, 10), new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.6 }), 0, 0.72, 0.02, 0, 0, 0, driverGroup);
-  addPart(new THREE.SphereGeometry(0.165, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.58), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 }), 0, 0.75, 0.02, 0, 0, 0, driverGroup);
-  addPart(new THREE.CylinderGeometry(0.055, 0.05, 0.44, 8), new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.6 }), -0.22, 0.45, 0.18, Math.PI / 2.4, 0.18, 0, driverGroup);
-  addPart(new THREE.CylinderGeometry(0.055, 0.05, 0.44, 8), new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.6 }), 0.22, 0.45, 0.18, Math.PI / 2.4, -0.18, 0, driverGroup);
+
+  const driverHead = new THREE.Group();
+  driverHead.position.set(0, 0.72, 0.02);
+  addPart(new THREE.SphereGeometry(0.15, 12, 10), new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.6 }), 0, 0, 0, 0, 0, 0, driverHead);
+  addPart(new THREE.SphereGeometry(0.165, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.58), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 }), 0, 0.03, 0, 0, 0, 0, driverHead);
+  driverGroup.add(driverHead);
+
+  const matSleeveDriver = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.6 });
+  const matGloveDriver = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 });
+
+  // Left arm stays on steering wheel
+  const driverArmL = new THREE.Group();
+  driverArmL.position.set(0.22, 0.52, 0.04);
+  addPart(new THREE.CylinderGeometry(0.055, 0.05, 0.44, 8), matSleeveDriver, 0, -0.06, 0.16, Math.PI / 2.4, -0.18, 0, driverArmL);
+  driverGroup.add(driverArmL);
+
+  // Right arm (pivots at shoulder for 指差呼称 pointing forward/rear!)
+  const driverArmR = new THREE.Group();
+  driverArmR.position.set(-0.22, 0.52, 0.04);
+  const rArmMesh = addPart(new THREE.CylinderGeometry(0.055, 0.048, 0.48, 8), matSleeveDriver, 0, -0.22, 0, 0, 0, 0, driverArmR);
+  rArmMesh.castShadow = true;
+  addPart(new THREE.SphereGeometry(0.055, 8, 8), matGloveDriver, 0, -0.46, 0, 0, 0, 0, driverArmR);
+  // Default grip pose on steering wheel:
+  driverArmR.rotation.set(-Math.PI / 2.4, 0, -0.15);
+  driverGroup.add(driverArmR);
   g.add(driverGroup);
 
   const headMat = new THREE.MeshBasicMaterial({ color: 0xfef9c3 });
@@ -126,37 +147,123 @@ export function createOpenCabTowingTractor3D() {
   addPart(new THREE.BoxGeometry(1.62, 0.28, 2.26), matAccentYellow, 0, 4.18, -0.35, 0, 0, 0, highMast);
   g.add(highMast);
 
-  g.userData = { frontPivots, allWheels, steerWheel, beaconBulb, beaconHalo, beams: [beamL, beamR], highMast };
+  g.userData = { frontPivots, allWheels, steerWheel, beaconBulb, beaconHalo, beams: [beamL, beamR], highMast, driverGroup, driverHead, driverArmR };
   return g;
 }
 
-// Towed Baggage Cart / Container Dolly (up to 6 units per NGO J03-2 rule!)
-export function createBaggageCart3D(idx = 0) {
-  const g = new THREE.Group();
-  const matFrame = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.4 });
-  const matDeck = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.55, metalness: 0.35 });
-  const matBag = new THREE.MeshStandardMaterial({ color: idx % 2 === 0 ? 0xdbe4ef : 0x2563eb, roughness: 0.38, metalness: idx % 2 === 0 ? 0.5 : 0.2 });
-  const matRubber = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
+// Animate TT Driver: Steering Glance + Reverse Mirror Check + 指差呼称 (Yubisasikoshou) Point & Call!
+export function animateTractorDriver(ttMesh, opts = {}) {
+  const ud = ttMesh && ttMesh.userData;
+  if (!ud || !ud.driverArmR || !ud.driverHead) return;
+  const { steerAngle = 0, reversing = false, yubikoshiTimer = 0, yubikoshiDir = 'fwd', tSec = 0 } = opts;
 
-  const add = (geo, mat, x, y, z) => {
+  if (yubikoshiTimer > 0) {
+    // Crisp Japanese 指差呼称: Point right arm decisively forward (+Z) or rearward (-Z) + emphatic nod!
+    const pulse = Math.sin(tSec * 9.0) * 0.06;
+    if (yubikoshiDir === 'rev') {
+      ud.driverArmR.rotation.set(Math.PI * 0.48 + pulse, 0, -0.35);
+      ud.driverHead.rotation.set(0.18 + Math.max(0, Math.sin(tSec * 7)) * 0.16, -0.95, 0);
+    } else {
+      ud.driverArmR.rotation.set(-Math.PI * 0.52 + pulse, 0, -0.08);
+      ud.driverHead.rotation.set(Math.max(0, Math.sin(tSec * 7)) * 0.22, -steerAngle * 0.4, 0);
+    }
+  } else if (reversing) {
+    // Reversing: driver turns head over right/left shoulder to check trailer & blind spot
+    ud.driverArmR.rotation.set(-Math.PI / 2.5, 0, -0.15);
+    ud.driverHead.rotation.set(0.06, -0.78 + steerAngle * 0.45, 0);
+  } else {
+    // Normal forward driving: both hands on wheel, head looks gently into turns
+    ud.driverArmR.rotation.set(-Math.PI / 2.4, 0, -0.15);
+    ud.driverHead.rotation.set(0.02, -steerAngle * 0.55, 0);
+  }
+}
+
+// =========================================================================
+// ALL NGO AIRPORT DOLLY TYPES (AKE, AKH, PMC, BULK BAGGAGE CART, SEMI-TRAILER)
+// =========================================================================
+export const DOLLY_TYPES = {
+  ake:  { id: 'ake',  wheelBase: 3.15, nameJa: 'コンテナドーリー (AKE/LD-3)', nameVi: 'Dolly Container AKE (LD-3)', nameEn: 'Container Dolly (AKE / LD-3)' },
+  akh:  { id: 'akh',  wheelBase: 3.10, nameJa: '低床ドーリー (AKH/A320系)', nameVi: 'Dolly Thấp AKH (A320/A321)', nameEn: 'Low-Profile Dolly (AKH / A320)' },
+  pmc:  { id: 'pmc',  wheelBase: 3.85, nameJa: 'パレットドーリー (96" PMC/PAG)', nameVi: 'Dolly Pallet 96" (PMC / PAG)', nameEn: 'Pallet Dolly (96" PMC / PAG)' },
+  bulk: { id: 'bulk', wheelBase: 3.05, nameJa: '手荷物カート (バルク/幌付)', nameVi: 'Xe lồng hành lý rời (Bulk Cart)', nameEn: 'Bulk Baggage Cart (Covered)' },
+  semi: { id: 'semi', wheelBase: 6.10, nameJa: '大型セミトレーラー (20ft/2ULD)', nameVi: 'Rơ-moóc dài Semi-Trailer (2 ULD)', nameEn: 'Long Semi-Trailer (Dual ULD)' }
+};
+
+export function createDollyUnit3D(dollyType = 'ake', idx = 0) {
+  const g = new THREE.Group();
+  const matFrame = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.45 });
+  const matDeck = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.55, metalness: 0.35 });
+  const matYellow = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 });
+  const matRubber = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
+  const matAlu = new THREE.MeshStandardMaterial({ color: 0xdbe4ef, roughness: 0.32, metalness: 0.55 });
+  const stripeCol = idx % 2 === 0 ? 0x0b3b8c : 0xdc2626;
+
+  const add = (geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) => {
     const m = new THREE.Mesh(geo, mat);
     m.position.set(x, y, z);
+    m.rotation.set(rx, ry, rz);
     m.castShadow = true;
     m.receiveShadow = true;
     g.add(m);
+    return m;
   };
-  add(new THREE.BoxGeometry(1.62, 0.16, 2.45), matDeck, 0, 0.44, 0);
-  add(new THREE.BoxGeometry(0.10, 0.08, 0.95), matFrame, 0, 0.44, 1.65);
-  add(new THREE.BoxGeometry(0.08, 0.22, 2.4), new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 }), -0.78, 0.58, 0);
-  add(new THREE.BoxGeometry(0.08, 0.22, 2.4), new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 }), 0.78, 0.58, 0);
-  add(new THREE.BoxGeometry(1.48, 1.38, 1.92), matBag, 0, 1.21, 0);
-  [[-0.74, 0.24, 0.85], [0.74, 0.24, 0.85], [-0.74, 0.24, -0.85], [0.74, 0.24, -0.85]].forEach(([wx, wy, wz]) => {
-    const w = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.16, 12), matRubber);
-    w.rotation.z = Math.PI / 2;
-    w.position.set(wx, wy, wz);
-    g.add(w);
-  });
+  const addWheels = (wx, wzArr, r = 0.25) => {
+    wzArr.forEach(wz => {
+      [-wx, wx].forEach(x => {
+        add(new THREE.CylinderGeometry(r, r, 0.17, 12), matRubber, x, r, wz, 0, 0, Math.PI / 2);
+      });
+    });
+  };
+
+  if (dollyType === 'pmc') {
+    // Wide 96"×125" Pallet Dolly with rollers + blue waterproof tarped cargo stack + yellow/red net
+    add(new THREE.BoxGeometry(2.55, 0.18, 3.35), matDeck, 0, 0.48, 0);
+    add(new THREE.BoxGeometry(0.14, 0.10, 1.10), matFrame, 0, 0.46, 2.15);
+    add(new THREE.BoxGeometry(0.10, 0.22, 3.30), matYellow, -1.24, 0.62, 0);
+    add(new THREE.BoxGeometry(0.10, 0.22, 3.30), matYellow, 1.24, 0.62, 0);
+    // Aluminum PMC base + cargo stack + tarpaulin
+    add(new THREE.BoxGeometry(2.38, 0.08, 3.12), matAlu, 0, 0.61, 0);
+    add(new THREE.BoxGeometry(2.24, 1.38, 2.94), new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.62 }), 0, 1.34, 0);
+    add(new THREE.BoxGeometry(2.28, 0.14, 2.98), matYellow, 0, 1.85, 0);
+    addWheels(1.18, [1.18, -1.18], 0.27);
+  } else if (dollyType === 'bulk') {
+    // Covered Bulk Baggage Cart with cage rails + blue canvas roof + colorful suitcases inside
+    add(new THREE.BoxGeometry(1.56, 0.15, 2.48), matDeck, 0, 0.44, 0);
+    add(new THREE.BoxGeometry(0.10, 0.08, 0.95), matFrame, 0, 0.44, 1.65);
+    [[-0.75, 1.15], [0.75, 1.15], [-0.75, -1.15], [0.75, -1.15]].forEach(([px, pz]) => {
+      add(new THREE.BoxGeometry(0.07, 1.38, 0.07), matFrame, px, 1.15, pz);
+    });
+    add(new THREE.BoxGeometry(1.58, 0.10, 2.48), new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.7 }), 0, 1.84, 0);
+    add(new THREE.BoxGeometry(1.58, 0.55, 2.48), new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.72, transparent: true, opacity: 0.85 }), 0, 1.54, 0);
+    [0xdc2626, 0xf59e0b, 0x334155, 0x10b981].forEach((bc, bi) => {
+      add(new THREE.BoxGeometry(0.55, 0.34, 0.72), new THREE.MeshStandardMaterial({ color: bc, roughness: 0.5 }), (bi % 2 === 0 ? -0.32 : 0.32), 0.70 + Math.floor(bi / 2) * 0.36, (bi < 2 ? 0.45 : -0.45));
+    });
+    addWheels(0.74, [0.85, -0.85], 0.24);
+  } else if (dollyType === 'akh') {
+    // Low-profile Bilateral-Bevel AKH (LD-3-45) Dolly for A320/A321
+    add(new THREE.BoxGeometry(1.72, 0.16, 2.42), matDeck, 0, 0.44, 0);
+    add(new THREE.BoxGeometry(0.10, 0.08, 0.95), matFrame, 0, 0.44, 1.62);
+    add(new THREE.BoxGeometry(0.08, 0.20, 2.38), matYellow, -0.82, 0.56, 0);
+    add(new THREE.BoxGeometry(0.08, 0.20, 2.38), matYellow, 0.82, 0.56, 0);
+    add(new THREE.BoxGeometry(1.56, 1.06, 1.98), matAlu, 0, 1.05, 0);
+    add(new THREE.BoxGeometry(1.58, 0.18, 2.00), new THREE.MeshStandardMaterial({ color: stripeCol, roughness: 0.35 }), 0, 1.24, 0);
+    addWheels(0.78, [0.84, -0.84], 0.24);
+  } else {
+    // Standard AKE (LD-3) Container Dolly with outboard bevel & airline stripe
+    add(new THREE.BoxGeometry(1.66, 0.16, 2.48), matDeck, 0, 0.44, 0);
+    add(new THREE.BoxGeometry(0.10, 0.08, 0.95), matFrame, 0, 0.44, 1.65);
+    add(new THREE.BoxGeometry(0.08, 0.22, 2.42), matYellow, -0.79, 0.58, 0);
+    add(new THREE.BoxGeometry(0.08, 0.22, 2.42), matYellow, 0.79, 0.58, 0);
+    add(new THREE.BoxGeometry(1.50, 1.44, 1.92), matAlu, 0, 1.24, 0);
+    add(new THREE.BoxGeometry(1.52, 0.22, 1.94), new THREE.MeshStandardMaterial({ color: stripeCol, roughness: 0.35 }), 0, 1.48, 0);
+    addWheels(0.75, [0.85, -0.85], 0.24);
+  }
   return g;
+}
+
+// Legacy alias kept for compatibility
+export function createBaggageCart3D(idx = 0) {
+  return createDollyUnit3D(idx % 2 === 0 ? 'ake' : 'bulk', idx);
 }
 
 // =========================================================================

@@ -16,7 +16,9 @@ import {
 } from './aircraft_3d_models.js';
 import {
   createOpenCabTowingTractor3D,
-  createBaggageCart3D,
+  animateTractorDriver,
+  createDollyUnit3D,
+  DOLLY_TYPES,
   createArticulatedCrew3D,
   animateCrewSignal
 } from './crewBuilder3D.js';
@@ -663,14 +665,19 @@ export class AirportScene3D {
     for (let gx = -1240; gx <= 1830; gx += 20) {
       addBox(8.5, 0.04, 0.30, 0xf8fafc, gx, 0.09, 50);
     }
-    // Solid white No-Parallel-Driving line (並走禁止) in front of Airport Fire Station (x = 490) & Cargo entry
+    // Solid white No-Parallel-Driving line (並走禁止) in front of Airport Fire Station (x = 490), Cargo (155), Center Pier (46) & T2 (-570)
     addBox(68, 0.05, 0.40, 0xf8fafc, 490, 0.095, 50);
     addDecal(texNoPar, 16, 4.6, 490, 0.11, 50);
     addBox(52, 0.05, 0.40, 0xf8fafc, 155, 0.095, 50);
     addDecal(texNoPar, 14, 4.4, 155, 0.11, 50);
+    addBox(42, 0.05, 0.40, 0xf8fafc, 46, 0.095, 50);
+    addDecal(texNoPar, 12, 4.0, 46, 0.11, 50);
+    addBox(48, 0.05, 0.40, 0xf8fafc, -570, 0.095, 50);
+    addDecal(texNoPar, 14, 4.4, -570, 0.11, 50);
 
-    // Green Pedestrian Walkway & Zebra Crosswalk at Center Pier Fixed Bridge (x = 46)
-    addBox(320, 0.04, 2.6, 0x16a34a, 10, 0.095, 58.2);
+    // Green Pedestrian & Bicycle Walkway (歩行者・自転車通行帯) along T1 Wings & T2 + Zebra Crosswalk at Center Pier
+    addBox(840, 0.04, 2.6, 0x16a34a, 0, 0.095, 58.2);
+    addBox(390, 0.04, 2.6, 0x16a34a, -765, 0.095, 58.2);
     for (let zx = 34; zx <= 58; zx += 2.4) {
       addBox(1.2, 0.05, 10.2, 0xf8fafc, zx, 0.10, 50);
     }
@@ -824,33 +831,71 @@ export class AirportScene3D {
       addDashedBox(sp.cx - (wingW - 0.5), sp.cz - (halfL + 3.5), sp.cx - (bodyW + 1.8), sp.cz - 12.5);
     });
 
-    // Helper for painted stand badges & lead-in lines across T1 Wings, Center Pier, T2, Remote & Cargo!
-    const addStandMark = (sx, sz, no, rotY = 0, lineLen = 36) => {
+    // Helper for painted stand badges, lead-in lines & authentic Wing-Hugging Open-Back Red ERA across T1, Pier, T2, Remote & Cargo!
+    const drawStandEra = (cx, cz, rotY = 0, halfL = 19, halfSpan = 18, fuseR = 2.0, hasPbb = false) => {
+      const grp = new THREE.Group();
+      grp.position.set(cx, 0, cz);
+      grp.rotation.y = rotY;
+      const localPts = computeWingHuggingEraPolyline(halfL, halfSpan, fuseR);
+      for (let i = 0; i < localPts.length - 1; i++) {
+        const ax = localPts[i][0], az = localPts[i][1];
+        const bx = localPts[i + 1][0], bz = localPts[i + 1][1];
+        const len = Math.hypot(bx - ax, bz - az);
+        const seg = new THREE.Mesh(new THREE.PlaneGeometry(0.42, len + 0.15), eraRedMat);
+        seg.rotation.x = -Math.PI / 2;
+        const w = new THREE.Group();
+        w.position.set((ax + bx) * 0.5, 0.105, (az + bz) * 0.5);
+        w.rotation.y = Math.atan2(bx - ax, bz - az);
+        seg.renderOrder = 5;
+        w.add(seg);
+        grp.add(w);
+      }
+      if (hasPbb) {
+        const pbbZ = halfL - 7.5;
+        const px = fuseR + 10.2;
+        const zone = new THREE.Mesh(new THREE.PlaneGeometry(13, 8.2), eraTintMat);
+        zone.rotation.x = -Math.PI / 2;
+        zone.position.set(px, 0.095, pbbZ);
+        grp.add(zone);
+      }
+      this.staticGroup.add(grp);
+    };
+
+    const addStandMark = (sx, sz, no, rotY = 0, lineLen = 36, opts = {}) => {
       addDecal(makeStandBadgeTexture(no), 7.0, 4.2, sx, 0.10, sz, rotY);
       const dz = rotY === 0 ? -lineLen * 0.5 : 0;
       const dx = rotY !== 0 ? (rotY > 0 ? -lineLen * 0.5 : lineLen * 0.5) : 0;
       const ln = addBox(rotY === 0 ? 0.45 : lineLen, 0.04, rotY === 0 ? lineLen : 0.45, 0xf5c818, sx + dx, 0.08, sz + dz);
+      // Place aircraft-center ERA contour slightly behind badge along lead-in
+      const eraDist = opts.eraDist ?? 18;
+      const ecx = sx + (rotY !== 0 ? (rotY > 0 ? -eraDist : eraDist) : 0);
+      const ecz = sz + (rotY === 0 ? -eraDist : 0);
+      drawStandEra(ecx, ecz, rotY, opts.halfL || 19, opts.halfSpan || 18, opts.fuseR || 2.0, Boolean(opts.hasPbb));
       return ln;
     };
 
-    // Center Pier Stands (#8, #9, #10 on North +X side; #11, #12, #13 on South -X side)
+    // Center Pier Stands (#8, #9, #10 on North +X side; #12, #13 on South -X side)
     [[92, -35, '8', -Math.PI / 2], [92, -95, '9', -Math.PI / 2], [92, -152, '10', -Math.PI / 2],
-     [0, -95, '12', Math.PI / 2], [0, -152, '13', Math.PI / 2]].forEach(([sx, sz, no, ry]) => addStandMark(sx, sz, no, ry, 28));
+     [0, -95, '12', Math.PI / 2], [0, -152, '13', Math.PI / 2]].forEach(([sx, sz, no, ry]) => {
+      addStandMark(sx, sz, no, ry, 28, { halfL: 21, halfSpan: 20, fuseR: 2.3, hasPbb: true, eraDist: -4 });
+    });
 
     // T1 North Domestic (#2-#5) & T1 South International (#16-#24)
     [[210, 28, '5'], [285, 28, '4'], [360, 28, '3'], [420, 28, '2'],
-     [-185, 28, '16'], [-265, 28, '19'], [-345, 28, '22'], [-415, 28, '24']].forEach(([sx, sz, no]) => addStandMark(sx, sz, no, 0, 42));
+     [-185, 28, '16'], [-265, 28, '19'], [-345, 28, '22'], [-415, 28, '24']].forEach(([sx, sz, no]) => {
+      addStandMark(sx, sz, no, 0, 42, { halfL: 21, halfSpan: 21, fuseR: 2.3, hasPbb: true, eraDist: 18 });
+    });
 
     // Remote Stands (#201-#206 North, #301-#601 South)
     [[230, -110, '201'], [315, -110, '203'], [405, -110, '206'],
      [-260, -110, '301'], [-380, -110, '303'], [-560, -110, '401'], [-740, -110, '501'], [-910, -110, '601']].forEach(([rx, rz, no]) => {
-      addStandMark(rx, rz, no, 0, 46);
+      addStandMark(rx, rz, no, 0, 46, { halfL: 20, halfSpan: 18.5, fuseR: 2.0, hasPbb: false, eraDist: 22 });
     });
 
-    // North Cargo Freighter Stands (#101-#119)
+    // North Cargo Freighter Stands (#101-#119 — Widebody B77F scale!)
     [[575, 22, '101'], [665, 22, '103'], [765, 22, '105'], [875, 22, '107'],
      [990, 22, '109'], [1110, 22, '112'], [1235, 22, '115'], [1365, 22, '119']].forEach(([cx, cz, no]) => {
-      addStandMark(cx, cz, no, 0, 54);
+      addStandMark(cx, cz, no, 0, 54, { halfL: 26, halfSpan: 25, fuseR: 2.7, hasPbb: false, eraDist: 20 });
     });
 
     // 9. ALL 1:1 ARCHITECTURE & DISTRICTS (100% ALIGNED WITH A3D_OBSTACLES!)
@@ -1218,16 +1263,26 @@ export class AirportScene3D {
       addT('skywayBusOut', createGseMesh('ramp_bus', { accent: 0x1d4ed8 }));
     }
 
-    // 4. Player Drivable Open-Cab TT + 6 Towed Carts + Long Semi-Trailer + BAY 01 Dock (at 218, 26)
+    // 4. Player Drivable Open-Cab TT + All Dolly Type Pools (AKE / AKH / PMC / Bulk) + Interactive World Dolly Staging!
     this.playerVeh = createOpenCabTowingTractor3D();
     this.dynamicGroup.add(this.playerVeh);
-    this.towedCarts = [];
-    for (let ci = 0; ci < 6; ci++) {
-      const cart = createBaggageCart3D(ci);
-      cart.visible = false;
-      this.dynamicGroup.add(cart);
-      this.towedCarts.push(cart);
-    }
+    this.towedCartPools = {};
+    ['ake', 'akh', 'pmc', 'bulk'].forEach(dt => {
+      this.towedCartPools[dt] = [];
+      for (let ci = 0; ci < 6; ci++) {
+        const cart = createDollyUnit3D(dt, ci);
+        cart.visible = false;
+        this.dynamicGroup.add(cart);
+        this.towedCartPools[dt].push(cart);
+      }
+    });
+    this.towedCarts = this.towedCartPools.ake;
+
+    // Interactive World Dolly Staging Groups (parked in GSE/Cargo bays — TT can drive up & Couple/Uncouple!)
+    this.worldDollyMeshes = {};
+    const dollyStageGrp = new THREE.Group();
+    this.dynamicGroup.add(dollyStageGrp);
+    this.worldDollyGroup = dollyStageGrp;
 
     const semi = new THREE.Group();
     const chassis = new THREE.Mesh(
@@ -2319,10 +2374,18 @@ export class AirportScene3D {
       if (ud.beaconHalo) ud.beaconHalo.visible = beaconBlink;
       if (ud.highMast) ud.highMast.visible = state.ngoVehMode === 'high38';
 
-      const isBackingMode = state.ngoDriveScenario === 'SC5' || state.ngoVehMode === 'backing';
+      animateTractorDriver(this.playerVeh, {
+        steerAngle: state.veh.steerAngle || 0,
+        reversing: (state.veh.speed || 0) < -0.15,
+        yubikoshiTimer: state.yubikoshi ? state.yubikoshi.timer : 0,
+        yubikoshiDir: state.yubikoshi ? state.yubikoshi.dir : 'fwd',
+        tSec
+      });
+
+      const isBackingMode = state.ngoDriveScenario === 'SC5' || state.ngoVehMode === 'backing' || (state.coupledDolly && state.coupledDolly.type === 'semi');
       if (this.backingBayGroup) {
-        this.backingBayGroup.visible = isBackingMode;
-        if (isBackingMode && this.backingBayBorderMat) {
+        this.backingBayGroup.visible = state.ngoDriveScenario === 'SC5' || state.ngoVehMode === 'backing';
+        if (this.backingBayGroup.visible && this.backingBayBorderMat) {
           const bk = state.backingStatus || {};
           this.backingBayBorderMat.color.setHex(bk.parked ? 0x22c55e : (bk.jackknife ? 0xef4444 : 0xfacc15));
         }
@@ -2336,16 +2399,67 @@ export class AirportScene3D {
           this.longSemiTrailer.visible = false;
         }
       }
-      const showCarts = !isBackingMode && state.ngoVehMode === 'towing' && Array.isArray(state.cartPoses);
-      this.towedCarts.forEach((cart, ci) => {
-        if (showCarts && state.cartPoses[ci]) {
-          cart.visible = true;
-          cart.position.set(state.cartPoses[ci].x, 0, state.cartPoses[ci].z);
-          cart.rotation.y = Math.PI / 2 - state.cartPoses[ci].heading;
-        } else {
-          cart.visible = false;
-        }
+      const activeDollyType = (state.coupledDolly && state.coupledDolly.type) || state.dollyType || 'ake';
+      const showCarts = !isBackingMode && (state.ngoVehMode === 'towing' || Boolean(state.coupledDolly)) && Array.isArray(state.cartPoses);
+      Object.entries(this.towedCartPools || {}).forEach(([dtKey, pool]) => {
+        const usePool = showCarts && dtKey === activeDollyType;
+        pool.forEach((cart, ci) => {
+          if (usePool && state.cartPoses[ci]) {
+            cart.visible = true;
+            cart.position.set(state.cartPoses[ci].x, 0, state.cartPoses[ci].z);
+            cart.rotation.y = Math.PI / 2 - state.cartPoses[ci].heading;
+          } else {
+            cart.visible = false;
+          }
+        });
       });
+
+      // Render Parked Interactive World Dollies on Apron / GSE Bays
+      if (this.worldDollyGroup && Array.isArray(state.worldDollies)) {
+        this.worldDollyGroup.visible = true;
+        const activeIds = new Set();
+        state.worldDollies.forEach(wd => {
+          if (wd.coupled) return;
+          activeIds.add(wd.id);
+          let grp = this.worldDollyMeshes[wd.id];
+          if (!grp) {
+            grp = new THREE.Group();
+            if (wd.type === 'semi') {
+              const sClone = this.longSemiTrailer.clone();
+              sClone.visible = true;
+              grp.add(sClone);
+            } else {
+              const wb = (DOLLY_TYPES[wd.type] || DOLLY_TYPES.ake).wheelBase;
+              for (let ui = 0; ui < wd.count; ui++) {
+                const uMesh = createDollyUnit3D(wd.type, ui);
+                uMesh.position.set(0, 0, -ui * wb);
+                grp.add(uMesh);
+              }
+            }
+            const ring = new THREE.Mesh(
+              new THREE.RingGeometry(1.6, 2.2, 24).rotateX(-Math.PI / 2),
+              new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.78, side: THREE.DoubleSide })
+            );
+            ring.position.set(0, 0.14, 2.4);
+            grp.add(ring);
+            grp.userData.hitchRing = ring;
+            this.worldDollyGroup.add(grp);
+            this.worldDollyMeshes[wd.id] = grp;
+          }
+          grp.visible = true;
+          grp.position.set(wd.x, 0, wd.z);
+          grp.rotation.y = Math.PI / 2 - wd.heading;
+          if (grp.userData.hitchRing) {
+            const isNear = state.nearbyDolly && state.nearbyDolly.id === wd.id;
+            grp.userData.hitchRing.material.color.setHex(isNear ? 0x22c55e : 0x38bdf8);
+            const sc = isNear ? (1.0 + Math.sin(tSec * 6) * 0.15) : 0.85;
+            grp.userData.hitchRing.scale.set(sc, sc, 1);
+          }
+        });
+        Object.entries(this.worldDollyMeshes).forEach(([id, grp]) => {
+          if (!activeIds.has(id)) grp.visible = false;
+        });
+      }
 
       if (this.impactRing) {
         if ((state.impactFlash || 0) > 0.02) {
@@ -2362,7 +2476,8 @@ export class AirportScene3D {
     }
 
     if (isFlight || isOps3d || this.compact) {
-      this.towedCarts.forEach(c => { c.visible = false; });
+      Object.values(this.towedCartPools || {}).forEach(pool => pool.forEach(c => { c.visible = false; }));
+      if (this.worldDollyGroup) this.worldDollyGroup.visible = false;
       if (this.longSemiTrailer) this.longSemiTrailer.visible = false;
       if (this.backingBayGroup) this.backingBayGroup.visible = false;
       if (this.impactRing) this.impactRing.visible = false;
@@ -2616,6 +2731,15 @@ export class AirportScene3D {
       }
       if (state.blastActive || sa.blast) {
         drawTag([-103, 3.6, -24], lang === 'ja' ? '🛑 監視員: #71 ブラスト注意・進入禁止！' : (lang === 'en' ? '🛑 SPOTTER: #71 JET BLAST — NO ENTRY!' : '🛑 GIÁM SÁT VIÊN: #71 LUỒNG PHẢN LỰC — CẤM VÀO!'), 'rgba(234,88,12,0.95)', '#FEF08A', 2);
+      }
+      if (state.yubikoshi && state.yubikoshi.timer > 0) {
+        const yTxt = lang === 'ja' ? state.yubikoshi.labelJa : (lang === 'en' ? state.yubikoshi.labelEn : state.yubikoshi.labelVi);
+        drawTag([state.veh.x, 3.35, state.veh.z], `👉 ${yTxt}`, 'rgba(16,185,129,0.96)', '#FFFFFF', 2);
+      }
+      if (state.nearbyDolly && !state.coupledDolly) {
+        const dtInfo = DOLLY_TYPES[state.nearbyDolly.type] || DOLLY_TYPES.ake;
+        const dName = lang === 'ja' ? dtInfo.nameJa : (lang === 'en' ? dtInfo.nameEn : dtInfo.nameVi);
+        drawTag([state.nearbyDolly.x, 2.75, state.nearbyDolly.z], `[C] 🔗 ${dName} ×${state.nearbyDolly.count}`, 'rgba(37,99,235,0.94)', '#FEF08A', 2);
       }
     }
 
