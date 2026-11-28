@@ -54,6 +54,7 @@ export const a3d = {
   ngoVehMode: 'standard', // 'standard' (TT 30km/h) | 'towing' (TT + 1..6 Dollies 15km/h) | 'high38' (>3.8m) | 'backing' (Semi-Trailer Reverse Bay)
   dollyType: 'ake',       // 'ake' | 'akh' | 'pmc' | 'bulk' | 'semi'
   dollyCount: 3,          // 1..6 towed units (max 6 per NGO rule)
+  dollyLoad: 'loaded',    // 'empty' (light) | 'loaded' (heavy)
   coupledDolly: null,     // { id, type, count } when coupled in 3D world
   nearbyDolly: null,
   worldDollies: [
@@ -70,6 +71,11 @@ export const a3d = {
   backingStatus: { hitchDeg: 0, latErr: 0, angErr: 0, depthPct: 0, jackknife: false, parked: false, hintJa: '', hintVi: '', hintEn: '' },
   prevHitch: null,
   trailerHeadings: [0, 0, 0, 0, 0, 0],
+  trailerAngVels: [0, 0, 0, 0, 0, 0],
+  swayIntensity: 0,
+  totalMassKg: 3400,
+  hitEffects: {},
+  incidentLock: null,
   ui: { views: false, settings: false, map: true, panels: {} }, // drawers / collapsible panels (kept across re-renders)
   marshalDrill: { active: false, x: 0, z: -35, heading: Math.PI / 2, v: 0, moved: false, result: null, t: 0 },
   marshallerDemoSignal: null, // null = auto phase | 'm_straight' | 'm_left' | 'm_right' | 'm_slow' | 'm_stop' | 'm_emerg_stop' | 'm_chocks' | 'm_allclear'
@@ -529,11 +535,17 @@ function stepPhysics(dt, now) {
     return;
   }
 
-  // Decay impact flash, camera shake & Yubisasikoshou timer smoothly
+  // Decay impact flash, camera shake, Yubisasikoshou & collision knockback timers smoothly
   a3d.impactFlash = Math.max(0, (a3d.impactFlash || 0) - dt * 2.2);
   a3d.camShake = Math.max(0, (a3d.camShake || 0) - dt * 2.6);
   if (a3d.yubikoshi && a3d.yubikoshi.timer > 0) {
     a3d.yubikoshi.timer = Math.max(0, a3d.yubikoshi.timer - dt);
+  }
+  if (a3d.hitEffects) {
+    Object.keys(a3d.hitEffects).forEach(k => {
+      a3d.hitEffects[k].ttl -= dt;
+      if (a3d.hitEffects[k].ttl <= 0) delete a3d.hitEffects[k];
+    });
   }
 
   // Live Chubu Centrair (NGO) Driving Scenarios (Moving Departing / Taxiing Aircraft + Active Spotters!)
@@ -581,17 +593,36 @@ function stepPhysics(dt, now) {
   a3d.ngoLiveAc = liveAc;
   a3d.spotterAlert = sAlert;
 
-  // Open-Cab TT Driving & Realistic Steering Physics
+  // Open-Cab TT Driving + Mass-Dependent Acceleration/Braking & Articulated Dolly Sway Physics
   const v = a3d.veh;
+  const isBackMode = a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing' || (a3d.coupledDolly && a3d.coupledDolly.type === 'semi');
+  const isTowingActive = isBackMode || a3d.ngoVehMode === 'towing' || Boolean(a3d.coupledDolly);
+  const activeDollyId = isBackMode ? 'semi' : ((a3d.coupledDolly && a3d.coupledDolly.type) || a3d.dollyType || 'ake');
+  const numUnits = isBackMode ? 1 : (a3d.coupledDolly ? a3d.coupledDolly.count : (a3d.ngoVehMode === 'towing' ? (a3d.dollyCount || 3) : 0));
+  const dSpec = DOLLY_TYPES[activeDollyId] || DOLLY_TYPES.ake;
+  const unitMass = isTowingActive ? ((a3d.dollyLoad === 'empty' ? dSpec.emptyMassKg : dSpec.loadedMassKg) || 1200) : 0;
+  const totalMassKg = 3400 + (isTowingActive ? unitMass * numUnits : 0);
+  a3d.totalMassKg = totalMassKg;
+  const massRatio = 3400 / Math.max(3400, totalMassKg); // 1.0 unloaded → ~0.11 heavy 6x PMC
+  const accelScale = Math.pow(massRatio, 0.52);
+  const brakeScale = Math.pow(massRatio, 0.42);
+
   const targetSteer = (a3d.keys.left ? -0.52 : 0) + (a3d.keys.right ? 0.52 : 0);
   v.steerAngle = (v.steerAngle || 0) + (targetSteer - (v.steerAngle || 0)) * Math.min(1, dt * 11);
 
-  const isBackMode = a3d.ngoDriveScenario === 'SC5' || a3d.ngoVehMode === 'backing' || (a3d.coupledDolly && a3d.coupledDolly.type === 'semi');
   const prevSpeed = v.speed;
-  if (a3d.keys.brake) v.speed = Math.abs(v.speed) < 0.35 ? 0 : v.speed - Math.sign(v.speed) * 20 * dt;
-  else if (a3d.keys.up) v.speed = Math.min(isBackMode ? 7.5 : 12.2, v.speed + 8.5 * dt);
-  else if (a3d.keys.down) v.speed = Math.max(isBackMode ? -3.4 : -4.5, v.speed - 7.5 * dt);
-  else v.speed = Math.abs(v.speed) < 0.15 ? 0 : v.speed - Math.sign(v.speed) * 5.2 * dt;
+  if (a3d.incidentLock) {
+    // Mandatory Ramp Incident Lock: tractor must remain completely stationary until 4-step procedure completes!
+    v.speed = 0;
+  } else if (a3d.keys.brake) {
+    v.speed = Math.abs(v.speed) < 0.35 ? 0 : v.speed - Math.sign(v.speed) * (20 * brakeScale) * dt;
+  } else if (a3d.keys.up) {
+    v.speed = Math.min(isBackMode ? 7.5 : 12.2, v.speed + (8.8 * accelScale) * dt);
+  } else if (a3d.keys.down) {
+    v.speed = Math.max(isBackMode ? -3.4 : -4.5, v.speed - (7.6 * accelScale) * dt);
+  } else {
+    v.speed = Math.abs(v.speed) < 0.15 ? 0 : v.speed - Math.sign(v.speed) * (5.2 * brakeScale) * dt;
+  }
 
   // Auto-trigger 指差呼称 (Yubisasikoshou) when initiating Reverse from stop, OR stopping cleanly at a Stop Line!
   if (a3d.keys.down && prevSpeed >= -0.05 && Math.abs(prevSpeed) < 0.5 && now - (a3d.yubikoshi.lastRevAt || 0) > 4500) {
@@ -613,27 +644,99 @@ function stepPhysics(dt, now) {
     a3d.yubikoshi.lastStopKey = '';
   }
 
+  const tractorYawRate = Math.abs(v.speed) > 0.10
+    ? v.steerAngle * ((isBackMode && v.speed < 0) ? 0.92 : (isBackMode ? 2.2 : 3.4)) * (v.speed >= 0 ? 1 : -1) * Math.min(1, Math.abs(v.speed) / 3.0)
+    : 0;
   if (Math.abs(v.speed) > 0.10) {
-    const dir = v.speed >= 0 ? 1 : -1;
-    // True bicycle-model turning rate when reversing semi-trailer (~0.48 rad/s -> controlled 28°/s, never instant jackknife!)
-    const steerGain = (isBackMode && v.speed < 0) ? 0.92 : (isBackMode ? 2.2 : 3.4);
-    v.heading += v.steerAngle * steerGain * dt * dir * Math.min(1, Math.abs(v.speed) / 3.0);
+    v.heading += tractorYawRate * dt;
   }
   const nx = Math.max(-2072, Math.min(2142, v.x + Math.cos(v.heading) * v.speed * dt));
   const nz = Math.max(-698, Math.min(340, v.z + Math.sin(v.heading) * v.speed * dt));
 
-  // Full 1:1 NGO Island Collision Detection (T1, 300m Center Pier, T2, Blast Fences, Cargo Sheds, Parked & Live Aircraft)
+  // Full 1:1 NGO Island Collision Detection (Buildings, Aircraft, Ground Crew & AI Traffic Vehicles!)
   const dynamicObs = [
     ...A3D_OBSTACLES,
     { x1: -1012, x2: -1006, z1: 52, z2: 118, name: 'T2 Blast Fence' },
     { x1: -72, x2: -64, z1: -8, z2: 28, name: 'Spot 6 Aircraft' },
-    { x1: 94, x2: 102, z1: -12, z2: 32, name: 'Spot 14 Aircraft' },
+    { x1: 99, x2: 107, z1: -12, z2: 32, name: 'Spot 14 Aircraft' },
     { x1: liveAc.x - 5.5, x2: liveAc.x + 5.5, z1: liveAc.z - 16, z2: liveAc.z + 16, name: 'Active Aircraft' }
   ];
   const pad = 1.65;
   const hitObj = dynamicObs.find(o => nx >= o.x1 - pad && nx <= o.x2 + pad && nz >= o.z1 - pad && nz <= o.z2 + pad);
 
-  if (hitObj) {
+  // Check collisions against live Ground Crew & Airside Traffic Vehicles (both TT cab and swinging Dolly tail!)
+  const liveCols = (scene3d && typeof scene3d.getDynamicColliders === 'function') ? scene3d.getDynamicColliders() : [];
+  let hitCol = null;
+  let hitSource = { x: nx, z: nz };
+  for (const c of liveCols) {
+    if (a3d.hitEffects && a3d.hitEffects[c.id]) continue; // already knocked back
+    const dCab = Math.hypot(nx - c.x, nz - c.z);
+    if (dCab < c.r + 1.35) {
+      hitCol = c;
+      hitSource = { x: nx, z: nz };
+      break;
+    }
+    if (a3d.cartPoses && a3d.cartPoses.length) {
+      const hitCart = a3d.cartPoses.find(cp => Math.hypot(cp.x - c.x, cp.z - c.z) < c.r + 1.15);
+      if (hitCart) {
+        hitCol = c;
+        hitSource = { x: hitCart.x, z: hitCart.z };
+        break;
+      }
+    }
+  }
+
+  if (hitCol) {
+    const impactKmh = Math.max(4, Math.abs(v.speed) * 3.6);
+    const dx = hitCol.x - hitSource.x;
+    const dz = hitCol.z - hitSource.z;
+    const dist = Math.max(0.1, Math.hypot(dx, dz));
+    const ux = dx / dist, uz = dz / dist;
+
+    // Realistic momentum transfer & knockback on collided person or vehicle
+    if (hitCol.kind === 'person') {
+      v.speed = 0; // Automatic emergency brake on personnel strike
+      v.x -= ux * 0.65;
+      v.z -= uz * 0.65;
+      a3d.hitEffects[hitCol.id] = { kind: 'person', dx: ux * 2.8, dz: uz * 2.8, spin: 0, ttl: 4.5 };
+    } else {
+      v.x -= ux * 0.85;
+      v.z -= uz * 0.85;
+      v.speed = -v.speed * 0.48;
+      v.heading += (Math.random() - 0.5) * Math.min(0.32, impactKmh * 0.015);
+      a3d.hitEffects[hitCol.id] = {
+        kind: 'vehicle',
+        dx: ux * Math.min(3.5, 0.9 + impactKmh * 0.08),
+        dz: uz * Math.min(3.5, 0.9 + impactKmh * 0.08),
+        spin: (Math.random() > 0.5 ? 1 : -1) * Math.min(0.45, 0.12 + impactKmh * 0.014),
+        ttl: 4.5
+      };
+    }
+
+    a3d.impactFlash = 1.0;
+    a3d.impactPos = { x: hitCol.x, z: hitCol.z };
+    a3d.camShake = Math.min(1.0, 0.45 + impactKmh / 20);
+    const pen = hitCol.kind === 'person' ? 40 : 25;
+    a3d.score = Math.max(0, a3d.score - pen);
+    a3dAudio.playCrash(hitCol.kind === 'person' ? 1.3 : Math.min(1.4, impactKmh / 12));
+    logA3d(
+      'danger',
+      `🚨 [${hitCol.kind === 'person' ? '人身接触事故' : '車両接触事故'} -${pen}pt] ${hitCol.nameJa}に衝突 (${impactKmh.toFixed(0)}km/h)！必須事故処理手順を実施せよ！`,
+      `🚨 [${hitCol.kind === 'person' ? 'VA CHẠM NGƯỜI' : 'VA CHẠM PHƯƠNG TIỆN'} -${pen}đ] Đụng ${hitCol.nameVi} (${impactKmh.toFixed(0)} km/h)! Bắt buộc thực hiện 4 bước xử lý sự cố!`,
+      `🚨 [${hitCol.kind === 'person' ? 'PERSONNEL STRIKE' : 'VEHICLE COLLISION'} -${pen}pt] Hit ${hitCol.nameEn} (${impactKmh.toFixed(0)} km/h)! Complete mandatory 4-step procedure!`
+    );
+    if (!a3d.incidentLock) {
+      a3d.incidentLock = {
+        kind: hitCol.kind,
+        nameJa: hitCol.nameJa,
+        nameVi: hitCol.nameVi,
+        nameEn: hitCol.nameEn,
+        speedKmh: Math.round(impactKmh),
+        step: 0
+      };
+      renderIncidentOverlay();
+    }
+  } else if (hitObj) {
     const impactKmh = Math.abs(v.speed) * 3.6;
     // Realistic physical bounce & push-out along shortest penetration axis!
     const dL = Math.abs(nx - (hitObj.x1 - pad));
@@ -662,16 +765,17 @@ function stepPhysics(dt, now) {
         `💥 VA CHẠM CHƯỚNG NGẠI (${impactKmh.toFixed(0)} km/h · -${pen}đ): Giữ nguyên hiện trường và báo ngay COC (0569-38-1500 / nội bộ 3000)!`,
         `💥 COLLISION (${impactKmh.toFixed(0)} km/h · -${pen}pt): Preserve the scene and report immediately to COC (0569-38-1500 / Ext. 3000)!`
       );
+      if (impactKmh > 10 && !a3d.incidentLock) {
+        a3d.incidentLock = { kind: 'obstacle', nameJa: hitObj.name, nameVi: hitObj.name, nameEn: hitObj.name, speedKmh: Math.round(impactKmh), step: 0 };
+        renderIncidentOverlay();
+      }
     }
   } else {
     v.x = nx;
     v.z = nz;
-    // TRUE Articulated Rigid-Hitch Tractor-Trailer Kinematics (All Dolly Types + Reverse Counter-Steer!)
+    // TRUE Articulated Tractor-Trailer Dynamics: Mass Inertia + Rearward Amplification (Trailer Whip/Sway) + Reverse Counter-Steer!
     const isBacking = isBackMode;
-    const isTowingActive = isBacking || a3d.ngoVehMode === 'towing' || Boolean(a3d.coupledDolly);
-    const activeDollyId = isBacking ? 'semi' : ((a3d.coupledDolly && a3d.coupledDolly.type) || a3d.dollyType || 'ake');
-    const numUnits = isBacking ? 1 : (a3d.coupledDolly ? a3d.coupledDolly.count : (a3d.ngoVehMode === 'towing' ? (a3d.dollyCount || 3) : 0));
-    const wheelBase = (DOLLY_TYPES[activeDollyId] || DOLLY_TYPES.ake).wheelBase;
+    const wheelBase = dSpec.wheelBase || 3.15;
     const hitchArm = isBacking ? 1.95 : 1.9;
     const curHx0 = v.x - Math.cos(v.heading) * hitchArm;
     const curHz0 = v.z - Math.sin(v.heading) * hitchArm;
@@ -689,13 +793,16 @@ function stepPhysics(dt, now) {
 
     if (!isTowingActive || numUnits <= 0) {
       a3d.cartPoses = [];
+      a3d.swayIntensity = 0;
     } else {
     if (!a3d.prevHitch || Math.hypot(curHx0 - a3d.prevHitch.x, curHz0 - a3d.prevHitch.z) > 6.0) {
       a3d.prevHitch = { x: curHx0, z: curHz0 };
       if (!a3d.trailerHeadings || a3d.trailerHeadings.length < 6) {
         a3d.trailerHeadings = [v.heading, v.heading, v.heading, v.heading, v.heading, v.heading];
       }
+      a3d.trailerAngVels = [0, 0, 0, 0, 0, 0];
     }
+    if (!a3d.trailerAngVels || a3d.trailerAngVels.length < 6) a3d.trailerAngVels = [0, 0, 0, 0, 0, 0];
 
     const cartPoses = [];
     let parentHdg = v.heading;
@@ -703,23 +810,43 @@ function stepPhysics(dt, now) {
     let hitchZ = curHz0;
     let prevHx = a3d.prevHitch.x;
     let prevHz = a3d.prevHitch.z;
+    const dtSafe = Math.max(0.008, dt);
+    const loadWhipMul = a3d.dollyLoad === 'empty' ? 1.24 : 0.96; // light/empty carts bounce & whip easily; heavy carts carry momentum
+    const grip = dSpec.lateralGrip || 0.8;
+    const swayGain = dSpec.swayGain || 1.0;
+    let maxSway = 0;
 
     for (let ci = 0; ci < numUnits; ci++) {
       let phi = a3d.trailerHeadings[ci] ?? parentHdg;
+      let phiVel = a3d.trailerAngVels[ci] || 0;
       const dHx = hitchX - prevHx;
       const dHz = hitchZ - prevHz;
-      if (Math.hypot(dHx, dHz) > 0.0005) {
-        // Exact non-holonomic rigid hitch angular displacement (naturally self-aligns forward & jackknifes in reverse!)
+      const stepDist = Math.hypot(dHx, dHz);
+
+      if (stepDist > 0.0005) {
         const lateralDisp = -Math.sin(phi) * dHx + Math.cos(phi) * dHz;
-        phi = wrapAngle(phi + lateralDisp / wheelBase);
+        const omegaKin = lateralDisp / (wheelBase * dtSafe);
+        // Centrifugal whip / fishtailing grows rearward along the dolly train (rearward amplification!)
+        const amp = (1 + ci * 0.24) * swayGain * loadWhipMul / grip;
+        const speedSqFactor = (v.speed * Math.abs(v.speed)) * 0.018;
+        const whipTorque = -tractorYawRate * speedSqFactor * amp;
+        const damping = 7.5 * grip + Math.abs(v.speed) * 0.65;
+        phiVel += ((omegaKin - phiVel) * damping + whipTorque) * dtSafe;
+        phi = wrapAngle(phi + phiVel * dtSafe);
+        maxSway = Math.max(maxSway, Math.min(1, Math.abs(phiVel - omegaKin) * 0.45 + Math.abs(wrapAngle(phi - parentHdg)) * 0.55));
+      } else {
+        phiVel *= Math.max(0, 1 - dtSafe * 8);
       }
+
       // Physical hitch bumper limit (±78°) so trailer never clips into TT cab
       let diff = wrapAngle(phi - parentHdg);
       if (Math.abs(diff) > 1.36) {
         diff = Math.sign(diff) * 1.36;
         phi = wrapAngle(parentHdg + diff);
+        phiVel *= 0.2;
       }
       a3d.trailerHeadings[ci] = phi;
+      a3d.trailerAngVels[ci] = phiVel;
 
       const cx = hitchX - Math.cos(phi) * (wheelBase * 0.52);
       const cz = hitchZ - Math.sin(phi) * (wheelBase * 0.52);
@@ -734,6 +861,7 @@ function stepPhysics(dt, now) {
       prevHz = nextPrevHz;
       parentHdg = phi;
     }
+    a3d.swayIntensity = maxSway;
     a3d.prevHitch = { x: curHx0, z: curHz0 };
     a3d.cartPoses = cartPoses;
     }
@@ -890,7 +1018,12 @@ function stepPhysics(dt, now) {
     hudZone.textContent = warnTxt;
     hudZone.className = `hud-pill ${!ev.allowed || ev.speeding || inPushbackDanger || inServiceBlastDanger ? 'danger' : 'ok'}`;
   }
-  if (hudSpd) hudSpd.textContent = `${kmh.toFixed(0)} / ${ev.speedLimit} km/h`;
+  if (hudSpd) {
+    const massTag = (a3d.totalMassKg || 3400) > 3500 ? ` · ${(a3d.totalMassKg / 1000).toFixed(1)}t` : '';
+    const swayTag = (a3d.swayIntensity || 0) > 0.55 ? ` · ⚠SWAY` : '';
+    hudSpd.textContent = `${kmh.toFixed(0)} / ${ev.speedLimit} km/h${massTag}${swayTag}`;
+    hudSpd.className = `hud-pill ${(a3d.swayIntensity || 0) > 0.55 ? 'danger' : ''}`;
+  }
   if (hudScr) hudScr.textContent = `SCORE ${a3d.score}/100`;
 }
 
@@ -1190,6 +1323,10 @@ export function renderAirport3dUI() {
                 <select id="a3d-dolly-type-sel" class="a3d-select" title="${t('ドーリー種別', 'Loại Dolly', 'Dolly Type')}">
                   ${Object.values(DOLLY_TYPES).map(d => `<option value="${d.id}" ${a3d.dollyType === d.id ? 'selected' : ''}>${t(d.nameJa, d.nameVi, d.nameEn)}</option>`).join('')}
                 </select>
+                <select id="a3d-dolly-load-sel" class="a3d-select" title="${t('積載重量（軽／重）', 'Tải trọng (Nhẹ/Nặng)', 'Load Mass (Light/Heavy)')}">
+                  <option value="loaded" ${a3d.dollyLoad === 'loaded' ? 'selected' : ''}>📦 ${t('実車 (重)', 'Đầy tải (Nặng)', 'Loaded (Heavy)')}</option>
+                  <option value="empty" ${a3d.dollyLoad === 'empty' ? 'selected' : ''}>🪶 ${t('空車 (軽)', 'Rỗng (Nhẹ)', 'Empty (Light)')}</option>
+                </select>
                 <button class="btn btn-sm ${a3d.coupledDolly ? 'btn-danger-outline' : 'btn-primary'}" id="a3d-btn-couple" title="Key: C">${a3d.coupledDolly ? `⛓‍💥 ${t('切離(C)', 'Tháo(C)', 'Uncouple(C)')}` : `🔗 ${t('連結(C)', 'Nối(C)', 'Couple(C)')}`}</button>
                 <button class="btn btn-sm" id="a3d-btn-yubi" title="Key: Y">👉 ${t('指差呼称(Y)', 'Chỉ tay hô(Y)', 'Yoshi!(Y)')}</button>
                 <span class="pro-only" style="display:contents;">
@@ -1262,6 +1399,7 @@ export function renderAirport3dUI() {
               <canvas id="a3d-minimap"></canvas>
             </div>
             <div class="raycast-toast" id="a3d-raycast-toast"></div>
+            <div id="a3d-incident-overlay" style="display:none;position:absolute;inset:0;z-index:25;background:rgba(15,23,42,0.82);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;"></div>
             <div class="hud-top">
               <div class="hud-pill ok" id="a3d-hud-zone">THREE.JS</div>
               <div style="display:flex;gap:6px;">
@@ -1447,6 +1585,18 @@ export function renderAirport3dUI() {
         }
       };
     }
+    const dlSel = document.getElementById('a3d-dolly-load-sel');
+    if (dlSel) {
+      dlSel.onchange = e => {
+        a3d.dollyLoad = e.target.value;
+        logA3d(
+          'info',
+          a3d.dollyLoad === 'loaded' ? '📦 積載モード: 実車（重）— 制動距離延長＆遠心力増大' : '🪶 積載モード: 空車（軽）— 後部ドーリーが振られやすい状態',
+          a3d.dollyLoad === 'loaded' ? '📦 Chế độ Đầy tải (Nặng) — Gia tốc chậm, quãng phanh dài hơn' : '🪶 Chế độ Rỗng (Nhẹ) — Đuôi Dolly dễ nảy & quăng hơn khi cua nhanh',
+          a3d.dollyLoad === 'loaded' ? '📦 Load Mode: Loaded (Heavy) — Longer braking distance & high inertia' : '🪶 Load Mode: Empty (Light) — Rear dollies whip/fishtail easily in sharp turns'
+        );
+      };
+    }
     const dtSel = document.getElementById('a3d-dolly-type-sel');
     if (dtSel) {
       dtSel.onchange = e => {
@@ -1560,5 +1710,81 @@ export function renderAirport3dUI() {
     a3d.cam.dist = Math.max(18, Math.min(3800, a3d.cam.dist * factor));
   };
 
+  renderIncidentOverlay();
   startAirport3dLoop();
+}
+
+function renderIncidentOverlay() {
+  const box = document.getElementById('a3d-incident-overlay');
+  if (!box) return;
+  const inc = a3d.incidentLock;
+  if (!inc) {
+    box.style.display = 'none';
+    box.innerHTML = '';
+    return;
+  }
+  const steps = [
+    {
+      ja: '1. 緊急停止・駐車ブレーキ・ハザード点灯',
+      vi: '1. Dừng khẩn cấp, kéo phanh tay & bật đèn cảnh báo Hazard',
+      en: '1. Emergency Stop, Parking Brake & Hazard Lights ON'
+    },
+    {
+      ja: inc.kind === 'person' ? '2. 負傷者救護・現場保存・輪止め設置' : '2. 現場保存・二次災害防止・輪止め設置',
+      vi: inc.kind === 'person' ? '2. Kiểm tra sơ cứu người bị nạn & giữ nguyên hiện trường' : '2. Giữ nguyên hiện trường, đặt chèn bánh & cảnh báo xung quanh',
+      en: inc.kind === 'person' ? '2. Check Injured Personnel & Preserve Incident Scene' : '2. Preserve Scene, Place Chocks & Secure Area'
+    },
+    {
+      ja: '3. COC (0569-38-1500 / 内線3000) ＆ 運行管理へ即時通報',
+      vi: '3. Báo cáo ngay COC (0569-38-1500 / nội bộ 3000) & Quản lý sân đỗ',
+      en: '3. Report Immediately to COC (0569-38-1500 / Ext. 3000) & Duty Manager'
+    },
+    {
+      ja: '4. 周囲安全確認・指差呼称 (安全よし！) で走行再開',
+      vi: '4. Kiểm tra an toàn xung quanh & 指差呼称 (An toàn tốt!) để mở khóa xe',
+      en: '4. Final Surround Check & Point-and-Call (All Clear!) to Resume'
+    }
+  ];
+  const title = inc.kind === 'person'
+    ? t('🚨 人身接触事故 — 必須処理手順', '🚨 SỰ CỐ VA CHẠM NGƯỜI — QUY TRÌNH BẮT BUỘC', '🚨 PERSONNEL STRIKE — MANDATORY PROCEDURE')
+    : t('🚨 車両・施設接触事故 — 必須処理手順', '🚨 SỰ CỐ VA CHẠM GIAO THÔNG — QUY TRÌNH BẮT BUỘC', '🚨 COLLISION INCIDENT — MANDATORY PROCEDURE');
+
+  box.style.display = 'flex';
+  box.innerHTML = `
+    <div style="max-width:440px;width:100%;background:var(--surface-1,#0f172a);border:2px solid #ef4444;border-radius:12px;padding:16px;color:var(--text-primary,#f8fafc);box-shadow:0 20px 45px rgba(0,0,0,0.55);">
+      <div style="font-size:15px;font-weight:800;color:#fca5a5;margin-bottom:4px;">${title}</div>
+      <div style="font-size:12.5px;color:#e2e8f0;margin-bottom:12px;">
+        ${t('対象', 'Đối tượng', 'Target')}: <strong>${t(inc.nameJa, inc.nameVi, inc.nameEn)}</strong> (${inc.speedKmh} km/h) —
+        ${t('以下の4手順を順番に完了するまで車両はロックされます。', 'Xe bị khóa cho đến khi hoàn thành tuần tự 4 bước quy trình an toàn:', 'Vehicle is locked until all 4 mandatory steps are completed in order:')}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${steps.map((s, idx) => {
+          const done = idx < inc.step;
+          const active = idx === inc.step;
+          return `<button class="btn ${done ? 'btn-ok' : (active ? 'btn-danger' : '')}" data-inc-step="${idx}" ${active ? '' : 'disabled'} style="justify-content:flex-start;text-align:left;height:auto;padding:9px 12px;opacity:${done || active ? 1 : 0.45};">
+            ${done ? '✅ ' : (active ? '👉 ' : '🔒 ')}${t(s.ja, s.vi, s.en)}
+          </button>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  box.querySelectorAll('[data-inc-step]').forEach(btn => {
+    btn.onclick = () => {
+      const idx = Number(btn.dataset.incStep);
+      if (!a3d.incidentLock || idx !== a3d.incidentLock.step) return;
+      a3dAudio.playChirp();
+      a3d.incidentLock.step += 1;
+      if (a3d.incidentLock.step >= 4) {
+        a3d.incidentLock = null;
+        triggerYubikoshi('fwd');
+        logA3d(
+          'ok',
+          '✅ 事故処理4手順完了・指差呼称確認！周囲に注意して徐行発進してください。',
+          '✅ Đã hoàn thành 4 bước xử lý sự cố & 指差呼称! Mở khóa xe — chú ý quan sát xung quanh.',
+          '✅ 4-Step Incident Procedure & Point-and-Call Complete! Vehicle unlocked — proceed with caution.'
+        );
+      }
+      renderIncidentOverlay();
+    };
+  });
 }

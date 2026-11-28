@@ -363,6 +363,18 @@ export class AirportScene3D {
     this.ilsLamps = [];
     this.trafficActors = {};
 
+    // Real-time Rear-View Mirror RenderTargets for TT Driver Cab (gse_cab)
+    this.mirrorRT_L = new THREE.WebGLRenderTarget(256, 192, { depthBuffer: true });
+    this.mirrorRT_R = new THREE.WebGLRenderTarget(256, 192, { depthBuffer: true });
+    this.mirrorRT_L.texture.wrapS = THREE.RepeatWrapping;
+    this.mirrorRT_L.texture.repeat.set(-1, 1);
+    this.mirrorRT_L.texture.offset.set(1, 0);
+    this.mirrorRT_R.texture.wrapS = THREE.RepeatWrapping;
+    this.mirrorRT_R.texture.repeat.set(-1, 1);
+    this.mirrorRT_R.texture.offset.set(1, 0);
+    this.mirrorCamL = new THREE.PerspectiveCamera(58, 256 / 192, 0.4, 900);
+    this.mirrorCamR = new THREE.PerspectiveCamera(58, 256 / 192, 0.4, 900);
+
     this.buildStaticAirport('NGO');
     this.initDynamicActors();
 
@@ -1006,9 +1018,9 @@ export class AirportScene3D {
         this.staticGroup.add(rot2);
       }
     };
-    addPortPier(-48, 21.5, null);
+    addPortPier(-44, 21.5, null);
     addPortPier(21, 21.5, null);
-    addPortPier(122, 23.5, 13.5);
+    addPortPier(139, 23.5, 13.5);
 
     // Center-Pier loop roads cross the inner taxilane (z = -62): give way before the taxilane edge.
     // (The old duplicates at (-34,-38) / (-145,-38) sat on top of the service-lane markings — removed.)
@@ -1109,34 +1121,35 @@ export class AirportScene3D {
   }
 
   initDynamicActors() {
-    // 1. Primary Interactive Neighbor Stands: Spot 6 (-68, 10: JAL B738) & Spot 14 (98, 10: ANA B788 — clear of 300m Pier at x=46!)
+    // 1. Primary Interactive Neighbor Stands: Spot 6 (-68, 10: JAL B738) & Spot 14 (103, 10: ANA B788 — clear of 300m Pier & Spot 14 Rotunda!)
     this.spot6Ac = createFleetAircraft3D('B738', 'JAL');
     this.spot6Ac.position.set(-68, 0, 10);
     this.dynamicGroup.add(this.spot6Ac);
 
     this.spot14Ac = createFleetAircraft3D('B788', 'ANA');
-    this.spot14Ac.position.set(98, 0, 10);
+    this.spot14Ac.position.set(103, 0, 10);
     this.dynamicGroup.add(this.spot14Ac);
 
-    this.spot6Pbb = this.createPbbMesh(-48, -65.9, 21.5, 3.6);
+    this.spot6Pbb = this.createPbbMesh(-44, -65.9, 21.5, 3.6);
     this.dynamicGroup.add(this.spot6Pbb);
-    this.spot14Pbb1 = this.createPbbMesh(122, 101.0, 23.5, 4.4);
-    this.spot14Pbb2 = this.createPbbMesh(122, 101.0, 13.5, 4.4);
+    this.spot14Pbb1 = this.createPbbMesh(139, 106.0, 23.5, 4.4);
+    this.spot14Pbb2 = this.createPbbMesh(139, 106.0, 13.5, 4.4);
     this.dynamicGroup.add(this.spot14Pbb1, this.spot14Pbb2);
 
     const b14a = createGseMesh('lowloader', { wide: true, uldType: 'AKE', deckY: 2.4 });
-    b14a.position.set(89.4, 0, 20.0); b14a.rotation.y = Math.PI / 2;
+    b14a.position.set(94.4, 0, 20.0); b14a.rotation.y = Math.PI / 2;
     const b14b = createGseMesh('lowloader', { wide: true, uldType: 'PMC', deckY: 2.4 });
-    b14b.position.set(89.4, 0, -3.0); b14b.rotation.y = Math.PI / 2;
+    b14b.position.set(94.4, 0, -3.0); b14b.rotation.y = Math.PI / 2;
     this.dynamicGroup.add(b14a, b14b);
+    this.spot14Gse = [b14a, b14b];
 
     // 1B. Scale-Authentic Parked Fleet Across the 4.37km Island (T1 Wings, 300m Center Pier, T2 LCC, Remote #200/#300 & North Cargo #103/#109!)
     this.parkedFleetGroup = new THREE.Group();
     if (!this.compact) {
       [
         { prof: 'B738', liveryId: 'ANA', x: 360, z: 12, yaw: 0 },              // T1 North Domestic #3
-        { prof: 'B788', liveryId: 'ANA', x: 96, z: -95, yaw: -Math.PI / 2 },   // 300m Center Pier #9
-        { prof: 'B788', liveryId: 'JAL', x: -6, z: -152, yaw: Math.PI / 2 },   // 300m Center Pier #13
+        { prof: 'B788', liveryId: 'ANA', x: 104, z: -95, yaw: -Math.PI / 2 },  // 300m Center Pier #9 (clear of Pier wall x=64!)
+        { prof: 'B788', liveryId: 'JAL', x: -14, z: -152, yaw: Math.PI / 2 },  // 300m Center Pier #13 (clear of Pier wall x=28!)
         { prof: 'B788', liveryId: 'JAL', x: -265, z: 12, yaw: 0 },             // T1 South International #19
         { prof: 'A320', liveryId: 'ANA', x: -345, z: 12, yaw: 0 },             // T1 South International #22
         { prof: 'A320', liveryId: 'ANA', x: -650, z: 20, yaw: 0 },             // T2 LCC #72
@@ -2284,6 +2297,46 @@ export class AirportScene3D {
     }
   }
 
+  getDynamicColliders() {
+    const out = [];
+    const pushVeh = (id, mesh, r = 2.6, nameJa = '構内車両', nameVi = 'Phương tiện sân đỗ', nameEn = 'Airside Vehicle') => {
+      if (!mesh || !mesh.visible) return;
+      out.push({ id, kind: 'vehicle', x: mesh.position.x, z: mesh.position.z, r, nameJa, nameVi, nameEn });
+    };
+    const pushPer = (id, mesh, r = 1.25, nameJa = '地上作業員', nameVi = 'Nhân viên mặt đất', nameEn = 'Ground Crew') => {
+      if (!mesh || !mesh.visible) return;
+      out.push({ id, kind: 'person', x: mesh.position.x, z: mesh.position.z, r, nameJa, nameVi, nameEn });
+    };
+
+    const tr = this.trafficActors || {};
+    pushVeh('tr_busE1', tr.spineBusE1, 3.4, 'ランプバス', 'Xe buýt sân đỗ', 'Apron Bus');
+    pushVeh('tr_busE2', tr.spineBusE2, 3.4, 'ランプバス', 'Xe buýt sân đỗ', 'Apron Bus');
+    pushVeh('tr_busW1', tr.spineBusW1, 3.4, 'ランプバス', 'Xe buýt sân đỗ', 'Apron Bus');
+    pushVeh('tr_dollyE1', tr.spineDollyE1, 2.8, '牽引ドーリー車列', 'Đoàn xe kéo Dolly', 'Dolly Train');
+    pushVeh('tr_dollyE2', tr.spineDollyE2, 2.8, '牽引ドーリー車列', 'Đoàn xe kéo Dolly', 'Dolly Train');
+    pushVeh('tr_dollyW1', tr.spineDollyW1, 2.8, '牽引ドーリー車列', 'Đoàn xe kéo Dolly', 'Dolly Train');
+    pushVeh('tr_dollyW2', tr.spineDollyW2, 2.8, '牽引ドーリー車列', 'Đoàn xe kéo Dolly', 'Dolly Train');
+    pushVeh('tr_catE', tr.spineCatE, 3.0, 'ケータリング車', 'Xe suất ăn Catering', 'Catering Truck');
+    pushVeh('tr_fuelW', tr.spineFuelW, 2.8, 'ハイドラント給油車', 'Xe tiếp dầu Hydrant', 'Hydrant Servicer');
+    pushVeh('tr_behind1', tr.behindDolly1, 2.8, '牽引ドーリー車列', 'Xe kéo sau bến đỗ', 'Behind-Stand Dolly');
+    pushVeh('tr_behind2', tr.behindTractor2, 2.2, 'トーイングトラクター', 'Xe đầu kéo TT', 'Towing Tractor');
+    pushVeh('tr_patrol', tr.perimPatrol, 2.4, '場周パトロール車', 'Xe tuần tra an ninh', 'Perimeter Patrol SUV');
+
+    pushVeh('gse_loader', this.spot7Loader, 2.8, 'ハイリフトローダー', 'Xe nâng High-Loader', 'High-Lift Loader');
+    pushVeh('gse_dolly', this.spot7DollyTrain, 2.6, '駐機ドーリー', 'Đoàn Dolly tại bến', 'Stand Dolly Train');
+    (this.spot14Gse || []).forEach((m, i) => pushVeh(`gse_b14_${i}`, m, 2.8, 'Spot 14 ローダー', 'Xe nâng Spot 14', 'Spot 14 Loader'));
+
+    pushPer('crew_marsh', this.crewMarshaller, 1.35, 'マーシャラー', 'Nhân viên Marshaller', 'Marshaller');
+    pushPer('crew_head', this.crewHeadset, 1.35, 'ヘッドセットマン', 'Nhân viên Headset', 'Headset Man');
+    pushPer('crew_load', this.crewLoadmaster, 1.35, 'ロードマスター', 'Nhân viên Loadmaster', 'Loadmaster');
+    pushPer('crew_wingL', this.crewWingL, 1.25, 'ウォッチマン(左)', 'Người canh cánh trái', 'Port Wingwalker');
+    pushPer('crew_wingR', this.crewWingR, 1.25, 'ウォッチマン(右)', 'Người canh cánh phải', 'Starboard Wingwalker');
+    pushPer('crew_spot_pb', this.spotterPushback, 1.35, '地上監視員 (プッシュバック)', 'Giám sát viên Pushback', 'Pushback Spotter');
+    pushPer('crew_spot_sl', this.spotterService, 1.35, '地上監視員 (サービスレーン)', 'Giám sát viên Service Lane', 'Service Lane Spotter');
+    pushPer('crew_spot_71', this.spotterBlast71, 1.35, '地上監視員 (#71ブラスト)', 'Giám sát viên #71 Blast', '#71 Blast Spotter');
+    return out;
+  }
+
   renderFrame(state, now) {
     if (this.disposed) return;
     const rect = this.canvas.getBoundingClientRect();
@@ -2413,16 +2466,18 @@ export class AirportScene3D {
       this.chocksGroup.visible = drvSc ? drvSc.chocksOn : true;
       this.conesGroup.visible = !isDeparting;
       this.tipRing.visible = false;
-      this.playerVeh.visible = state.camMode !== 'gse_cab';
+      this.playerVeh.visible = true;
       this.playerVeh.position.set(state.veh.x, 0, state.veh.z);
       this.playerVeh.rotation.y = Math.PI / 2 - state.veh.heading;
 
       const ud = this.playerVeh.userData || {};
+      const isCab = state.camMode === 'gse_cab';
+      if (ud.driverGroup) ud.driverGroup.visible = !isCab;
       if (ud.frontPivots) ud.frontPivots.forEach(p => { p.rotation.y = -(state.veh.steerAngle || 0); });
       if (ud.steerWheel) ud.steerWheel.rotation.z = -(state.veh.steerAngle || 0) * 3.2;
       if (ud.allWheels) ud.allWheels.forEach(w => { w.rotation.x += (state.veh.speed || 0) * 0.055; });
       if (ud.beaconHalo) ud.beaconHalo.visible = beaconBlink;
-      if (ud.highMast) ud.highMast.visible = state.ngoVehMode === 'high38';
+      if (ud.highMast) ud.highMast.visible = !isCab && state.ngoVehMode === 'high38';
 
       animateTractorDriver(this.playerVeh, {
         steerAngle: state.veh.steerAngle || 0,
@@ -2542,6 +2597,36 @@ export class AirportScene3D {
     const doorFlags = this._animateSpot7GseFleet(isFlight, isOps3d, state, flightPose, tSec);
     this._animateGroundCrewChoreography(isFlight, isOps3d, state, flightPose, acPose, tSec);
 
+    // Apply physical knockback / tumble effects on collided crew & traffic vehicles
+    if (state.hitEffects && !isFlight) {
+      const actorMap = {
+        tr_busE1: this.trafficActors.spineBusE1, tr_busE2: this.trafficActors.spineBusE2,
+        tr_busW1: this.trafficActors.spineBusW1, tr_dollyE1: this.trafficActors.spineDollyE1,
+        tr_dollyE2: this.trafficActors.spineDollyE2, tr_dollyW1: this.trafficActors.spineDollyW1,
+        tr_dollyW2: this.trafficActors.spineDollyW2, tr_catE: this.trafficActors.spineCatE,
+        tr_fuelW: this.trafficActors.spineFuelW, tr_behind1: this.trafficActors.behindDolly1,
+        tr_behind2: this.trafficActors.behindTractor2, tr_patrol: this.trafficActors.perimPatrol,
+        gse_loader: this.spot7Loader, gse_dolly: this.spot7DollyTrain,
+        crew_marsh: this.crewMarshaller, crew_head: this.crewHeadset,
+        crew_load: this.crewLoadmaster, crew_wingL: this.crewWingL, crew_wingR: this.crewWingR,
+        crew_spot_pb: this.spotterPushback, crew_spot_sl: this.spotterService, crew_spot_71: this.spotterBlast71
+      };
+      Object.entries(state.hitEffects).forEach(([cid, eff]) => {
+        const m = actorMap[cid];
+        if (!m || !eff || eff.ttl <= 0) return;
+        const p = Math.min(1, eff.ttl / 4.0);
+        m.position.x += eff.dx * p;
+        m.position.z += eff.dz * p;
+        if (eff.kind === 'person') {
+          m.rotation.x = Math.PI * 0.44 * p;
+          m.position.y = 0.25 * p;
+        } else {
+          m.rotation.y += eff.spin * p;
+          m.rotation.z = Math.sin(tSec * 28) * 0.08 * p;
+        }
+      });
+    }
+
     this.activeAc.position.set(acPose.x, acPose.y, acPose.z);
     this.activeAc.rotation.order = 'YXZ';
     this.activeAc.rotation.y = Math.PI / 2 - acPose.heading;
@@ -2644,7 +2729,7 @@ export class AirportScene3D {
     }
 
     this.camera.fov = this.smoothCam.fov;
-    this.camera.near = Math.max(1.2, Math.min(28, this.smoothCam.pos[1] * 0.014));
+    this.camera.near = targetCam.povKind === 'gse_cab' ? 0.14 : Math.max(1.2, Math.min(28, this.smoothCam.pos[1] * 0.014));
     this.camera.updateProjectionMatrix();
     const shk = state.camShake || 0;
     const sx = shk > 0.01 ? (Math.random() - 0.5) * shk * 1.4 : 0;
@@ -2657,6 +2742,42 @@ export class AirportScene3D {
     const povOwner = { marshaller: this.crewMarshaller, headset: this.crewHeadset, loadmaster: this.crewLoadmaster }[targetCam.povKind];
     const hideOwner = Boolean(povOwner && povOwner.visible);
     if (hideOwner) povOwner.visible = false;
+
+    // Render live left & right Rear-View Mirrors when in TT Driver Cab (gse_cab)
+    if (targetCam.povKind === 'gse_cab' && state.subtab === 'drive' && !this.compact && this.mirrorRT_L && this.playerVeh) {
+      const ud = this.playerVeh.userData || {};
+      const vh = state.veh.heading || 0;
+      const vch = Math.cos(vh), vsh = Math.sin(vh);
+      const toW = (lx, ly, lz) => [state.veh.x + lz * vch + lx * vsh, ly, state.veh.z + lz * vsh - lx * vch];
+      const wasVis = this.playerVeh.visible;
+      this.playerVeh.visible = false; // avoid mirror housing occluding its own camera
+
+      const pL = toW(0.88, 1.56, 0.26), tL = toW(1.55, 1.05, -24.0);
+      this.mirrorCamL.position.set(pL[0], pL[1], pL[2]);
+      this.mirrorCamL.lookAt(tL[0], tL[1], tL[2]);
+      this.renderer.setRenderTarget(this.mirrorRT_L);
+      this.renderer.render(this.scene, this.mirrorCamL);
+
+      const pR = toW(-0.88, 1.56, 0.26), tR = toW(-1.55, 1.05, -24.0);
+      this.mirrorCamR.position.set(pR[0], pR[1], pR[2]);
+      this.mirrorCamR.lookAt(tR[0], tR[1], tR[2]);
+      this.renderer.setRenderTarget(this.mirrorRT_R);
+      this.renderer.render(this.scene, this.mirrorCamR);
+
+      this.renderer.setRenderTarget(null);
+      this.playerVeh.visible = wasVis;
+      if (ud.mirrorFaceL && ud.mirrorFaceL.material.map !== this.mirrorRT_L.texture) {
+        ud.mirrorFaceL.material.map = this.mirrorRT_L.texture;
+        ud.mirrorFaceL.material.color.setHex(0xffffff);
+        ud.mirrorFaceL.material.needsUpdate = true;
+      }
+      if (ud.mirrorFaceR && ud.mirrorFaceR.material.map !== this.mirrorRT_R.texture) {
+        ud.mirrorFaceR.material.map = this.mirrorRT_R.texture;
+        ud.mirrorFaceR.material.color.setHex(0xffffff);
+        ud.mirrorFaceR.material.needsUpdate = true;
+      }
+    }
+
     if (this.composer && state.gfxQuality !== 'low') {
       this.composer.render();
     } else {
@@ -2801,6 +2922,17 @@ export class AirportScene3D {
       grd.addColorStop(1, `rgba(220,38,38,${(state.impactFlash * 0.68).toFixed(2)})`);
       ctx.fillStyle = grd;
       ctx.fillRect(0, 0, W, H);
+    }
+
+    if (povKind === 'gse_cab' && state.subtab === 'drive') {
+      const steerDeg = Math.round(((state.veh && state.veh.steerAngle) || 0) * 180 / Math.PI);
+      const swayPct = Math.round(Math.min(100, (state.swayIntensity || 0) * 100));
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
+      ctx.fillRect(W * 0.5 - 175, H - 38, 350, 24);
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '700 11px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`◀ MIRROR L | CAB STEER ${steerDeg >= 0 ? '+' : ''}${steerDeg}° | SWAY ${swayPct}% | MIRROR R ▶`, W * 0.5, H - 22);
     }
 
     if (povKind === 'pilot') {

@@ -1876,10 +1876,12 @@ export function computeViewpointCamera(camMode, isFlightMode, flightPose, veh, o
     }
     if (camMode === 'gse_cab') {
       const vch = Math.cos(veh.heading), vsh = Math.sin(veh.heading);
+      // Driver eye in TT local space: seat x=+0.34, y=1.64, z=-0.38 so wheel & both mirrors stay in view
+      const toW = (lx, ly, lz) => [veh.x + lz * vch + lx * vsh, ly, veh.z + lz * vsh - lx * vch];
       return {
-        pos: [veh.x + vch * 0.4, 2.35, veh.z + vsh * 0.4],
-        target: [veh.x + vch * 28, 1.65, veh.z + vsh * 28],
-        fov: 64,
+        pos: toW(0.34, 1.64, -0.38),
+        target: toW(0.22, 1.38, 16.0),
+        fov: 76,
         povKind: 'gse_cab'
       };
     }
