@@ -1,7 +1,7 @@
 // Full 1:1 Chubu Centrair (NGO / RJGG) 4,370m × 1,920m Island + 3,500m × 60m Runway + Multi-Lane Airside/Flight/Skyway Traffic
 import * as THREE from 'three';
 import { AIRCRAFT_PROFILES } from '../data/aircraft.js';
-import { A3D_AIRPORTS, A3D_SPOTS, A3D_CLOUDS, A3D_FLIGHT_PHASES, NGO_CARGO_DISTRICT, computeFlightCyclePose, computeViewpointCamera } from '../data/airports.js';
+import { A3D_AIRPORTS, A3D_SPOTS, A3D_CLOUDS, A3D_FLIGHT_PHASES, NGO_CARGO_DISTRICT, NGO_STAND7_X, computeFlightCyclePose, computeViewpointCamera } from '../data/airports.js';
 import { createDetailedAirliner3D } from './aircraftBuilder3D.js';
 import { registerProceduralFallback } from './aircraft_3d_models.js';
 registerProceduralFallback(createDetailedAirliner3D);
@@ -815,18 +815,19 @@ export class AirportScene3D {
 
     A3D_SPOTS.forEach(sp => {
       const halfSpan = sp.wingHalf || 18;
-      const halfL = halfSpan > 20 ? 23.0 : 18.5;
+      const halfL = sp.eraHalfL || (halfSpan > 20 ? 23.0 : 18.5);
+      const ecz = sp.eraCz ?? sp.cz; // ERA centre (nose-gear-referenced stands extend aft for long types)
       const fuseR = halfSpan > 20 ? 2.6 : 1.9;
 
       addBox(0.50, 0.04, 62, 0xf5c818, sp.cx, 0.08, -3);
-      addBox(7.2, 0.04, 0.45, 0xf5c818, sp.cx, 0.085, sp.cz + halfL - 3.5);
-      addBox(5.6, 0.04, 0.32, 0xf5c818, sp.cx, 0.085, sp.cz + halfL - 5.5);
+      addBox(7.2, 0.04, 0.45, 0xf5c818, sp.cx, 0.085, ecz + halfL - 3.5);
+      addBox(5.6, 0.04, 0.32, 0xf5c818, sp.cx, 0.085, ecz + halfL - 5.5);
       addBox(3.4, 0.04, 0.28, 0xf8fafc, sp.cx, 0.085, sp.cz - 8.5);
 
       const sTex = makeStandBadgeTexture(sp.ngoNo);
       const sPlate = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 4.4), new THREE.MeshStandardMaterial({ map: sTex, roughness: 0.7 }));
       sPlate.rotation.x = -Math.PI / 2;
-      sPlate.position.set(sp.cx, 0.09, sp.cz + halfL + 9.2);
+      sPlate.position.set(sp.cx, 0.09, ecz + halfL + 9.2);
       this.staticGroup.add(sPlate);
 
       // 4 Color-Coded Apron Utility Pits (White Hydrant, Red Bonding, Blue GPU, Yellow PC-Air)
@@ -848,7 +849,7 @@ export class AirportScene3D {
 
       // Open-Back Wing-Hugging Bright Red ERA Polyline
       const localPts = computeWingHuggingEraPolyline(halfL, halfSpan, fuseR);
-      const worldPts = localPts.map(([lx, lz]) => [sp.cx + lx, sp.cz + lz]);
+      const worldPts = localPts.map(([lx, lz]) => [sp.cx + lx, ecz + lz]);
 
       const eShape = new THREE.Shape();
       eShape.moveTo(worldPts[0][0], -worldPts[0][1]);
@@ -868,8 +869,8 @@ export class AirportScene3D {
 
       const bodyW = fuseR + 6.8;
       const wingW = halfSpan + 3.8;
-      addDashedBox(sp.cx - (wingW - 0.5), sp.cz + halfL * 0.45, sp.cx - (bodyW + 1.8), sp.cz + halfL + 6.5);
-      addDashedBox(sp.cx - (wingW - 0.5), sp.cz - (halfL + 3.5), sp.cx - (bodyW + 1.8), sp.cz - 12.5);
+      addDashedBox(sp.cx - (wingW - 0.5), ecz + halfL * 0.45, sp.cx - (bodyW + 1.8), ecz + halfL + 6.5);
+      addDashedBox(sp.cx - (wingW - 0.5), ecz - (halfL + 3.5), sp.cx - (bodyW + 1.8), ecz - 12.5);
     });
 
     // Helper for painted stand badges, lead-in lines & authentic Wing-Hugging Open-Back Red ERA across T1, Pier, T2, Remote & Cargo!
@@ -1695,15 +1696,20 @@ export class AirportScene3D {
     // Unified pipeline: every jet uses the same sculpted GLB + livery shader (only DHC8 turboprop is procedural)
     this.activeAc = createFleetAircraft3D(acId, liveryId);
     const spec = this.activeAc.userData.spec || AIRCRAFT_3D_SPECS.A320;
-    // Spot 7 sits beside the 300m Center Pier (wall at x = 28.75): narrow-bodies are 1:1, wide-bodies
-    // are fitted so the wingtip keeps ≥ 5m clearance from the pier (the only non-1:1 aircraft in the scene).
-    const s = Math.min(1, (28.75 - 5.0) / (spec.wingspanM * 0.5));
+    // Every type is 1:1. Spot 7's centreline (NGO_STAND7_X) leaves ≥ 6 m wingtip clearance to the Centre
+    // Pier wall (x = 28.75) even for a 65 m-span B777-300ER; only a hypothetical > 77 m span would be fitted.
+    const s = Math.min(1, (28.75 - 6.0 - NGO_STAND7_X) / (spec.wingspanM * 0.5));
     this.activeAc.scale.setScalar(s);
     this.activeAcScale = s;
+    // Stop-bar logic: the flight pose is the A320's reference point; every other type is shifted along its
+    // own axis so its NOSE GEAR stops on the same yellow T (longer jets extend aft toward the taxilane,
+    // exactly like real type-specific stop bars) and follows the lead-in line with its nose gear.
+    const refNG = (AIRCRAFT_3D_SPECS.A320 || spec).attachPoints.noseGear.z;
+    this.acRefOff = refNG - spec.attachPoints.noseGear.z * s;
     this.activeBlastZone = createJetBlastHazardZone3D(spec);
     this.activeBlastZone.visible = false;
     this.activeAc.add(this.activeBlastZone);
-    this.activeAc.position.set(0, 0, 10);
+    this.activeAc.position.set(NGO_STAND7_X, 0, 10 + this.acRefOff);
     this.dynamicGroup.add(this.activeAc);
     this._computeSpot7Layout(spec, s);
   }
@@ -1712,7 +1718,8 @@ export class AirportScene3D {
   // attach points → every vehicle docks at the correct door for EVERY aircraft type.
   _computeSpot7Layout(spec, s) {
     const ap = spec.attachPoints;
-    const Z0 = 10;
+    const Z0 = 10 + (this.acRefOff || 0);
+    const X0 = NGO_STAND7_X;
     const r = spec.fuseRadius * s;
     const W = id => Z0 + ap[id].z * s;
     const noseZ = Z0 + spec.lengthM * 0.5 * s;
@@ -1721,31 +1728,31 @@ export class AirportScene3D {
     const isBeltOnly = spec.gseCargoType === 'belt';
     const beltDoor = isBeltOnly ? 'cargoFwd' : 'bulkDoor';
     const L = {
-      s, r, noseZ, tailZ, halfSpan, isBeltOnly,
+      s, r, noseZ, tailZ, halfSpan, isBeltOnly, x0: X0,
       noseGearZ: W('noseGear'),
       mainGearZ: Z0 + spec.mainGearZOffset * s,
       mainGearX: spec.mainGearTrackX * s,
-      loader: { x: -r - 4.05, z: W('cargoFwd') },
-      belt: { x: -r - 4.0, z: W(beltDoor) },
-      gpu: { x: -r - 3.4, z: W('gpuPort') },
-      cat: { x: -r - 3.75, z: W('doorR1') },
-      fuel: { x: ap.fuelPort.dockX * s, z: W('fuelPort') },
-      lav: { x: -r - 2.9, z: W('lavPort') },
-      water: { x: r + 2.9, z: W('waterPort') },
+      loader: { x: X0 - r - 4.05, z: W('cargoFwd') },
+      belt: { x: X0 - r - 4.0, z: W(beltDoor) },
+      gpu: { x: X0 - r - 3.4, z: W('gpuPort') },
+      cat: { x: X0 - r - 3.75, z: W('doorR1') },
+      fuel: { x: X0 + ap.fuelPort.dockX * s, z: W('fuelPort') },
+      lav: { x: X0 - r - 2.9, z: W('lavPort') },
+      water: { x: X0 + r + 2.9, z: W('waterPort') },
       tugCoupleZ: W('noseGear') + 7.1,
-      doorL1: { x: r + 0.25, z: W('doorL1'), h: ap.doorL1.y * s - 1.25 },
+      doorL1: { x: X0 + r + 0.25, z: W('doorL1'), h: ap.doorL1.y * s - 1.25 },
       cargoSill: ap.cargoFwd.y * s
     };
     L.loaderStandby = { x: L.loader.x - 12.5, z: L.loader.z + 3.5 };
     L.dolly = { x: L.loader.x - 6.8, z: L.loader.z - 0.5 };
     L.beltStandby = { x: L.belt.x - 12.0, z: L.belt.z - 4.3 };
     L.beltTractor = { x: L.belt.x - 6.2, z: L.belt.z - 0.6 };
-    L.gpuStandby = { x: -r - 15.5, z: noseZ + 6.5 };
-    L.catStandby = { x: -r - 16.5, z: L.cat.z + 7.5 };
+    L.gpuStandby = { x: X0 - r - 15.5, z: noseZ + 6.5 };
+    L.catStandby = { x: X0 - r - 16.5, z: L.cat.z + 7.5 };
     L.fuelStandby = { x: L.fuel.x - 8.0, z: L.fuel.z - 26 };
     L.lavStandby = { x: L.lav.x - 10, z: L.lav.z - 8 };
     L.waterStandby = { x: L.water.x + 11, z: L.water.z - 7 };
-    L.tugStandby = { x: r + 12.5, z: noseZ + 8 };
+    L.tugStandby = { x: X0 + r + 12.5, z: noseZ + 8 };
     this.spot7Layout = L;
 
     // Type-specific nose-wheel stop bar (yellow "T") on the Spot 7 lead-in line — the marshaller drill target
@@ -1760,19 +1767,19 @@ export class AirportScene3D {
       this.dynamicGroup.add(g);
       this.spot7StopBar = g;
     }
-    this.spot7StopBar.position.set(0, 0.13, L.noseGearZ);
+    this.spot7StopBar.position.set(X0, 0.13, L.noseGearZ);
 
     // Chocks: nose gear fore/aft + both main gears
     if (this.chocksGroup) {
       const ch = this.chocksGroup.children;
-      const pts = [[0, L.noseGearZ + 0.85], [-L.mainGearX, L.mainGearZ + 1.1], [L.mainGearX, L.mainGearZ + 1.1]];
+      const pts = [[X0, L.noseGearZ + 0.85], [X0 - L.mainGearX, L.mainGearZ + 1.1], [X0 + L.mainGearX, L.mainGearZ + 1.1]];
       ch.forEach((c, i) => { if (pts[i]) c.position.set(pts[i][0], 0.21, pts[i][1]); });
     }
     // Cones: nose, both wingtips, both engine intakes
     if (this.conesGroup) {
       const eX = spec.engineSpanX * s, eZ = Z0 + (spec.engineZOffset + 3.2) * s;
       const tipZ = L.mainGearZ - 3.0 * s;
-      const pts = [[0, noseZ + 2.5], [-(halfSpan + 1.0), tipZ], [halfSpan + 1.0, tipZ], [-eX, eZ], [eX, eZ]];
+      const pts = [[X0, noseZ + 2.5], [X0 - (halfSpan + 1.0), tipZ], [X0 + halfSpan + 1.0, tipZ], [X0 - eX, eZ], [X0 + eX, eZ]];
       this.conesGroup.children.forEach((c, i) => { if (pts[i]) c.position.set(pts[i][0], 0.58, pts[i][1]); });
     }
     // PBB docks the real door L1 (port side)
@@ -2117,22 +2124,23 @@ export class AirportScene3D {
 
     const demoSig = state.marshallerDemoSignal;
     const L = this.spot7Layout;
+    const X0 = L.x0 || 0;
     const tipX = L.halfSpan + 1.5, tipZ = L.mainGearZ - 1.5;
 
     if (!isFlight) {
-      this.crewMarshaller.position.set(0, 0, L.noseZ + 6.0);
+      this.crewMarshaller.position.set(X0, 0, L.noseZ + 6.0);
       this.crewMarshaller.rotation.y = Math.PI;
       animateCrewSignal(this.crewMarshaller, demoSig || (acPose.beaconOn ? 'm_stop' : 'm_chocks'), tSec);
 
-      this.crewWingL.position.set(tipX, 0, tipZ);
+      this.crewWingL.position.set(X0 + tipX, 0, tipZ);
       this.crewWingL.rotation.y = Math.PI;
       animateCrewSignal(this.crewWingL, 'watchman_clear', tSec);
 
-      this.crewWingR.position.set(-tipX, 0, tipZ);
+      this.crewWingR.position.set(X0 - tipX, 0, tipZ);
       this.crewWingR.rotation.y = Math.PI;
       animateCrewSignal(this.crewWingR, 'watchman_clear', tSec);
 
-      this.crewHeadset.position.set(-(L.r + 1.6), 0, L.noseGearZ + 0.4);
+      this.crewHeadset.position.set(X0 - (L.r + 1.6), 0, L.noseGearZ + 0.4);
       this.crewHeadset.rotation.y = Math.PI * 0.65;
       animateCrewSignal(this.crewHeadset, isOps3d ? 'point_and_call' : 'm_allclear', tSec);
 
@@ -2147,60 +2155,60 @@ export class AirportScene3D {
     const p = state.flightProgress || 0;
 
     if (ph === 0) {
-      this.crewMarshaller.position.set(11.5, 0, L.noseZ + 8.5);
+      this.crewMarshaller.position.set(X0 + 11.5, 0, L.noseZ + 8.5);
       this.crewMarshaller.rotation.y = Math.PI;
       animateCrewSignal(this.crewMarshaller, demoSig || 'm_stop', tSec);
 
-      this.crewWingL.position.set(15.5, 0, L.noseZ + 7.5);
+      this.crewWingL.position.set(X0 + 15.5, 0, L.noseZ + 7.5);
       this.crewWingL.rotation.y = Math.PI;
       animateCrewSignal(this.crewWingL, 'm_stop', tSec);
 
-      this.crewWingR.position.set(-15.5, 0, L.noseZ + 7.5);
+      this.crewWingR.position.set(X0 - 15.5, 0, L.noseZ + 7.5);
       this.crewWingR.rotation.y = Math.PI;
       animateCrewSignal(this.crewWingR, 'm_stop', tSec);
 
-      this.crewHeadset.position.set(-12.5, 0, L.noseZ + 8.5);
+      this.crewHeadset.position.set(X0 - 12.5, 0, L.noseZ + 8.5);
       this.crewHeadset.rotation.y = Math.PI;
       animateCrewSignal(this.crewHeadset, 'point_and_call', tSec);
     } else if (ph === 1) {
-      this.crewMarshaller.position.set(0, 0, L.noseZ + 6.5);
+      this.crewMarshaller.position.set(X0, 0, L.noseZ + 6.5);
       this.crewMarshaller.rotation.y = Math.PI;
       const mSig = demoSig || (p < 0.72 ? 'm_straight' : (p < 0.92 ? 'm_slow' : 'm_stop'));
       animateCrewSignal(this.crewMarshaller, mSig, tSec);
 
-      this.crewWingL.position.set(tipX, 0, tipZ);
+      this.crewWingL.position.set(X0 + tipX, 0, tipZ);
       this.crewWingL.rotation.y = Math.PI;
       animateCrewSignal(this.crewWingL, 'watchman_clear', tSec);
 
-      this.crewWingR.position.set(-tipX, 0, tipZ);
+      this.crewWingR.position.set(X0 - tipX, 0, tipZ);
       this.crewWingR.rotation.y = Math.PI;
       animateCrewSignal(this.crewWingR, 'watchman_clear', tSec);
 
-      this.crewHeadset.position.set(-13.5, 0, L.noseZ + 7.5);
+      this.crewHeadset.position.set(X0 - 13.5, 0, L.noseZ + 7.5);
       this.crewHeadset.rotation.y = Math.PI * 0.75;
       animateCrewSignal(this.crewHeadset, 'm_stop', tSec);
     } else if (ph === 2) {
-      this.crewMarshaller.position.set(0, 0, L.noseZ + 6.5);
+      this.crewMarshaller.position.set(X0, 0, L.noseZ + 6.5);
       this.crewMarshaller.rotation.y = Math.PI;
       animateCrewSignal(this.crewMarshaller, demoSig || 'm_chocks', tSec);
 
-      this.crewHeadset.position.set(-(L.r + 1.2), 0, L.noseGearZ + 0.6);
+      this.crewHeadset.position.set(X0 - (L.r + 1.2), 0, L.noseGearZ + 0.6);
       this.crewHeadset.rotation.y = Math.PI * 0.55;
       animateCrewSignal(this.crewHeadset, 'point_and_call', tSec);
 
-      this.crewWingL.position.set(L.r + 8.0, 0, L.noseGearZ - 1.0);
+      this.crewWingL.position.set(X0 + L.r + 8.0, 0, L.noseGearZ - 1.0);
       this.crewWingL.rotation.y = -Math.PI * 0.5;
       animateCrewSignal(this.crewWingL, 'point_and_call', tSec);
 
-      this.crewWingR.position.set(-(L.r + 6.5), 0, L.noseGearZ + 2.0);
+      this.crewWingR.position.set(X0 - (L.r + 6.5), 0, L.noseGearZ + 2.0);
       this.crewWingR.rotation.y = Math.PI * 0.4;
       animateCrewSignal(this.crewWingR, 'guideman_beckon', tSec);
     } else if (ph >= 3 && ph <= 5) {
-      this.crewMarshaller.position.set(L.r + 10.5, 0, L.noseGearZ + 1.0);
+      this.crewMarshaller.position.set(X0 + L.r + 10.5, 0, L.noseGearZ + 1.0);
       this.crewMarshaller.rotation.y = -Math.PI * 0.5;
       animateCrewSignal(this.crewMarshaller, demoSig || 'point_and_call', tSec);
 
-      this.crewHeadset.position.set(-(L.r + 2.2), 0, L.noseGearZ + 1.0);
+      this.crewHeadset.position.set(X0 - (L.r + 2.2), 0, L.noseGearZ + 1.0);
       this.crewHeadset.rotation.y = Math.PI * 0.45;
       animateCrewSignal(this.crewHeadset, 'point_and_call', tSec);
 
@@ -2208,7 +2216,7 @@ export class AirportScene3D {
       this.crewWingL.rotation.y = -Math.PI * 0.65;
       animateCrewSignal(this.crewWingL, ph === 4 ? 'point_and_call' : 'spotter_clear', tSec);
 
-      this.crewWingR.position.set(-(L.r + 7.5), 0, ph === 4 ? L.cat.z + 2.0 : L.loader.z + 3.3);
+      this.crewWingR.position.set(X0 - (L.r + 7.5), 0, ph === 4 ? L.cat.z + 2.0 : L.loader.z + 3.3);
       this.crewWingR.rotation.y = -Math.PI * 0.75;
       animateCrewSignal(this.crewWingR, p < 0.45 ? 'guideman_beckon' : 'point_and_call', tSec);
 
@@ -2223,15 +2231,15 @@ export class AirportScene3D {
       animateCrewSignal(this.crewFueler, 'point_and_call', tSec);
     } else if (ph === 6) {
       const ang = p * Math.PI * 1.4;
-      this.crewHeadset.position.set(-Math.cos(ang) * (L.r + 3.5), 0, 10 + Math.sin(ang) * (L.noseZ - 8));
+      this.crewHeadset.position.set(X0 - Math.cos(ang) * (L.r + 3.5), 0, 10 + Math.sin(ang) * (L.noseZ - 8));
       this.crewHeadset.rotation.y = Math.atan2(this.crewHeadset.position.x, 10 - this.crewHeadset.position.z);
       animateCrewSignal(this.crewHeadset, 'point_and_call', tSec);
 
-      this.crewMarshaller.position.set(13.5, 0, L.noseZ + 6.0);
+      this.crewMarshaller.position.set(X0 + 13.5, 0, L.noseZ + 6.0);
       animateCrewSignal(this.crewMarshaller, demoSig || 'm_allclear', tSec);
-      this.crewWingL.position.set(tipX, 0, tipZ);
+      this.crewWingL.position.set(X0 + tipX, 0, tipZ);
       animateCrewSignal(this.crewWingL, 'watchman_clear', tSec);
-      this.crewWingR.position.set(-tipX, 0, tipZ);
+      this.crewWingR.position.set(X0 - tipX, 0, tipZ);
       animateCrewSignal(this.crewWingR, 'watchman_clear', tSec);
     } else if (ph === 7 && flightPose) {
       const ac = flightPose.ac;
@@ -2253,12 +2261,12 @@ export class AirportScene3D {
       this.crewWingR.rotation.y = yaw3d + Math.PI;
       animateCrewSignal(this.crewWingR, 'walk_escort', tSec);
 
-      this.crewMarshaller.position.set(-14.0, 0, -39.5);
+      this.crewMarshaller.position.set(X0 - 14.0, 0, -39.5);
       this.crewMarshaller.rotation.y = Math.PI;
       animateCrewSignal(this.crewMarshaller, demoSig || 'm_allclear', tSec);
     } else if (ph === 8) {
-      this.crewHeadset.position.set(-29.0, 0, -53.0);
-      this.crewHeadset.rotation.y = Math.atan2(acPose.x - (-29.0), acPose.z - (-53.0));
+      this.crewHeadset.position.set(X0 - 29.0, 0, -53.0);
+      this.crewHeadset.rotation.y = Math.atan2(acPose.x - (X0 - 29.0), acPose.z - (-53.0));
       animateCrewSignal(this.crewHeadset, p < 0.32 ? 'bypass_pin_salute' : 'wave_off', tSec);
 
       this.crewLoadmaster.visible = true;
@@ -2268,18 +2276,18 @@ export class AirportScene3D {
         [this.crewWingL,      -22.0, -40.5],
         [this.crewWingR,      -25.0, -40.5]
       ].forEach(([cr, cx, cz]) => {
-        cr.position.set(cx, 0, cz);
-        cr.rotation.y = Math.atan2(acPose.x - cx, acPose.z - cz);
+        cr.position.set(X0 + cx, 0, cz);
+        cr.rotation.y = Math.atan2(acPose.x - (X0 + cx), acPose.z - cz);
         animateCrewSignal(cr, 'wave_off', tSec);
       });
     } else {
-      this.crewMarshaller.position.set(11.5, 0, L.noseZ + 8.5);
+      this.crewMarshaller.position.set(X0 + 11.5, 0, L.noseZ + 8.5);
       animateCrewSignal(this.crewMarshaller, demoSig || 'wave_off', tSec);
-      this.crewHeadset.position.set(-12.5, 0, L.noseZ + 8.5);
+      this.crewHeadset.position.set(X0 - 12.5, 0, L.noseZ + 8.5);
       animateCrewSignal(this.crewHeadset, 'wave_off', tSec);
-      this.crewWingL.position.set(15.5, 0, L.noseZ + 7.5);
+      this.crewWingL.position.set(X0 + 15.5, 0, L.noseZ + 7.5);
       animateCrewSignal(this.crewWingL, 'wave_off', tSec);
-      this.crewWingR.position.set(-15.5, 0, L.noseZ + 7.5);
+      this.crewWingR.position.set(X0 - 15.5, 0, L.noseZ + 7.5);
       animateCrewSignal(this.crewWingR, 'wave_off', tSec);
     }
   }
@@ -2317,6 +2325,7 @@ export class AirportScene3D {
     const glassEm = isNight ? 0x403214 : (isSunset ? 0x261808 : 0x000000);
     if (this.glassMat) this.glassMat.emissive.setHex(glassEm);
     if (this.glassMeshes) this.glassMeshes.forEach(m => m.material.emissive && m.material.emissive.setHex(glassEm));
+    if (this.playerVeh && this.playerVeh.userData.beams) this.playerVeh.userData.beams.forEach(b => { b.visible = isNight || wx === 'fog'; });
     this._updateEnvironment(isNight ? 'night' : (isSunset ? 'sunset' : (wx === 'rain' || wx === 'fog' || wx === 'snow' ? 'overcast' : 'day')));
     if (this.runwayMat) this.runwayMat.roughness = wx === 'rain' ? 0.14 : 0.72;
     if (this.apronMat) this.apronMat.roughness = wx === 'rain' ? 0.18 : 0.78;
@@ -2338,7 +2347,7 @@ export class AirportScene3D {
     // Marshaller drill: the aircraft is driven by the trainee's hand signals (physics in airport3dModule)
     if (flightPose && state.marshalDrill && state.marshalDrill.active) {
       const md = state.marshalDrill;
-      Object.assign(flightPose.ac, { x: md.x, z: md.z, heading: md.heading, y: 0, pitch: 0, beaconOn: true, gs: md.v });
+      Object.assign(flightPose.ac, { x: NGO_STAND7_X + md.x, z: md.z, heading: md.heading, y: 0, pitch: 0, beaconOn: true, gs: md.v });
     }
     const tSec = (now || 0) * 0.001;
     this.radarBar.rotation.y = tSec * 1.4;
@@ -2365,10 +2374,10 @@ export class AirportScene3D {
     const beaconBlink = Math.floor((now || 0) / 420) % 2 === 0;
     const strobeOn = ((now || 0) % 1100) < 110;
 
-    let acPose = { x: 0, y: 0, z: 10, heading: Math.PI / 2, pitch: 0, beaconOn: false };
+    let acPose = { x: NGO_STAND7_X, y: 0, z: 10, heading: Math.PI / 2, pitch: 0, beaconOn: false };
     if (this.compact) {
       const tipPitch = wbConseq && wbConseq.stressFlags.tailTip ? -0.22 : (wbConseq && wbConseq.stressFlags.noseHeavy ? 0.08 : 0);
-      acPose = { x: 0, y: tipPitch < -0.1 ? 0.35 : 0, z: 10, heading: Math.PI / 2, pitch: tipPitch, beaconOn: false };
+      acPose = { x: NGO_STAND7_X, y: tipPitch < -0.1 ? 0.35 : 0, z: 10, heading: Math.PI / 2, pitch: tipPitch, beaconOn: false };
       this.updatePbbExt(this.spot7Pbb, prof.isFreighter ? 0 : 1);
       this.chocksGroup.visible = true;
       this.conesGroup.visible = true;
@@ -2377,7 +2386,7 @@ export class AirportScene3D {
       this.tipRing.visible = Boolean(wbConseq && wbConseq.stressFlags.tailTip);
     } else if (isOps3d) {
       const ho = state.handsOn;
-      acPose = { x: 0, y: 0, z: 10, heading: Math.PI / 2, pitch: 0, beaconOn: ho.beaconOn };
+      acPose = { x: NGO_STAND7_X, y: 0, z: 10, heading: Math.PI / 2, pitch: 0, beaconOn: ho.beaconOn };
       this.updatePbbExt(this.spot7Pbb, ho.pbbExt);
       this.chocksGroup.visible = ho.chocksOn;
       this.conesGroup.visible = ho.conesOn;
@@ -2534,7 +2543,7 @@ export class AirportScene3D {
     }
 
     // Dynamic Directional Shadow-Map Tracking across the entire 4.37km Island!
-    const focusX = isFlight ? acPose.x : (state.subtab === 'drive' ? state.veh.x : 0);
+    const focusX = isFlight ? acPose.x : (state.subtab === 'drive' ? state.veh.x : NGO_STAND7_X);
     const focusZ = isFlight ? acPose.z : (state.subtab === 'drive' ? state.veh.z : 10);
     this.sunLight.target.position.set(focusX, 0, focusZ);
     this.sunLight.position.set(focusX + sunDirOff[0], sunDirOff[1], focusZ + sunDirOff[2]);
@@ -2542,7 +2551,8 @@ export class AirportScene3D {
     const doorFlags = this._animateSpot7GseFleet(isFlight, isOps3d, state, flightPose, tSec);
     this._animateGroundCrewChoreography(isFlight, isOps3d, state, flightPose, acPose, tSec);
 
-    this.activeAc.position.set(acPose.x, acPose.y, acPose.z);
+    const refOff = this.acRefOff || 0;
+    this.activeAc.position.set(acPose.x + Math.cos(acPose.heading) * refOff, acPose.y, acPose.z + Math.sin(acPose.heading) * refOff);
     this.activeAc.rotation.order = 'YXZ';
     this.activeAc.rotation.y = Math.PI / 2 - acPose.heading;
     this.activeAc.rotation.x = -(acPose.pitch || 0);
@@ -2577,7 +2587,8 @@ export class AirportScene3D {
     let targetCam;
     if (this.compact) {
       const ang = tSec * 0.22;
-      targetCam = { pos: [Math.cos(ang) * 34 - 6, 12.5, 10 + Math.sin(ang) * 32], target: [0, 3.8, 10], fov: 44, povKind: 'compact' };
+      const cS = Math.max(1, (this.spot7Layout ? this.spot7Layout.halfSpan : 18) / 18); // frame wide-bodies too
+      targetCam = { pos: [NGO_STAND7_X + Math.cos(ang) * 34 * cS - 6, 12.5 * cS, 10 + Math.sin(ang) * 32 * cS], target: [NGO_STAND7_X, 3.8, 10 + (this.acRefOff || 0)], fov: 44, povKind: 'compact' };
     } else {
       const isBack = state.ngoDriveScenario === 'SC5' || state.ngoVehMode === 'backing';
       const camExtra = {
@@ -2589,7 +2600,7 @@ export class AirportScene3D {
       const spec = (this.activeAc && this.activeAc.userData.spec) || AIRCRAFT_3D_SPECS.A320;
       const sc = this.activeAcScale || 1;
       const crewPos = c => (c && c.visible ? [c.position.x, c.position.z] : null);
-      camExtra.acInfo = { halfL: spec.lengthM * 0.5 * sc, cockpitY: (spec.bellyClearanceM + spec.fuseRadius * 1.45) * sc };
+      camExtra.acInfo = { halfL: spec.lengthM * 0.5 * sc, cockpitY: (spec.bellyClearanceM + spec.fuseRadius * 1.45) * sc, refOff: this.acRefOff || 0 };
       camExtra.noseZ = L ? L.noseZ : 29;
       camExtra.cargoDoor = L ? [L.loader.x + 4.0, Math.max(1.6, L.cargoSill), L.loader.z] : null;
       // Belt-loader driver seat (outboard of the belt, facing the bulk/cargo door) — the GSE cab POV during a turnaround

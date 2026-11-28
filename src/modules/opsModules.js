@@ -132,7 +132,7 @@ function renderTurnaroundControlsAndChecklist() {
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
           <div>
             <div style="font-size:12px;color:var(--text-muted);">${t('空港選択（5大拠点・実測WGS84 3D同期）', 'Chọn sân bay Nhật Bản (5 sân bay thực tế · Đồng bộ 3D WGS84)', 'Select Japanese Airport (5 Real WGS84 3D Airports)')}</div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+            <div class="h-scroll-row" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
               ${Object.values(JP_AIRPORTS).map(a => `
                 <button class="btn btn-sm ${taState.airport === a.code ? 'btn-primary' : ''}" data-ta-ap="${a.code}">${a.code} (${a.targetMin}m)</button>
               `).join('')}
@@ -162,7 +162,7 @@ function renderTurnaroundControlsAndChecklist() {
       <div class="ta-3d-toolbar">
         <div class="ta-tool-grp">
           <span class="ta-tool-lbl">${t('機種 (3D実寸)', 'Tàu bay (Tỷ lệ thật)', 'Aircraft (1:1m)')}</span>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <div class="h-scroll-row" style="display:flex;gap:4px;flex-wrap:wrap;">
             ${Object.values(AIRCRAFT_3D_SPECS).map(ac => `
               <button class="btn btn-sm ${taState.aircraftType === ac.id ? 'btn-primary' : ''}" data-ta-ac="${ac.id}">${ac.shortName}</button>
             `).join('')}
@@ -170,7 +170,7 @@ function renderTurnaroundControlsAndChecklist() {
         </div>
         <div class="ta-tool-grp">
           <span class="ta-tool-lbl">${t('航空会社塗装', 'Màu sơn hãng (Livery)', 'Airline Livery')}</span>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <div class="h-scroll-row" style="display:flex;gap:4px;flex-wrap:wrap;">
             ${Object.values(AIRLINE_LIVERIES).map(l => `
               <button class="btn btn-sm ${taState.liveryId === l.id ? 'btn-primary' : ''}" data-ta-liv="${l.id}" style="${taState.liveryId === l.id ? `background:${l.badgeColor};border-color:${l.badgeColor};color:#fff;` : ''}">${l.shortName}</button>
             `).join('')}
@@ -414,7 +414,7 @@ export function renderPaxModule() {
   const pick = paxState.picked[sc.id];
 
   mount.innerHTML = `
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+    <div class="h-scroll-row" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
       ${PAX_SCENARIOS.map((s, i) => {
         const solved = appState.paxSolved.includes(s.id);
         return `<button class="btn btn-sm ${i === paxState.idx ? 'btn-primary' : ''}" data-pax-i="${i}">${solved ? '✓ ' : ''}${s.id}: ${t(s.titleJa, s.titleVi, s.titleEn).slice(0, 22)}…</button>`;
@@ -426,13 +426,13 @@ export function renderPaxModule() {
         <span class="badge ${appState.paxSolved.includes(sc.id) ? 'badge-ok' : 'badge-accent'}">${appState.paxSolved.includes(sc.id) ? 'SOLVED' : sc.id}</span>
       </div>
       <div class="alert alert-info" style="font-size:13.5px;">${bi(sc.descJa, sc.descVi, sc.descEn)}</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="qz-opts-col" style="display:flex;flex-direction:column;gap:8px;">
         ${sc.options.map((ch, ci) => {
           const isPicked = pick === ci;
           const border = pick !== undefined ? (ch.ok ? 'var(--ok)' : (isPicked ? 'var(--danger)' : 'var(--border)')) : 'var(--border)';
           const bg = pick !== undefined ? (ch.ok ? 'var(--ok-soft)' : (isPicked ? 'var(--danger-soft)' : 'var(--surface-2)')) : 'var(--surface-2)';
           return `
-            <button data-pax-c="${ci}" style="text-align:left;padding:11px 14px;border-radius:8px;border:1.5px solid ${border};background:${bg};cursor:pointer;color:var(--text-primary);font-size:13.5px;">
+            <button class="quiz-opt" data-pax-c="${ci}" style="text-align:left;padding:11px 14px;border-radius:8px;border:1.5px solid ${border};background:${bg};cursor:pointer;color:var(--text-primary);font-size:13.5px;">
               <strong style="margin-right:8px;">${['A', 'B', 'C', 'D'][ci]}.</strong>
               <span class="ja">${bi(ch.ja, ch.vi, ch.en)}</span>
             </button>
@@ -530,7 +530,7 @@ export function renderCargoModule() {
     const c = DGR_CASES[cargoState.dgrIdx] || DGR_CASES[0];
     const pick = cargoState.dgrPicked[c.id];
     content = `
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+      <div class="h-scroll-row" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
         ${DGR_CASES.map((dc, i) => `
           <button class="btn btn-sm ${i === cargoState.dgrIdx ? 'btn-primary' : ''}" data-dgr-i="${i}">
             ${appState.cargoSolved.includes(dc.id) ? '✓ ' : ''}${dc.id}
@@ -543,13 +543,13 @@ export function renderCargoModule() {
           <div style="flex-shrink:0;">${renderDgrSvg(c.labelType)}</div>
           <div style="flex:1;min-width:220px;" class="ja">${bi(c.descJa, c.descVi, c.descEn)}</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="qz-opts-col" style="display:flex;flex-direction:column;gap:8px;">
           ${c.options.map((ch, ci) => {
             const isPicked = pick === ci;
             const border = pick !== undefined ? (ch.ok ? 'var(--ok)' : (isPicked ? 'var(--danger)' : 'var(--border)')) : 'var(--border)';
             const bg = pick !== undefined ? (ch.ok ? 'var(--ok-soft)' : (isPicked ? 'var(--danger-soft)' : 'var(--surface-2)')) : 'var(--surface-2)';
             return `
-              <button data-dgr-c="${ci}" style="text-align:left;padding:10px 14px;border-radius:8px;border:1.5px solid ${border};background:${bg};cursor:pointer;color:var(--text-primary);font-size:13.5px;">
+              <button class="quiz-opt" data-dgr-c="${ci}" style="text-align:left;padding:10px 14px;border-radius:8px;border:1.5px solid ${border};background:${bg};cursor:pointer;color:var(--text-primary);font-size:13.5px;">
                 <span class="ja">${bi(ch.ja, ch.vi, ch.en)}</span>
               </button>
             `;

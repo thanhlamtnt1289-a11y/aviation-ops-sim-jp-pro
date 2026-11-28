@@ -1795,16 +1795,16 @@ body:not(.theme-dark) .seg-tab.active {
   right: 12px;
   top: 52px;
   z-index: 9;
-  width: 148px;
-  height: 93px;
-  opacity: 0.88;
-  transition: width .2s ease, height .2s ease, opacity .2s ease;
+  width: 230px;
+  height: 148px;
+  cursor: pointer;
+  transition: width .2s ease, height .2s ease;
   border-radius: 8px;
   overflow: hidden;
   border: 1.5px solid rgba(56, 189, 248, 0.55);
   background: rgba(6, 14, 28, 0.88);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-  pointer-events: none;
+  pointer-events: auto;
 }
 .a3d-minimap-wrap canvas {
   width: 100%;
@@ -2260,6 +2260,7 @@ body.level-basic .pro-only { display: none !important; }
 @media (max-width: 720px) { .qz-topic-row { grid-template-columns:1fr; gap:4px; } .qz-topic-label { padding-top:0; } }
 
 /* 3D overlays: minimap expands on hover; viewpoint hint fades out so it never covers the scene */
-.a3d-minimap-wrap:hover { width: 236px; height: 148px; opacity: 1; }
+.a3d-minimap-wrap.big { width: 380px; height: 245px; }
+@media (max-width: 720px) { .a3d-minimap-wrap { width: 150px; height: 100px; } .a3d-minimap-wrap.big { width: 240px; height: 160px; } }
 #a3d-vp-desc { transition: opacity .6s ease; }
 #a3d-vp-desc.faded { opacity: 0; pointer-events: none; }
