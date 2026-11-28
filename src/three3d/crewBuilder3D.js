@@ -60,7 +60,39 @@ export function createOpenCabTowingTractor3D() {
   g.add(beaconHalo);
 
   addPart(new THREE.CylinderGeometry(0.045, 0.055, 0.62, 8), matChassisDark, 0.34, 1.24, 0.16, -0.52);
-  const steerWheel = addPart(new THREE.TorusGeometry(0.20, 0.032, 8, 16), matRubber, 0.34, 1.48, 0.02, 1.05);
+  const steerWheel = new THREE.Group();
+  steerWheel.position.set(0.34, 1.48, 0.02);
+  steerWheel.rotation.x = 1.05;
+  addPart(new THREE.TorusGeometry(0.20, 0.030, 8, 20), matRubber, 0, 0, 0, 0, 0, 0, steerWheel);
+  // Top-dead-center yellow alignment stripe & 3 steering spokes for clear rotation feedback in cab view
+  addPart(new THREE.BoxGeometry(0.045, 0.07, 0.068), new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 }), 0, 0.20, 0, 0, 0, 0, steerWheel);
+  addPart(new THREE.CylinderGeometry(0.045, 0.045, 0.05, 10), matChassisDark, 0, 0, 0, Math.PI / 2, 0, 0, steerWheel);
+  addPart(new THREE.BoxGeometry(0.36, 0.028, 0.022), matRim, 0, 0, 0, 0, 0, 0, steerWheel);
+  addPart(new THREE.BoxGeometry(0.030, 0.19, 0.022), matRim, 0, -0.095, 0, 0, 0, 0, steerWheel);
+  g.add(steerWheel);
+
+  // Dashboard instrument cluster (visible in Cab View)
+  addPart(new THREE.BoxGeometry(0.54, 0.16, 0.24), matChassisDark, 0.34, 1.24, 0.34, -0.22);
+  addPart(new THREE.BoxGeometry(0.42, 0.09, 0.02), new THREE.MeshBasicMaterial({ color: 0x0f172a }), 0.34, 1.27, 0.22, -0.22);
+
+  // Realistic Left (+X in TT local) & Right (-X in TT local) Side Rear-View Mirrors
+  const makeSideMirror = (sideSign, ryAim) => {
+    const mGrp = new THREE.Group();
+    mGrp.position.set(sideSign * 0.76, 1.54, 0.42);
+    mGrp.rotation.y = ryAim;
+    addPart(new THREE.BoxGeometry(0.18, 0.035, 0.035), matChassisDark, -sideSign * 0.09, -0.03, 0, 0, 0, 0, mGrp);
+    addPart(new THREE.BoxGeometry(0.34, 0.23, 0.045), matChassisDark, 0, 0, 0, 0, 0, 0, mGrp);
+    addPart(new THREE.BoxGeometry(0.32, 0.21, 0.048), matRim, 0, 0, -0.002, 0, 0, 0, mGrp);
+    const faceMat = new THREE.MeshBasicMaterial({ color: 0x94a3b8 });
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(0.29, 0.18), faceMat);
+    face.position.set(0, 0, -0.029);
+    face.rotation.y = Math.PI;
+    mGrp.add(face);
+    g.add(mGrp);
+    return face;
+  };
+  const mirrorFaceL = makeSideMirror(1, -0.22);
+  const mirrorFaceR = makeSideMirror(-1, 0.34);
   addPart(new THREE.BoxGeometry(0.52, 0.14, 0.52), matSeat, 0.34, 0.90, -0.34);
   addPart(new THREE.BoxGeometry(0.52, 0.58, 0.12), matSeat, 0.34, 1.20, -0.56);
   addPart(new THREE.BoxGeometry(0.50, 0.14, 0.50), matSeat, -0.34, 0.90, -0.34);
@@ -154,7 +186,7 @@ export function createOpenCabTowingTractor3D() {
   addPart(new THREE.BoxGeometry(1.62, 0.28, 2.26), matAccentYellow, 0, 4.18, -0.35, 0, 0, 0, highMast);
   g.add(highMast);
 
-  g.userData = { frontPivots, allWheels, steerWheel, beaconBulb, beaconHalo, beams: [beamL, beamR], highMast, driverGroup, driverHead, driverArmR };
+  g.userData = { frontPivots, allWheels, steerWheel, beaconBulb, beaconHalo, beams: [beamL, beamR], highMast, driverGroup, driverHead, driverArmR, mirrorFaceL, mirrorFaceR };
   return g;
 }
 
@@ -189,11 +221,11 @@ export function animateTractorDriver(ttMesh, opts = {}) {
 // ALL NGO AIRPORT DOLLY TYPES (AKE, AKH, PMC, BULK BAGGAGE CART, SEMI-TRAILER)
 // =========================================================================
 export const DOLLY_TYPES = {
-  ake:  { id: 'ake',  wheelBase: 3.15, nameJa: 'コンテナドーリー (AKE/LD-3)', nameVi: 'Dolly Container AKE (LD-3)', nameEn: 'Container Dolly (AKE / LD-3)' },
-  akh:  { id: 'akh',  wheelBase: 3.10, nameJa: '低床ドーリー (AKH/A320系)', nameVi: 'Dolly Thấp AKH (A320/A321)', nameEn: 'Low-Profile Dolly (AKH / A320)' },
-  pmc:  { id: 'pmc',  wheelBase: 3.85, nameJa: 'パレットドーリー (96" PMC/PAG)', nameVi: 'Dolly Pallet 96" (PMC / PAG)', nameEn: 'Pallet Dolly (96" PMC / PAG)' },
-  bulk: { id: 'bulk', wheelBase: 3.05, nameJa: '手荷物カート (バルク/幌付)', nameVi: 'Xe lồng hành lý rời (Bulk Cart)', nameEn: 'Bulk Baggage Cart (Covered)' },
-  semi: { id: 'semi', wheelBase: 6.10, nameJa: '大型セミトレーラー (20ft/2ULD)', nameVi: 'Rơ-moóc dài Semi-Trailer (2 ULD)', nameEn: 'Long Semi-Trailer (Dual ULD)' }
+  ake:  { id: 'ake',  wheelBase: 3.15, emptyMassKg: 420,  loadedMassKg: 1580, lateralGrip: 0.82, swayGain: 1.00, maxSafeKmh: 15, nameJa: 'コンテナドーリー (AKE/LD-3)', nameVi: 'Dolly Container AKE (LD-3)', nameEn: 'Container Dolly (AKE / LD-3)' },
+  akh:  { id: 'akh',  wheelBase: 3.10, emptyMassKg: 380,  loadedMassKg: 1180, lateralGrip: 0.90, swayGain: 0.85, maxSafeKmh: 15, nameJa: '低床ドーリー (AKH/A320系)', nameVi: 'Dolly Thấp AKH (A320/A321)', nameEn: 'Low-Profile Dolly (AKH / A320)' },
+  pmc:  { id: 'pmc',  wheelBase: 3.85, emptyMassKg: 750,  loadedMassKg: 4600, lateralGrip: 0.68, swayGain: 1.38, maxSafeKmh: 15, nameJa: 'パレットドーリー (96" PMC/PAG)', nameVi: 'Dolly Pallet 96" (PMC / PAG)', nameEn: 'Pallet Dolly (96" PMC / PAG)' },
+  bulk: { id: 'bulk', wheelBase: 3.05, emptyMassKg: 340,  loadedMassKg: 940,  lateralGrip: 0.72, swayGain: 1.48, maxSafeKmh: 15, nameJa: '手荷物カート (バルク/幌付)', nameVi: 'Xe lồng hành lý rời (Bulk Cart)', nameEn: 'Bulk Baggage Cart (Covered)' },
+  semi: { id: 'semi', wheelBase: 6.10, emptyMassKg: 3200, loadedMassKg: 9500, lateralGrip: 0.76, swayGain: 1.25, maxSafeKmh: 15, nameJa: '大型セミトレーラー (20ft/2ULD)', nameVi: 'Rơ-moóc dài Semi-Trailer (2 ULD)', nameEn: 'Long Semi-Trailer (Dual ULD)' }
 };
 
 export function createDollyUnit3D(dollyType = 'ake', idx = 0) {
