@@ -1,3 +1,4 @@
+import { ALL_QUESTIONS } from './quizModule.js';
 // 00. Flight Ops Hub Dashboard — Pure Trilingual JA / VI / EN · Readiness Score, NGO Centrair Shortcuts & Quick Launch
 import { ROADMAP, stageProgress, isPro } from '../core/roadmap.js';
 import { AIRCRAFT_PROFILES, WB_SCENARIOS } from '../data/aircraft.js';
@@ -11,7 +12,7 @@ export function renderDashboard(actions) {
   if (!mount) return;
 
   const overall = computeOverallProgress();
-  const totalQ = QUIZ_BANK.length + NGO_DRIVING_QUIZ.length;
+  const totalQ = ALL_QUESTIONS.length;
   const totalDict = OPS_DICTIONARY.length + NGO_EXTRA_DICTIONARY.length;
   const srsCount = Object.keys(appState.srsWrong || {}).length;
   const acc = appState.quizStats.answered > 0
