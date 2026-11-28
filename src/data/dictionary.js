@@ -191,5 +191,24 @@ export const OPS_MARSHALLING_SIGNALS = [
     { cat: 'safety', ja: 'SHELLモデル', kana: 'しぇるもでる', en: 'SHELL Human Factors Model', vi: 'Mô hình yếu tố con người ICAO: Software (Quy trình), Hardware (Thiết bị), Environment, Liveware (Con người)' },
     { cat: 'safety', ja: 'フェールセーフ ＆ フールプルーフ', kana: 'ふぇーるせーふ・ふーるぷるーふ', en: 'Fail-Safe & Fool-Proof', vi: 'Fail-Safe = hỏng hóc vẫn chuyển về trạng thái an toàn; Fool-Proof = thiết kế chống thao tác nhầm của con người' },
     { cat: 'safety', ja: '高所作業基準（2m以上・10m以上）', kana: 'こうしょさぎょうきじゅん', en: 'Elevated Work Rules (≥2m Harness / ≥10m License)', vi: 'Cao ≥2m bắt buộc sàn chắn/dây đai toàn thân (フルハーネス); lái xe nâng người 2–10m cần 特別教育, ≥10m cần 技能講習' },
-    { cat: 'safety', ja: '機材待機区域（ESA）', kana: 'きざいたいきくいき', en: 'Equipment Staging Area (ESA)', vi: 'Ô vạch trắng tập kết sẵn xe GSE ngoài vùng ERA trước khi tàu bay vào đỗ' }
+    { cat: 'safety', ja: '機材待機区域（ESA）', kana: 'きざいたいきくいき', en: 'Equipment Staging Area (ESA)', vi: 'Ô vạch trắng tập kết sẵn xe GSE ngoài vùng ERA trước khi tàu bay vào đỗ' },
+    // --- T03 追補：NGO構内運転・無線・ライトガン・DGR標準用語 (18語) ---
+    { cat: 'safety', ja: '制限区域立入証（パス）', kana: 'せいげんくいきたちいりしょう', en: 'Restricted Area ID Pass', vi: 'Thẻ ra vào khu vực hạn chế NGO (Xanh dương, Vàng, Đỏ có 船陸交通, Xanh nhạt, Tím)' },
+    { cat: 'safety', ja: 'エプロン境界線（ABL）', kana: 'えぷろんきょうかいせん', en: 'Apron Boundary Line (ABL)', vi: 'Vạch đỏ nét liền ranh giới Apron — cấm vượt sang đường lăn (trừ 3 ngoại lệ)' },
+    { cat: 'safety', ja: 'スポット誘導経路境界線', kana: 'すぽっとゆうどうけいろきょうかいせん', en: 'Aircraft Stand Taxilane Boundary Line', vi: 'Vạch đỏ ranh giới đường lăn Spot — lối ra Service Lane không được dừng tại vạch này' },
+    { cat: 'safety', ja: 'サービスレーン', kana: 'さーびすれーん', en: 'Service Lane', vi: 'Làn cắt ngang đường lăn chỉ dành cho ô tô; tự quan sát không gọi ATC, chờ tàu qua ≥100m' },
+    { cat: 'safety', ja: 'スポット後方車両通行帯', kana: 'すぽっとこうほうしゃりょうつうこうたい', en: 'Behind-Stand Vehicle Road', vi: 'Đường xe chạy sau bãi đỗ dành cho xe >3.8m; cấm đi bộ và xe đạp' },
+    { cat: 'safety', ja: '場周道路', kana: 'じょうしゅうどうろ', en: 'Airport Perimeter Road', vi: 'Đường vành đai sân bay (max 40 km/h); đầu Bắc/Nam đường băng dừng hẳn tại STOP' },
+    { cat: 'safety', ja: 'ILS制限区域', kana: 'あいえるえすせいげんくいき', en: 'ILS Restricted Area', vi: 'Khu vực bảo vệ sóng hạ cánh ILS — đèn đỏ bật cấm vào; đoạn 50m cấm dừng đỗ 24/7' },
+    { cat: 'safety', ja: '並走禁止', kana: 'へいそうきんし', en: 'No Driving Abreast', vi: 'Cấm chạy song song áp dụng cho mọi phương tiện tại tất cả ngã tư và đoạn cua' },
+    { cat: 'safety', ja: '自走アウト', kana: 'じそうあうと', en: 'Self-Taxi-Out', vi: 'Tàu bay tự nổ máy lăn ra khỏi bãi đỗ không dùng xe kéo — luồng phản lực rất mạnh' },
+    { cat: 'safety', ja: 'ブラスト注意区域', kana: 'ぶらすとちゅういくいき', en: 'Jet Blast Caution Zone', vi: 'Vùng sơn khung vàng cảnh báo luồng phản lực tại T2 Spot #71 và #77' },
+    { cat: 'safety', ja: 'エンジンランナップ（試運転）', kana: 'えんじんらんなっぷ', en: 'Engine Run-Up', vi: 'Thử nổ động cơ (có thể diễn ra 24/24 ở mọi Spot; dấu hiệu: Beacon đỏ bật + còn Chocks)' },
+    { cat: 'safety', ja: 'COC（セントレア・オペレーション・センター）', kana: 'しーおーしー', en: 'Centrair Operation Center (COC)', vi: 'Trung tâm Điều hành Centrair (0569-38-1500 / nội bộ 3000, 24/365) — tai nạn giữ hiện trường' },
+    { cat: 'ramp', ja: '指向信号灯（ライトガン）', kana: 'しこうしんごうとう・らいとがん', en: 'Light Gun Signal', vi: 'Đèn tín hiệu chỉ hướng từ Đài kiểm soát dùng khi mất sóng bộ đàm trên đường băng/đường lăn' },
+    { cat: 'ramp', ja: 'フォネティックコード', kana: 'ふぉねてぃっくこーど', en: 'ICAO Phonetic Alphabet', vi: 'Bảng chữ cái vô tuyến quốc tế (C=Charlie, J=Juliett, N=November, W=Whiskey, 9=Niner)' },
+    { cat: 'ramp', ja: 'MCA無線', kana: 'えむしーえーむせん', en: 'MCA Airside Radio', vi: 'Bộ đàm mặt đất bắt buộc nghe trực liên tục khi vào khu vực tàu bay chạy (着陸帯等)' },
+    { cat: 'cargo', ja: '隔離表（Segregation）', kana: 'かくりひょう', en: 'DG Segregation Table', vi: 'Bảng cách ly hàng nguy hiểm kỵ nhau (VD: Class 6.1 cách thực phẩm & động vật sống AVI)' },
+    { cat: 'cargo', ja: '特殊取扱コード（SHC）', kana: 'とくしゅとりあつかいこーど', en: 'Special Handling Code (SHC)', vi: 'Mã 3 chữ cái IATA: AVI (động vật sống), PER (tươi sống), VAL (giá trị cao), HEA (>150kg)' },
+    { cat: 'pax', ja: 'オーバーブッキング', kana: 'おーばーぶっきんぐ', en: 'Overbooking', vi: 'Tình huống bán quá chỗ — ưu tiên kêu gọi khách tình nguyện đổi chuyến (Flex Traveler)' }
   ];

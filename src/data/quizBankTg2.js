@@ -537,7 +537,7 @@ export const QUIZ_BANK_TG2 = [
   {
     id: 'T2Q020', topic: 'tg2_leadership', level: 2,
     qJa: '到着した国際線便で、搭乗橋（PBB）を操作してL1ドアへ装着する際、作業責任者が事前確認を徹底すべき事項はどれか？',
-    qVi: 'Khi vận hành cầu hành khách (PBB / 搭乗橋) nối vào cửa L1 của tàu bay vừa vào bãi, trưởng nhóm phải kiểm tra điều kiện tiên quyết nào?',
+    qVi: 'Khi vận hành ống lồng PBB (搭乗橋) nối vào cửa L1 của tàu bay vừa vào bãi, trưởng nhóm phải kiểm tra điều kiện tiên quyết nào?',
     qEn: 'Before docking a Passenger Boarding Bridge (PBB) onto aircraft door L1, what precondition must the supervisor ensure?',
     optsJa: [
       '時間短縮のため、機体が停止バーの5m手前を通過した時点でPBBを動かし始める',

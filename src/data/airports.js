@@ -1391,7 +1391,7 @@ export const A3D_FLIGHT_PHASES = [
           tasksJa: ['L1ドア閉鎖後にPBBを白枠待機位置へ収納し、全GSEをERA外へ退避'],
           tasksVi: ['Đợi cửa L1 đóng kín rồi rút PBB về ô trắng chờ, đưa toàn bộ xe GSE ra ngoài vạch đỏ ERA'],
           tasksEn: ['Retract PBB into its white standby box after L1 closure and clear all GSE outside red ERA'] },
-        { roleJa: 'プッシュバックTugドライバー', roleVi: 'Tài xế xe đẩy lùi (Pushback Tug)', roleEn: 'Pushback Tractor Driver', badge: 'TUG',
+        { roleJa: 'プッシュバックTugドライバー', roleVi: 'Tài xế xe kéo đẩy tàu bay (Pushback Tug)', roleEn: 'Pushback Tractor Driver', badge: 'TUG',
           tasksJa: ['トーバーを前脚へ確実に連結し、管制承認とブレーキ解除指示を待機'],
           tasksVi: ['Khớp chắc chắn thanh kéo Towbar vào càng mũi, chờ huấn lệnh ATC và lệnh nhả phanh đỗ'],
           tasksEn: ['Couple towbar securely to nose gear and stand by for ATC clearance and brake release'] }
