@@ -2271,3 +2271,72 @@ body.level-basic .pro-only { display: none !important; }
 .a3d-incident-dock .btn { padding:7px 10px !important; font-size:12px; }
 @keyframes a3dIncIn { from { transform:translateY(16px); opacity:0; } to { transform:none; opacity:1; } }
 @media (max-width: 720px) { .a3d-incident-dock { right:8px; left:8px; bottom:8px; width:auto; max-height:58%; } }
+
+/* ── On-stage controls (inside the 3D frame) + true full-screen ───────────────── */
+.airport3d-stage .hud-banner { top: 50px; bottom: auto; left: 10px; right: auto; max-width: min(60%, 520px); }
+.a3d-pad-dock { position: absolute; left: 10px; bottom: 10px; z-index: 12; background: rgba(10, 20, 36, 0.55) !important; border-color: rgba(148, 163, 184, 0.35) !important; }
+.a3d-pad-dock .drive-key { background: rgba(255, 255, 255, 0.92); }
+.a3d-pad-dock .drive-brake { color: #C92A2A; }
+.a3d-oc { position: absolute; right: 10px; bottom: 10px; z-index: 14; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; transition: opacity .35s ease; }
+.a3d-oc > * { pointer-events: auto; }
+.a3d-oc.dim { opacity: .5; }
+.a3d-oc.dim:hover { opacity: 1; }
+.a3d-oc-rail { display: flex; align-items: stretch; gap: 4px; padding: 4px; border-radius: 12px; background: rgba(10, 20, 36, 0.62); border: 1px solid rgba(148, 163, 184, 0.35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 6px 18px rgba(0, 0, 0, .35); }
+.a3d-oc-items { display: flex; gap: 4px; }
+.a3d-oc-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 50px; height: 48px; padding: 3px 6px; border: 1px solid transparent; border-radius: 9px; background: rgba(255, 255, 255, 0.08); color: #F1F5F9; cursor: pointer; font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
+.a3d-oc-btn:hover { background: rgba(255, 255, 255, 0.16); }
+.a3d-oc-btn:active { transform: scale(.96); }
+.a3d-oc-btn.on { background: var(--accent, #2563EB); border-color: rgba(255, 255, 255, .35); }
+.a3d-oc-ic { font-size: 17px; line-height: 1; }
+.a3d-oc-lb { font-size: 10px; line-height: 1.1; font-weight: 700; white-space: nowrap; word-break: keep-all; }
+.a3d-oc-handle { min-width: 26px; border: none; border-radius: 8px; background: rgba(255, 255, 255, 0.06); color: #CBD5E1; font-size: 15px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.a3d-oc.collapsed .a3d-oc-items { display: none; }
+.a3d-oc.collapsed .a3d-oc-handle { min-width: 56px; height: 40px; font-size: 13px; }
+.a3d-oc-pop { display: none; flex-wrap: wrap; justify-content: flex-end; gap: 5px; max-width: min(420px, calc(100vw - 40px)); padding: 6px; border-radius: 12px; background: rgba(10, 20, 36, 0.82); border: 1px solid rgba(148, 163, 184, 0.35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.a3d-oc-pop.open { display: flex; animation: a3dIncIn .2s ease-out; }
+.a3d-oc-chip { min-height: 38px; padding: 6px 11px; border-radius: 8px; border: 1px solid rgba(148, 163, 184, .4); background: rgba(255, 255, 255, .08); color: #F1F5F9; font-size: 12.5px; font-weight: 600; white-space: nowrap; word-break: keep-all; cursor: pointer; }
+.a3d-oc-chip.on { background: var(--accent, #2563EB); border-color: transparent; }
+.airport3d-stage.has-incident .a3d-oc { display: none; }
+
+/* Full-screen: the whole 3D card fills the screen; the frequently used controls stay inside the frame */
+body.a3d-immersive:has(#screen-airport3d.active .a3d-main-card.immersive) { overflow: hidden; }
+.a3d-main-card.immersive { position: fixed !important; inset: 0; z-index: 1000; margin: 0 !important; border-radius: 0 !important; display: flex; flex-direction: column; gap: 4px; padding: calc(4px + env(safe-area-inset-top)) calc(4px + env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) calc(4px + env(safe-area-inset-left)) !important; background: var(--bg-canvas, #0B1220) !important; border: none !important; }
+.a3d-main-card.immersive .a3d-toolbar { position: static !important; margin: 0 !important; flex: 0 0 auto; }
+.a3d-main-card.immersive.bar-hidden .a3d-toolbar,
+.a3d-main-card.immersive.bar-hidden .a3d-drawer { display: none !important; }
+.a3d-main-card.immersive .a3d-drawer { flex: 0 0 auto; }
+.a3d-main-card.immersive .airport3d-stage { flex: 1 1 auto; min-height: 0; border-radius: 8px; }
+#screen-airport3d .a3d-main-card.immersive .airport3d-stage #airport3d-gl,
+#screen-airport3d .a3d-main-card.immersive .airport3d-stage #airport3d-hud2d { position: absolute; inset: 0; width: 100% !important; height: 100% !important; min-height: 0 !important; }
+.a3d-main-card.immersive .phase-strip { flex: 0 0 auto; }
+.a3d-main-card.immersive .radio-bar { display: none; }
+
+@media (max-width: 640px) {
+  .a3d-oc-rail { flex-direction: column-reverse; }
+  .a3d-oc-items { flex-direction: column; }
+  .a3d-oc-handle { min-height: 24px; }
+  .a3d-oc.collapsed .a3d-oc-handle { min-width: 52px; }
+  .a3d-oc-btn { min-width: 52px; height: 46px; }
+  .airport3d-stage .hud-banner { display: none; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  .a3d-oc-btn { height: 42px; min-width: 46px; }
+  .a3d-oc-lb { font-size: 9px; }
+}
+/* Phone landscape: the floating toolbar sits on the bottom edge of the 3D view, so lift the pad and rail above it */
+@media (max-width: 932px) and (max-height: 500px) and (orientation: landscape) {
+  #screen-airport3d.active .a3d-main-card:not(.immersive) .a3d-pad-dock,
+  #screen-airport3d.active .a3d-main-card:not(.immersive) .a3d-oc { bottom: 62px; }
+  #screen-airport3d.active .a3d-main-card.immersive .a3d-drawer.open { position: static !important; box-shadow: none; }
+  #screen-airport3d.active .a3d-main-card.immersive .a3d-toolbar { padding: 3px 6px; }
+}
+/* Narrow screens / full-screen: the toolbar scrolls sideways instead of clipping its last buttons */
+@media (max-width: 900px) {
+  .a3d-toolbar-left { flex-wrap: nowrap !important; overflow-x: auto; min-width: 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .a3d-toolbar-left::-webkit-scrollbar { display: none; }
+  .a3d-toolbar-left > * { flex: 0 0 auto; }
+}
+.a3d-main-card.immersive .a3d-toolbar { flex-wrap: nowrap; }
+.a3d-main-card.immersive .a3d-toolbar-left { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.a3d-main-card.immersive .a3d-toolbar-left > * { flex: 0 0 auto; }
+.a3d-main-card.immersive .a3d-toolbar-right { flex: 0 0 auto; }

@@ -1209,6 +1209,96 @@ export function initAirport3dModule() {
   renderAirport3dUI();
 }
 
+// ── On-stage control rail: the controls used while driving / watching live INSIDE the 3D frame ──
+const OC_PREF_KEY = 'a3d.oc.v1';
+function loadOcPrefs() {
+  if (loadOcPrefs._done) return;
+  loadOcPrefs._done = true;
+  try { const o = JSON.parse(localStorage.getItem(OC_PREF_KEY) || '{}'); ['oc', 'pad', 'bar'].forEach(k => { if (typeof o[k] === 'boolean') a3d.ui[k] = o[k]; }); } catch (e) { /* storage blocked */ }
+}
+function saveOcPrefs() {
+  try { localStorage.setItem(OC_PREF_KEY, JSON.stringify({ oc: a3d.ui.oc !== false, pad: a3d.ui.pad !== false, bar: a3d.ui.bar !== false })); } catch (e) { /* storage blocked */ }
+}
+function onStageViewList(isFlight, isDrive) {
+  if (isDrive) return ['chase', 'gse_cab', 'backing', 'top', 'orbit'];
+  if (isFlight) return BASIC_VIEWS;
+  return ['orbit', 'top', 'terminal', 'tower'];
+}
+function viewLabel(id) {
+  if (id === 'chase') return t('🚗 車両追従', '🚗 Sau xe', '🚗 Chase');
+  const vp = A3D_VIEWPOINTS.find(v => v.id === id);
+  return vp ? t(vp.ja, vp.vi, vp.en) : id;
+}
+function ocBtn(id, icon, label, active = false) {
+  return `<button class="a3d-oc-btn ${active ? 'on' : ''}" id="${id}"><span class="a3d-oc-ic">${icon}</span><span class="a3d-oc-lb">${label}</span></button>`;
+}
+function renderOnStageControls(isFlight, isDrive) {
+  const open = a3d.ui.oc !== false;
+  const items = [
+    ocBtn('a3d-oc-full', a3d.expanded ? '✕' : '⛶', a3d.expanded ? t('戻る', 'Thu nhỏ', 'Exit') : t('全画面', 'Phóng to', 'Full'), a3d.expanded),
+    ocBtn('a3d-oc-views', '🎥', t('視点', 'Góc nhìn', 'View'), a3d.ui.ocPop === 'views'),
+    ocBtn('a3d-oc-map', '🗺', t('地図', 'Bản đồ', 'Map'), a3d.ui.map),
+  ];
+  if (isDrive) {
+    items.push(ocBtn('a3d-oc-couple', a3d.coupledDolly ? '⛓‍💥' : '🔗', a3d.coupledDolly ? t('切離', 'Tháo', 'Uncouple') : t('連結', 'Nối', 'Couple'), a3d.coupledDolly));
+    items.push(ocBtn('a3d-oc-yubi', '👉', t('指差', 'Yoshi', 'Yoshi')));
+    items.push(ocBtn('a3d-oc-pad', '🎮', t('操作キー', 'Phím lái', 'Keys'), a3d.ui.pad !== false));
+  }
+  if (isFlight) {
+    items.push(ocBtn('a3d-oc-play', a3d.flightPlaying ? '⏸' : '▶', a3d.flightPlaying ? t('停止', 'Dừng', 'Pause') : t('再生', 'Chạy', 'Play'), a3d.flightPlaying));
+    items.push(ocBtn('a3d-oc-next', '⏭', t('次へ', 'Bước sau', 'Next')));
+  }
+  if (a3d.expanded) items.push(ocBtn('a3d-oc-bar', '☰', t('ツール', 'Công cụ', 'Tools'), a3d.ui.bar !== false));
+  const views = onStageViewList(isFlight, isDrive);
+  return `
+    <div class="a3d-oc ${open ? '' : 'collapsed'}" id="a3d-oc">
+      <div class="a3d-oc-pop ${a3d.ui.ocPop === 'views' && open ? 'open' : ''}" id="a3d-oc-pop">
+        ${views.map(id => `<button class="a3d-oc-chip ${a3d.camMode === id ? 'on' : ''} ${isDrive || BASIC_VIEWS.includes(id) ? '' : 'pro-only'}" data-ocvp="${id}">${viewLabel(id)}</button>`).join('')}
+      </div>
+      <div class="a3d-oc-rail">
+        <div class="a3d-oc-items">${items.join('')}</div>
+        <button class="a3d-oc-handle" id="a3d-oc-handle" aria-label="${open ? t('閉じる', 'Thu gọn', 'Hide') : t('操作パネル', 'Mở nút điều khiển', 'Show controls')}">${open ? '›' : '‹ 🎛'}</button>
+      </div>
+    </div>`;
+}
+function setImmersive(on) {
+  a3d.expanded = on;
+  document.body.classList.toggle('a3d-immersive', on);
+  try {
+    if (on && document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+    if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  } catch (e) { /* iPhone Safari has no Fullscreen API: CSS full-screen only */ }
+  renderAirport3dUI();
+}
+function wireOnStageControls() {
+  const $ = id => document.getElementById(id);
+  const sb = $('a3d-stage-box');
+  const oc = $('a3d-oc');
+  if (!sb || !oc) return;
+  const rerender = () => { saveOcPrefs(); renderAirport3dUI(); };
+  // Smart dimming: the rail fades after a few idle seconds so it never hides the scene, and wakes on any touch
+  const wake = () => { oc.classList.remove('dim'); clearTimeout(wireOnStageControls._t); wireOnStageControls._t = setTimeout(() => { if (!a3d.ui.ocPop) oc.classList.add('dim'); }, 4500); };
+  sb.addEventListener('pointerdown', wake, { passive: true });
+  oc.addEventListener('pointerenter', wake);
+  wake();
+  $('a3d-oc-handle').onclick = () => { a3d.ui.oc = a3d.ui.oc === false; a3d.ui.ocPop = null; rerender(); };
+  $('a3d-oc-full').onclick = () => setImmersive(!a3d.expanded);
+  $('a3d-oc-views').onclick = () => { a3d.ui.ocPop = a3d.ui.ocPop === 'views' ? null : 'views'; $('a3d-oc-pop').classList.toggle('open', a3d.ui.ocPop === 'views'); $('a3d-oc-views').classList.toggle('on', a3d.ui.ocPop === 'views'); };
+  oc.querySelectorAll('[data-ocvp]').forEach(b => { b.onclick = () => { setA3dViewpoint(b.dataset.ocvp); a3d.ui.ocPop = null; renderAirport3dUI(); }; });
+  $('a3d-oc-map').onclick = () => { a3d.ui.map = !a3d.ui.map; renderAirport3dUI(); };
+  const c = $('a3d-oc-couple'); if (c) c.onclick = () => { toggleCoupleDolly(); renderAirport3dUI(); };
+  const y = $('a3d-oc-yubi'); if (y) y.onclick = () => triggerYubikoshi((a3d.veh.speed || 0) < -0.1 || a3d.keys.down ? 'rev' : 'fwd');
+  const pd = $('a3d-oc-pad'); if (pd) pd.onclick = () => { a3d.ui.pad = a3d.ui.pad === false; rerender(); };
+  const pl = $('a3d-oc-play'); if (pl) pl.onclick = () => { const b = $('a3d-flight-play'); if (b) b.click(); renderAirport3dUI(); };
+  const nx = $('a3d-oc-next'); if (nx) nx.onclick = () => { const b = $('a3d-flight-next'); if (b) b.click(); };
+  const br = $('a3d-oc-bar'); if (br) br.onclick = () => { a3d.ui.bar = a3d.ui.bar === false; rerender(); };
+}
+if (typeof window !== 'undefined' && !window.__a3dImmersiveWired) {
+  window.__a3dImmersiveWired = true;
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && a3d.expanded && appState.activeModule === 'airport3d') { a3d.expanded = false; document.body.classList.remove('a3d-immersive'); renderAirport3dUI(); } });
+  window.addEventListener('keydown', e => { if (e.key === 'Escape' && a3d.expanded) setImmersive(false); });
+}
+
 // Views shown to beginners (Pro shows every camera)
 const BASIC_VIEWS = ['flight_follow', 'marshal_rear', 'marshaller', 'pilot', 'orbit', 'top', 'gse_cab'];
 
@@ -1285,6 +1375,7 @@ export function openA3dSubtab(tab = 'flight') {
 }
 
 export function renderAirport3dUI() {
+  loadOcPrefs();
   const mount = document.getElementById('airport3d-mount');
   if (!mount) return;
   const isFlight = a3d.subtab === 'flight';
@@ -1303,7 +1394,7 @@ export function renderAirport3dUI() {
 
     <div class="workspace-grid wide-left a3d-layout ${a3d.ui.landSide ? 'land-side-open' : ''}">
       <div>
-        <div class="card a3d-main-card">
+        <div class="card a3d-main-card ${a3d.expanded ? 'immersive' : ''} ${a3d.expanded && a3d.ui.bar === false ? 'bar-hidden' : ''}">
           <!-- Compact toolbar: playback / vehicle on the left, view · map · settings drawers on the right -->
           <div class="a3d-toolbar">
             <div class="a3d-toolbar-left">
@@ -1342,7 +1433,7 @@ export function renderAirport3dUI() {
               <button class="btn btn-sm ${a3d.ui.views ? 'btn-primary' : ''}" data-drawer="views" aria-label="${t('視点', 'Góc nhìn', 'Views')}">🎥<span class="a3d-btn-lbl"> ${t('視点', 'Góc nhìn', 'Views')} ▾</span></button>
               <button class="btn btn-sm ${a3d.ui.map ? 'btn-primary' : ''}" id="a3d-toggle-map" aria-label="${t('地図', 'Bản đồ', 'Map')}">🗺<span class="a3d-btn-lbl"> ${t('地図', 'Bản đồ', 'Map')}</span></button>
               <button class="btn btn-sm ${a3d.ui.settings ? 'btn-primary' : ''}" data-drawer="settings" aria-label="${t('設定', 'Cài đặt', 'Settings')}">⚙<span class="a3d-btn-lbl"> ${t('設定', 'Cài đặt', 'Settings')} ▾</span></button>
-              <button class="btn btn-sm ${a3d.expanded ? 'btn-primary' : ''}" id="a3d-toggle-expand" title="${t('拡大', 'Phóng to', 'Expand')}">⛶</button>
+              <button class="btn btn-sm ${a3d.expanded ? 'btn-primary' : ''}" id="a3d-toggle-expand" title="${t('全画面', 'Toàn màn hình', 'Full screen')}">⛶</button>
               <button class="btn btn-sm a3d-land-panel-btn ${a3d.ui.landSide ? 'btn-primary' : ''}" id="a3d-land-panel-btn" aria-label="${t('パネル', 'Bảng điều khiển', 'Panels')}">☰</button>
             </div>
           </div>
@@ -1395,7 +1486,7 @@ export function renderAirport3dUI() {
             </div>
           </div>
 
-          <div class="airport3d-stage ${a3d.expanded ? 'expanded' : ''} ${a3d.ui.hudInfo ? 'hud-info-open' : ''}" id="a3d-stage-box">
+          <div class="airport3d-stage ${a3d.ui.hudInfo ? 'hud-info-open' : ''}" id="a3d-stage-box">
             <canvas id="airport3d-gl"></canvas>
             <canvas id="airport3d-hud2d"></canvas>
             <div class="a3d-minimap-wrap ${a3d.ui.map ? '' : 'hidden'} ${a3d.ui.mapBig ? 'big' : ''}" id="a3d-minimap-box" title="${t('タップ：拡大／全体切替', 'Chạm: phóng to / toàn đảo', 'Tap: zoom / island')}">
@@ -1412,16 +1503,17 @@ export function renderAirport3dUI() {
               </div>
             </div>
             <div class="hud-banner">
-              <div class="hud-pill pro-only a3d-hud-secondary" id="a3d-vp-desc" style="font-family:var(--font-sans);font-size:11.5px;max-width:70%;">
+              <div class="hud-pill pro-only a3d-hud-secondary" id="a3d-vp-desc" style="font-family:var(--font-sans);font-size:11.5px;">
                 [${curVp.key}] ${t(curVp.ja, curVp.vi, curVp.en)} — ${t(curVp.descJa, curVp.descVi, curVp.descEn)}
               </div>
-              ${isDrive ? `
-                <div class="drive-pad" id="a3d-drive-pad">
-                  <div></div><button class="drive-key" data-k="up">▲</button><div></div>
-                  <button class="drive-key" data-k="left">◀</button><button class="drive-key" data-k="down">▼</button><button class="drive-key" data-k="right">▶</button>
-                </div>
-              ` : ''}
             </div>
+            ${isDrive && a3d.ui.pad !== false ? `
+              <div class="drive-pad a3d-pad-dock" id="a3d-drive-pad">
+                <div></div><button class="drive-key" data-k="up" aria-label="${t('前進', 'Tiến', 'Forward')}">▲</button><button class="drive-key drive-brake" data-k="brake" aria-label="${t('ブレーキ', 'Phanh', 'Brake')}">■</button>
+                <button class="drive-key" data-k="left" aria-label="${t('左', 'Trái', 'Left')}">◀</button><button class="drive-key" data-k="down" aria-label="${t('後退', 'Lùi', 'Reverse')}">▼</button><button class="drive-key" data-k="right" aria-label="${t('右', 'Phải', 'Right')}">▶</button>
+              </div>
+            ` : ''}
+            ${renderOnStageControls(isFlight, isDrive)}
           </div>
 
           ${isFlight ? `<div class="phase-strip" id="a3d-phase-strip"></div><div class="radio-bar pro-only" id="a3d-radio-bar"></div>` : ''}
@@ -1560,10 +1652,9 @@ export function renderAirport3dUI() {
   mount.querySelectorAll('details[data-panel]').forEach(d => {
     d.addEventListener('toggle', () => { a3d.ui.panels[d.dataset.panel] = d.open; });
   });
-  document.getElementById('a3d-toggle-expand').onclick = () => {
-    a3d.expanded = !a3d.expanded;
-    document.getElementById('a3d-stage-box').classList.toggle('expanded', a3d.expanded);
-  };
+  document.getElementById('a3d-toggle-expand').onclick = () => setImmersive(!a3d.expanded);
+  document.body.classList.toggle('a3d-immersive', !!a3d.expanded);
+  wireOnStageControls(mount);
   const hudInfoBtn = document.getElementById('a3d-hud-info-btn');
   if (hudInfoBtn) hudInfoBtn.onclick = () => {
     a3d.ui.hudInfo = !a3d.ui.hudInfo;
@@ -1787,6 +1878,7 @@ function renderIncidentOverlay() {
   if (!inc || (inc.revealAt && !inc.revealed)) {
     box.style.display = 'none';
     box.innerHTML = '';
+    { const sb = document.getElementById('a3d-stage-box'); if (sb) sb.classList.remove('has-incident'); }
     return;
   }
   const steps = [
@@ -1816,6 +1908,7 @@ function renderIncidentOverlay() {
     : t('🚨 車両・施設接触事故 — 必須処理手順', '🚨 SỰ CỐ VA CHẠM GIAO THÔNG — QUY TRÌNH BẮT BUỘC', '🚨 COLLISION INCIDENT — MANDATORY PROCEDURE');
 
   box.style.display = 'flex';
+  { const sb = document.getElementById('a3d-stage-box'); if (sb) sb.classList.add('has-incident'); }
   box.innerHTML = `
     <div style="max-width:440px;width:100%;background:var(--surface-1,#0f172a);border:2px solid #ef4444;border-radius:12px;padding:16px;color:var(--text-primary,#f8fafc);box-shadow:0 20px 45px rgba(0,0,0,0.55);">
       <div style="font-size:15px;font-weight:800;color:#fca5a5;margin-bottom:4px;">${title}</div>
